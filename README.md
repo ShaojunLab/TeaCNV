@@ -24,5 +24,9 @@ R
 install.packages("./", repos=NULL, type="source")
 ```
 
+## Usage
 
+```
+library(infercnv)
 
+```
