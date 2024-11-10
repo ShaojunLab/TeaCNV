@@ -1,5 +1,5 @@
 options(expressions=10000)
-workpath="./TeaCNV"
+workpath="./"
 setwd(workpath)
 suppressPackageStartupMessages({
   library(Matrix)
@@ -14,27 +14,27 @@ suppressPackageStartupMessages({
   library(foreach)
   library(doParallel)
 })
-source("./R/funs_filtMT.R",chdir = T)
-source("./R/mydataProcess.R",chdir = T) 
-source("./R/funs_atac2cnv.R",chdir = T)
-source("./R/funs_binClust.R",chdir = T)
-source("./R/seg_plot.R",chdir = T)
-source("./R/figurePlot.R",chdir = T)
-source("./R/seg_score.R",chdir = T)
-source("./R/fun_pseudoBulk_mat.R",chdir = T)
-source("./R/funs_find_subclones.R",chdir = T)
-source("./R/funs_utils.R",chdir = T)
+# source("./R/funs_filtMT.R",chdir = T)
+# source("./R/mydataProcess.R",chdir = T) 
+# source("./R/funs_atac2cnv.R",chdir = T)
+# source("./R/funs_binClust.R",chdir = T)
+# source("./R/seg_plot.R",chdir = T)
+# source("./R/figurePlot.R",chdir = T)
+# source("./R/seg_score.R",chdir = T)
+# source("./R/fun_pseudoBulk_mat.R",chdir = T)
+# source("./R/funs_find_subclones.R",chdir = T)
+# source("./R/funs_utils.R",chdir = T)
 
 
-#CNV esti
-source("./R/findmode.R",chdir = T)
-source("./R/optEstimation.R",chdir = T)
-source("./R/results.check.R",chdir = T)
-source("./R/funs_bulkCNV_estimation.R",chdir = T)
-source("./R/ploidy.correction.v2.R",chdir = T)
-source("./R/genome.subclonality.function.R",chdir = T)
-source("./R/fun_segmentation_comb.R",chdir = T)
-source("./R/funs_InformationSegs.r")
+# #CNV esti
+# source("./R/findmode.R",chdir = T)
+# source("./R/optEstimation.R",chdir = T)
+# source("./R/results.check.R",chdir = T)
+# source("./R/funs_bulkCNV_estimation.R",chdir = T)
+# source("./R/ploidy.correction.v2.R",chdir = T)
+# source("./R/genome.subclonality.function.R",chdir = T)
+# source("./R/fun_segmentation_comb.R",chdir = T)
+# source("./R/funs_InformationSegs.r")
 
 TeaCNV <- methods::setClass("TeaCNV",
                                slots = c(data.rawpeak="ANY",
@@ -50,6 +50,7 @@ TeaCNV <- methods::setClass("TeaCNV",
                                          options = "list",
                                          logVar="ANY"))
 
+#' @title CreateTeaCNVObject()
 #' @param FiltCell_by Filtering method if FiltCell=TRUE, c("Zscore","density","quantile"),default is "Zscore".
 CreateTeaCNVObject <- function(input,
                                   annotationFile,
@@ -225,6 +226,7 @@ CreateTeaCNVObject <- function(input,
   return(object)
 }
 
+#' @title EffectCorrectByRef()
 #' @param cell_anno data.frame of cell annotation, containing the cell name(row.name), 
 #' the cell group classification(first column) and the sample ID (second column), tab-delimited
 #' @param NormalTypeList cell groups in the first column of cell_anno
@@ -297,7 +299,7 @@ EffectCorrectByRef <- function(mat,cell_anno,sampleID_normal,NormalTypeList,samp
 
 
 
-#' @title 
+#' @title runTeaCNV()
 #' 
 #' @param input_obj  the TeaCNV object or matrix of peaks (rows) vs. cells (columns) containing the raw counts
 #'                    It can be a filename or the data directly.

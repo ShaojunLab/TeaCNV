@@ -401,7 +401,7 @@ CNV_esti <- function(outdir=".",
   # chr1_148951389_248907553 1.421164      1.47
   # chr2_19449_91766890 1.451020      1.47
   # chr2_95076467_108240173 1.368492      1.47
-
+#' @export
 mse_loss<- function(seg.cnv.df,
                      y_true.term = NULL,
                      y_pred.term = NULL,

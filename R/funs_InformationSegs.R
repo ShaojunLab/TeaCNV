@@ -4,7 +4,7 @@ suppressMessages({
   library(ggpubr)
   library(tidyr)
   library(ggsci)
-  library(LaplacesDemon)
+  #library(LaplacesDemon)
   library(Seurat)
   library(Signac)
   library(futile.logger)
@@ -14,8 +14,8 @@ cols_Palette <- c("#B0D9A5","#A6DAEF","#D9BDD8","#E58579","#8AB1D2","#F9E9A4","#
 # source("fun_Grange.R")
 
 custom_theme <-
-    theme_classic()+ 
-    theme(plot.background=element_blank(),
+    ggplot2::theme_classic()+ 
+    ggplot2::theme(plot.background=element_blank(),
           legend.position='right',
           plot.title = element_text(hjust = 0.5),
           axis.title = element_text(color="black",size=15),

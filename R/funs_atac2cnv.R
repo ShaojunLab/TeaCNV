@@ -132,7 +132,7 @@ CNratioInfer <- function(input_matrix,inputcellano,
   flog.info(print("Ratio matrix done!"))
 }
 
-
+#' @title CNratioInfer.sc()
 #' @description infer CN ratio for individual single cell
 #' @param prop.zero numeric vector with the same length of rows of input_matrix.
 CNratioInfer.sc <- function(input_matrix,
@@ -589,6 +589,7 @@ combine_res_chr <- function(data.dir, mtx_seg,chrs,df_meta_slim,
   return(list(seg_res_ls=seg_res_ls,mtx_seg=mtx_seg_total))
 }
 
+#' @title ls.colummn2mtx()
 #' @param res.ls list of resuts of multiple clusters
 #' @description the names of res.ls should in first column of metadata
 ls.colummn2mtx <- function(res.ls,metadata,extract_by="integerCNV"){

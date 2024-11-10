@@ -36,6 +36,7 @@ gen_pseudo_mat <- function(obj,randomseeds,Neighbors=100,assay="RNA",expMatrix=o
 #' @param mat_obj matrix with features as rownames, cell Id as colnames
 #' @param group_ano a data.frame of cell_group needs to be provided, the first column is cell ID, the second column is cell groups
 #' @param type sum or median expression of cells in a group c("mean","sum","median","density")
+#' @export
 pseudo_bulk_v2 <- function(mat_obj,group_ano,method="sum",adjust_zero=TRUE){
   if(!is.matrix(mat_obj)){ mat_obj <- as.matrix(mat_obj)}
   myrowname <- rownames(mat_obj)
@@ -98,7 +99,7 @@ pseudo_bulk_v2 <- function(mat_obj,group_ano,method="sum",adjust_zero=TRUE){
     peak_ref_grp_median <- rowMedians(matrix_data,na.rm=TRUE)
   }
   
-  peak_ref_grp_sd <- rowSds(matrix_data,na.rm=TRUE)
+  peak_ref_grp_sd <- matrixStats::rowSds(matrix_data,na.rm=TRUE,useNames = TRUE)
   peak_ref_grp_sum <- rowSums(matrix_data,na.rm=TRUE)
   peak_ref_grp_means_sd <- data.frame(mean=peak_ref_grp_median,SD=peak_ref_grp_sd,sum=peak_ref_grp_sum)
   rownames(peak_ref_grp_means_sd) <- RN

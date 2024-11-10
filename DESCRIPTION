@@ -13,3 +13,29 @@ RoxygenNote: 7.3.2
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Imports:
+    GenomicRanges,
+    data.table,
+    Matrix,
+    Signac,
+    Seurat,
+    tidyr,
+    ggplot2,
+    Matrix,
+    futile.logger,
+    gridExtra,
+    MatrixGenerics,
+    MixGHD,
+    foreach,
+    doParallel,
+    rtracklayer,
+    plyranges,
+    fpc,
+    LaplacesDemon,
+    mixtools,
+    strucchange
+Depends:
+    GenomicRanges,
+    data.table,
+    ggplot2
+
