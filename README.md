@@ -9,3 +9,20 @@ TeaCNV allows the inference of absolute copy number profiles from low coverage s
 This framework runs on R (version > 4.2.0)
 
 ## Installing TeaCNV
+### Option A: Install TeaCNV within R using devtools
+If installing from directly within R, you can instead use the following command from within R.
+```
+library("devtools")
+devtools::install_github("ShaojunLab/TeaCNV")
+```
+### Option B: Install TeaCNV by pulling the code using git followed by source installation:
+Alternatively, you can pull the code from github and install it:
+```
+git clone https://github.com/ShaojunLab/TeaCNV
+cd TeaCNV
+R
+install.packages("./", repos=NULL, type="source")
+```
+
+
+
