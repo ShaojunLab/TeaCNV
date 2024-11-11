@@ -931,7 +931,6 @@ findClonePerChr <- function(mat,
     ylim = c(min(mtx_chr_bulk0),max(mtx_chr_bulk0))
     SegScore_total <- segment4df(mtx_chr_bulk0,  
                                  cytoBand = cytoBand,
-                                 ylim = c(0,3),
                                  outpath = outdir_j,
                                  outPlot = F,
                                  filename = "segRatio_subClust")
