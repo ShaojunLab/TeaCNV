@@ -27,7 +27,7 @@ install.packages("./", repos=NULL, type="source")
 ## Usage
 
 If you have installed TeaCNV, you can set the working path, load the sample data, and specify the reference normal cell annotation by setting the `ref_group_names` parameter, then run TeaCNV as follows:
-you can run the example data with:
+
 ```
 library(infercnv)
 setwd("./TeaCNV")
@@ -36,7 +36,7 @@ cell_meta <- read.csv("./example/cell_meta.csv",row.name=1)
 ref_group_names <- c("Myeloid","Tcell","Bcell")
 ```
 
-We use the count_lim parameter to limit abnormally high peak counts, and it is recommended to use the 99% quantile count value.
+We use the `count_lim` parameter to limit abnormally high peak counts, and it is recommended to use the 99% quantile count value.
 ```
 cnv_obj <- CreateEiCNVObject(input = mtx,
                              annotationFile = cell_meta,
