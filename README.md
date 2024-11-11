@@ -26,7 +26,7 @@ install.packages("./", repos=NULL, type="source")
 
 ## Usage
 
-If you have installed TeaCNV, you can set the working path, load the sample data, and specify the reference normal cell annotation by setting the ·ref_group_names· parameter, then run TeaCNV as follows:
+If you have installed TeaCNV, you can set the working path, load the sample data, and specify the reference normal cell annotation by setting the `ref_group_names` parameter, then run TeaCNV as follows:
 you can run the example data with:
 ```
 library(infercnv)
