@@ -33,7 +33,8 @@ Imports:
     fpc,
     LaplacesDemon,
     mixtools,
-    strucchange
+    strucchange,
+    plyranges
 Depends:
     GenomicRanges,
     data.table,
