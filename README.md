@@ -37,6 +37,8 @@ ref_group_names <- c("Myeloid","Tcell","Bcell")
 ```
 
 We use the `count_lim` parameter to limit abnormally high peak counts, and it is recommended to use the 99% quantile count value.
+The `seu_resolution` parameter is the `resolution` to cluster cells in **Seurat**, use a value above 1.2 if you want to obtain a larger number of clusters (default 1.0).
+We set the minimum size of each clone through the `min_cells_in_group` parameter (default value is 20). `delt_lim` represents the relative CN ratio spacing of one absolute copy number change (default value is 0.3). The larger the delt_lim, the lower the clonal-level ploidy estimate.
 ```
 cnv_obj <- CreateTeaCNVObject(input = mtx,
                              annotationFile = cell_meta,
@@ -48,7 +50,9 @@ cnv_obj <- CreateTeaCNVObject(input = mtx,
 res <- runTeaCNV(
 	        input_obj = cnv_obj,
 	        outdir = "./example",
-	        delt_lim = 0.3
+	        delt_lim = 0.3,
+		min_cells_in_group = 10,
+	        seu_resolution = 1.2
 	    )
 ```
 
