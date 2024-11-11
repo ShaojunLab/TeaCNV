@@ -47,7 +47,7 @@ cnv_obj <- CreateEiCNVObject(input = mtx,
                             )
 res <- runEiCNVs(
 	        input_obj = cnv_obj,
-	        outdir = outdir2,#"./example",
+	        outdir = "./example",
 	        delt_lim = 0.3
 	    )
 ```
