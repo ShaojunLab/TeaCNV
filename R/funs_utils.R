@@ -62,8 +62,7 @@ infer_intCNV <- function(CNVdata,SegLen_cutoff=NULL,shift_correc = TRUE,delta_cu
   
   seg.dat_new <- seg.dat
   if(shift_correc){
-    #按最大峰值与最近的整数拷贝距离校正ratio的整体偏差
-    mv_dist <- global_offset_correct(seg.dat$ratio,breaks=100)
+    mv_dist <- global_offset_correct(seg.dat$ratio)
     
     #update the ratio
     if(mv_dist!=0){
