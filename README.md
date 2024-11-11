@@ -38,14 +38,14 @@ ref_group_names <- c("Myeloid","Tcell","Bcell")
 
 We use the `count_lim` parameter to limit abnormally high peak counts, and it is recommended to use the 99% quantile count value.
 ```
-cnv_obj <- CreateEiCNVObject(input = mtx,
+cnv_obj <- CreateTeaCNVObject(input = mtx,
                              annotationFile = cell_meta,
                              ref_group_names = ref_group_names,
                              ChrRemove = c('chrX', 'chrY', 'chrM'),
                              genome = "hg38",
                              count_lim = 4
                             )
-res <- runEiCNVs(
+res <- runTeaCNV(
 	        input_obj = cnv_obj,
 	        outdir = "./example",
 	        delt_lim = 0.3
