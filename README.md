@@ -35,10 +35,11 @@ load("./example/atac_count.RData")
 cell_meta <- read.csv("./example/cell_meta.csv",row.name=1)
 ref_group_names <- c("Myeloid","Tcell","Bcell")
 ```
+TeaCNV takes a peak-cell count matrix as input. A data table is provided via the `annotationFile`, where the first column contains annotations for the cells represented in the columns of the input matrix. These annotations typically distinguish between reference and observed cell groups. The `ref_group_names` parameter identifies the group name associated with the reference cells.
 
-We use the `count_lim` parameter to limit abnormally high peak counts, and it is recommended to use the 99% quantile count value.
-The `seu_resolution` parameter is the `resolution` to cluster cells in **Seurat**, use a value above 1.2 if you want to obtain a larger number of clusters (default 1.0).
-We set the minimum size of each clone through the `min_cells_in_group` parameter (default value is 20). `delt_lim` represents the relative CN ratio spacing of one absolute copy number change (default value is 0.3). The larger the delt_lim, the lower the clonal-level ploidy estimate.
+To filter out abnormally high peak counts, the `count_lim` parameter can be used, and it is recommended to set it to the 99th percentile of peak counts. 
+The `seu_resolution` parameter controls the clustering resolution in **Seurat**; a value above 1.2 is suggested if a higher number of clusters is desired (default: 1.0).
+The `min_cells_in_group` parameter sets the minimum required size for each clone, with a default value of 20 cells. `delt_lim` defines the relative copy number (CN) ratio interval for a single absolute CN change (default: 0.3). Increasing `delt_lim` results in a lower clonal-level ploidy estimate.
 ```
 cnv_obj <- CreateTeaCNVObject(input = mtx,
                              annotationFile = cell_meta,
