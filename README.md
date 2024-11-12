@@ -32,6 +32,7 @@ If TeaCNV is already installed, follow the steps below to set up the working dir
 library(TeaCNV)
 setwd("./TeaCNV")
 load("./example/atac_count.RData")
+mtx <- as.matrix(mtx)
 cell_meta <- read.csv("./example/cell_meta.csv",row.name=1)
 ```
 TeaCNV takes a peak-cell count matrix as input. A data table is provided via the `annotationFile`, where the first column contains annotations for the cells represented in the columns of the input matrix. These annotations typically distinguish between reference and observed cell groups. The `ref_group_names` parameter identifies the group name associated with the reference cells.
