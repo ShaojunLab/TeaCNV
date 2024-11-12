@@ -57,3 +57,6 @@ res <- runTeaCNV(
 	    )
 ```
 
+The output of TeaCNV is saved in the 'final.CNVres.rds' file. If you need to modify parameters and rerun the analysis, you can load the 'TeaCNV.obj' file as the `cnv_obj` object and continue from there.
+
+
