@@ -29,7 +29,7 @@ install.packages("./", repos=NULL, type="source")
 If you have installed TeaCNV, you can set the working path, load the sample data, and run TeaCNV as follows:
 
 ```
-library(infercnv)
+library(TeaCNV)
 setwd("./TeaCNV")
 load("./example/atac_count.RData")
 cell_meta <- read.csv("./example/cell_meta.csv",row.name=1)
