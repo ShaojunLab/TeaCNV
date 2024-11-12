@@ -41,10 +41,10 @@ To filter out abnormally high peak counts, the `count_lim` parameter can be used
 The `seu_resolution` parameter controls the clustering resolution in **Seurat**; a value above 1.2 is suggested if a higher number of clusters is desired (default: 1.0).
 The `min_cells_in_group` parameter sets the minimum required size for each clone, with a default value of 20 cells. `delt_lim` defines the relative copy number (CN) ratio interval for a single absolute CN change (default: 0.3). Increasing `delt_lim` results in a lower clonal-level ploidy estimate.
 ```
-ref_group_names <- "reference"
+
 cnv_obj <- CreateTeaCNVObject(input = mtx,
                              annotationFile = cell_meta,
-                             ref_group_names = ref_group_names,
+                             ref_group_names = "reference",
                              ChrRemove = c('chrX', 'chrY', 'chrM'),
                              genome = "hg38",
                              count_lim = 4
