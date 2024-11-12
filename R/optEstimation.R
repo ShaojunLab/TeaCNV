@@ -1,5 +1,6 @@
 
 #' @title FitSample()
+#' @export
 FitSample = function(seg.dat, Q, pi_theta_qz, sigma.h, tau.dom,sigma.h.dom, verbose=FALSE) {
   require(numDeriv)
   kThetaQz = rep(1 / (Q + 1), Q + 1)
@@ -71,7 +72,10 @@ FitSample = function(seg.dat, Q, pi_theta_qz, sigma.h, tau.dom,sigma.h.dom, verb
               seg.q.tab=seg.q.tab,mode.flag=NA))
 }
 
+
 #' @title OptThetaQzSigmaH()
+#' @export
+
 OptThetaQzSigmaH <- function(obs, comb, sigma.h.dom, pi_theta_qz, verbose=FALSE) {
   objective <- function(par, obs, comb, lambda) {
     sigma.h <- par
@@ -125,7 +129,10 @@ OptThetaQzSigmaH <- function(obs, comb, sigma.h.dom, pi_theta_qz, verbose=FALSE)
               lambda.qz.res = lambda.qz.res))
 }
 
+
 #' @title GetThetaQzPost()
+#' @export
+
 GetThetaQzPost <- function(d, sigma, w, comb, sigma.h, pi_theta_qz, theta.qz = NA, comb.s = 1) {
   q <- length(comb)
   unif.qz <- rep(1 / (q + 1), q + 1)
@@ -155,7 +162,10 @@ GetThetaQzPost <- function(d, sigma, w, comb, sigma.h, pi_theta_qz, theta.qz = N
   return(post_theta_qz)
 }
 
+
 #' @title GetSegQzPost()
+#' @export
+
 GetSegQzPost <- function(d, sigma, w, comb, lambda.qz.res, sigma.h, 
                          theta.qz=NA, comb.s=1) {
   if (is.list(lambda.qz.res)) {
@@ -189,7 +199,9 @@ GetSegQzPost <- function(d, sigma, w, comb, lambda.qz.res, sigma.h,
   return(list(QZ = seg_qz, Q = seg.Q))
 }
 
+
 #' @title CalcFitEntropy()
+#' @export
 CalcFitEntropy <- function(obs, seg.qz) {
   H <- function(p) {
     v <- -p * log(p)
@@ -203,7 +215,9 @@ CalcFitEntropy <- function(obs, seg.qz) {
   return(res)
 }
 
+
 #' @title CalcChrArmDistr()
+#' @export
 CalcChrArmDistr = function(seg.obj, seg_q, chr_arms_dat) {
   n_arm = nrow(chr_arms_dat)
   chr_arm_tab = array(NA, dim=c(1, n_arm, ncol(seg_q)))
@@ -225,7 +239,9 @@ CalcChrArmDistr = function(seg.obj, seg_q, chr_arms_dat) {
   return(chr_arm_tab)
 }
 
+
 #' @title doCNV()
+#' @export
 doCNV <- function(seg.dat){
   Q = 8 # maximum integer copy number
   CNVres=list()
@@ -279,7 +295,9 @@ doCNV <- function(seg.dat){
   return(list(CNVestimate=CNVestimate,seg.dat=seg.dat))
 }
 
+
 #' @title EstimateCNVPost()
+#' @export
 EstimateCNVPost <- function(seg.dat, Q,delta,sigma.h){
   d=seg.dat$ratio
   sigma=seg.dat$sd
@@ -291,7 +309,8 @@ EstimateCNVPost <- function(seg.dat, Q,delta,sigma.h){
   return(seg.Q)
 }
 
-
+#' @title EstimateCNVPost1()
+#' @export
 ##return different dat
 EstimateCNVPost1 <- function(seg.dat, CNVestimate){
   d=seg.dat$ratio
@@ -309,7 +328,10 @@ EstimateCNVPost1 <- function(seg.dat, CNVestimate){
 }
 
 
+
 #' @title doCNV1()
+#' @export
+
 doCNV1 <- function(seg.dat){
   Q = 8 # maximum integer copy number
   CNVres=list()
@@ -371,6 +393,8 @@ doCNV1 <- function(seg.dat){
 }
 
 
+#' @title doCNV1_v2()
+#' @export
 #change the method of find the best delta (distance of copy number change)
 doCNV1_v2 <- function(seg.dat,Determ_method = "Post",Q = 8){
  # Q = 8 # maximum integer copy number
@@ -467,7 +491,9 @@ doCNV1_v2 <- function(seg.dat,Determ_method = "Post",Q = 8){
   return(list(CNVestimate=CNVestimate,seg.dat=seg.dat))
 }
 
+
 #' @title lossCNV()
+#' @export
 lossCNV <- function(observed,tau){
   lower=0
   upper=max(observed)+1
@@ -481,7 +507,10 @@ lossCNV <- function(observed,tau){
   return(mean(diff))
 }
 
+
 #' @title iterEst()
+#' @export
+
 iterEst <- function(seg.dat){
   output = lapply(1:5, function(i,seg.dat){
     output<-doCNV1(seg.dat)

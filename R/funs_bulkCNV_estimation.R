@@ -17,8 +17,11 @@ suppressMessages({
 # source("optEstimation.R",chdir = T)
 # source("funs_utils.R",chdir = T)
 # source("integerCNV.correction.R",chdir = T)
+
+
 #' @title CNV_esti_ini()
 #' @description estimate initial clonal-level CNVs
+#' @export
 CNV_esti_ini <- function(outdir=".",
                          segScore_file="segScore_median.rds",
                          filt_seg = TRUE,
@@ -109,7 +112,10 @@ CNV_esti_ini <- function(outdir=".",
   ###------------------------------------###
   #merge segment ratio and integer CNV results
   ###------------------------------------###
+
 #' @title addCNV2BinDF()
+#' @export
+
 addCNV2BinDF <- function(output.cnv,ratio.df,genome="hg38",true_loc=TRUE){
   ratio.df$row.name <- rownames(ratio.df)
   g <- getBSgenome(genome, masked=FALSE)
@@ -157,11 +163,13 @@ addCNV2BinDF <- function(output.cnv,ratio.df,genome="hg38",true_loc=TRUE){
 
 }
 
+
 #' @title CNV_esti()
 #' @param segScore_file the file with segment ratio of each bin for each cell
 #' @param length_seg_cutoff if filt_seg=TRUE, set the quantile threshold length of segments
 #' @param genome the reference genome for the genomic location annotation
 #' @param offset.adjust Adjust the ratio to nearest integer.
+#' @export
 CNV_esti <- function(outdir=".",
                      segScore_file="segScore_median.rds",
                      filt_seg = TRUE,
@@ -393,15 +401,17 @@ CNV_esti <- function(outdir=".",
 
 
 #' 
+
 #' @title mse_loss()
 #' @description the Mean Squared Error (MSE) of integer CNV estimation to the mapping ratio 
-#' @param seg.cnv.df
+#' @param seg.cnv.df data.frame with SegName and SegMean in columns
 #'  segName  SegMean ratio_map
   # chr1_827077_120942799 1.426278      1.47
   # chr1_148951389_248907553 1.421164      1.47
   # chr2_19449_91766890 1.451020      1.47
   # chr2_95076467_108240173 1.368492      1.47
 #' @export
+
 mse_loss<- function(seg.cnv.df,
                      y_true.term = NULL,
                      y_pred.term = NULL,
@@ -429,8 +439,8 @@ mse_loss<- function(seg.cnv.df,
   return(mse)
 }
 
-
-
+#' @title peakIndex()
+#' @export
 peakIndex <- function(df_seg_C1,initialCN,index_col="SegMean"){
   colnames(initialCN)[grepl("ratio",colnames(initialCN),ignore.case = T)] <- "ratio"
   colnames(initialCN)[grepl("CN",colnames(initialCN),ignore.case = T)] <- "CN"
@@ -461,6 +471,7 @@ peakIndex <- function(df_seg_C1,initialCN,index_col="SegMean"){
 }
 
 #' @title ploidyEst1()
+#' @export
 ploidyEst1 <- function(CNest,df_seg_C1){
   ##average ploidy
   ploidy <- round(CNest$ratio[CNest$base==1]*2)
@@ -546,7 +557,9 @@ ploidyEst1 <- function(CNest,df_seg_C1){
   return(CNest)
 }
 
+
 #' @title CNplot()
+#' @export
 CNplot <- function(df_seg_C1,CNest,clust_i,ylim=NULL){
   require(ggplot2)
   if(is.null(ylim)){
@@ -592,6 +605,7 @@ CNplot <- function(df_seg_C1,CNest,clust_i,ylim=NULL){
 #' @title bestCNVres.select()
 #' @description selection the best integer CNV result from  multiple clusters based on the the Mean Squared Error (MSE) of integer CNV estimation to the mapping ratio 
 #' @param inteCNV_res list of integer CNV result with length of N clusters
+#' @export
 bestCNVres.select <- function(inteCNV_res){
   mse <- do.call(c,lapply(inteCNV_res, function(x){
     #cnv <- unique(x[,c("segName","SegMean","ratio_map")])
@@ -810,9 +824,11 @@ seg_plot.CNV <- function(inteCNV_res,
   return(bar_df)
 }  
 
+
 #' @title CNbaseline.fill()
 #' @description fill the blank CN level based on known delt and CNs 
 #' @param CNbase data.frame with columns of 'ratio' and 'CN'
+#' @export
 CNbaseline.fill <- function(CNbase,delt=NULL){
   CNbase <- as.data.frame(CNbase)
   colnames(CNbase)[1:2] <- c("ratio","CN")

@@ -1,5 +1,7 @@
 
 #' @title GetLambda()
+#' @export
+
 GetLambda <- function(theta, W, n.states, lambda.init=NA, w.thresh=0,verbose=FALSE) {
   if (all(theta == theta[1])) {
     lambda.res <- list()
@@ -63,7 +65,9 @@ GetLambda <- function(theta, W, n.states, lambda.init=NA, w.thresh=0,verbose=FAL
   return(lambda.res)
 }
 
+
 #' @title CalcLambda()
+#' @export
 ##nlm estimation to get lambda parameter and likelihood
 CalcLambda <- function(theta, W, n.states, first.lambda.guess,verbose=FALSE) {
   if (all(!is.na(first.lambda.guess))) {
@@ -102,7 +106,9 @@ CalcLambda <- function(theta, W, n.states, first.lambda.guess,verbose=FALSE) {
   return(list(Lambda=lambda, norm.term=lambda.norm.term, resid=resid))
 }
 
+
 #' @title L2Loss()
+#' @export
 ###define L2 loss function
 L2Loss <- function(lambda, n.states, theta, W) {
   res <- LambdaEval(lambda, W, n.states) 
@@ -114,6 +120,7 @@ L2Loss <- function(lambda, n.states, theta, W) {
 }
 
 #' @title GetInitGues()
+#' @export
 ##generate initial lambda if likelihood is infinite
 GetInitGues <- function(W, n.states) {
   l0 <- seq(1, 0, length=(n.states-1))
@@ -124,7 +131,9 @@ GetInitGues <- function(W, n.states) {
   return(l0 * sgn)
 }
 
+
 #' @title LambdaEval()
+#' @export
 LambdaEval <- function(lambda, W, n.states) {
   log.p.q.terms <- LambdaExpr(lambda, W)  
   p.q.terms <- exp(log.p.q.terms)
@@ -139,13 +148,19 @@ LambdaEval <- function(lambda, W, n.states) {
   return(g1)
 }
 
+
 #' @title LambdaExpr()
+#' @export
+
 LambdaExpr <- function(lambda, W) {
   n.states <- length(lambda) + 1
   return(-c(0, lambda) * ((c(1:n.states)-1) %*% matrix(W, nrow=1)))
 }
 
+
 #' @title MargModeFinder()
+#' @export
+
 MargModeFinder <- function(obs, dom2, Q, lambda.qz.res, pz, sigma.h, tau_dom, d.res=0.025, verbose=FALSE) {
   #d.res=0.125
   delta_dom = log(c(1 / tau_dom[2] - 0.05, 1))
@@ -170,7 +185,10 @@ MargModeFinder <- function(obs, dom2, Q, lambda.qz.res, pz, sigma.h, tau_dom, d.
   return(umodes)
 }
 
+
 #' @title run_1d_opt()
+#' @export
+
 run_1d_opt = function(obs, dom, d_res, lambda_qz_res, pz, sigma_h, Q, verbose=FALSE) {
   comb_1d_ll = function(par, Q, obs, lambda_qz_res, pz, sigma_h) {
     delta = exp(par)
@@ -197,7 +215,10 @@ run_1d_opt = function(obs, dom, d_res, lambda_qz_res, pz, sigma_h, Q, verbose=FA
   return(mode_tab)
 }
 
+
 #' @title GetCopyRatioComb()
+#' @export
+
 GetCopyRatioComb = function(Q, delta) {
   xx = (delta * (c(1:Q) - 1))
   #means = Atten(xx, error_model$fit.at)
@@ -206,7 +227,9 @@ GetCopyRatioComb = function(Q, delta) {
   return(xx)
 }
 
+
 #' @title CalcNormLoglik()
+#' @export
 CalcNormLoglik <- function(d, sigma, w, comb, lambda.qz.res, pz, sigma.h, comb.s=1) {
   if (is.list(lambda.qz.res)) {
     log.pqz <- t((LambdaExpr(lambda.qz.res[["Lambda"]], w))) +
@@ -227,7 +250,10 @@ CalcNormLoglik <- function(d, sigma, w, comb, lambda.qz.res, pz, sigma.h, comb.s
   return(LL)
 }
 
+
 #' @title LogAdd()
+#' @export
+
 LogAdd <- function(X) {
   ##  Calculates log( sum(exp(x)) )  without 'leaving' log space
   if (is.vector(X)) {
@@ -244,7 +270,10 @@ LogAdd <- function(X) {
   return(res)
 }
 
+
 #' @title CombLL()
+#' @export
+
 CombLL <- function(par, Q, obs, dom2, lambda.qz.res, pz, sigma.h) {
   if (any(is.na(par))) {
     cat("$")
@@ -260,7 +289,9 @@ CombLL <- function(par, Q, obs, dom2, lambda.qz.res, pz, sigma.h) {
   return(-LL)
 }
 
+
 #' @title CalcModeLogCurv()
+#' @export
 CalcModeLogCurv <- function(mode, mode.hess, verbose=FALSE) {
   hess.mat <- mode.hess
   curvature <- abs(det(hess.mat / (2 * pi)))
@@ -271,13 +302,17 @@ CalcModeLogCurv <- function(mode, mode.hess, verbose=FALSE) {
   return(mode.curv)
 }
 
+
 #' @title GetTau()
+#' @export
 GetTau = function(delta) {
   tau = 1 / delta
   return(list(tau=tau)) 
 }
 
+
 #' @title FindLocationModes()
+#' @export
 ##FindLocationModes: find the integer coly number distance
 FindLocationModes <- function(obs, Q, theta.qz, sigma.h, tau.dom, verbose=FALSE) {
   kDom2 <- log(c(0.08, 1.05)) 

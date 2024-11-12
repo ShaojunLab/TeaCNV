@@ -6,6 +6,7 @@
 #' @param dat a numeric vector of data to be correction
 #' @param breaks a integer number for hist()
 #' @return the global CN ratio offset
+#' @export
 global_offset_correct <- function(dat,dat.ref=NULL){
   cen <- median(dat,na.rm = T)
   dist1 <- abs(cen-max(dat))
@@ -40,6 +41,7 @@ global_offset_correct <- function(dat,dat.ref=NULL){
 # 1        901     3 3.403457     179850        0.01924034  1.147  166.5213          0 248956422
 # 2        954     3 3.403457     179850        0.01924034  1.147  166.5213          0 248956422
 #' @param SegLen_cutoff quantile of segment length to be filtered out
+#' @export
 #' 
 # source("dataProcess.R")
 # source("results.check.R")
@@ -95,11 +97,13 @@ infer_intCNV <- function(CNVdata,SegLen_cutoff=NULL,shift_correc = TRUE,delta_cu
   return(output)
 }
 
+
 #' @title mt2ratio_by_col()
 #' @description calculate bulk-level ratio from single-cell count matrix based on global mean
 #' @param mat count maxtrix with cell on column, and feature on row
 #' @param col_idx integer vector of column start index and end index
 #' @param ref.value numeric data.frame with the length of nrow(mat)
+#' @export
 #source("fun_pseudoBulk_mat.R")
 mt2ratio_by_col <- function(mat,col_idx=NULL,ref.value=NULL){
   if(is.null(col_idx)){
@@ -124,8 +128,10 @@ mt2ratio_by_col <- function(mat,col_idx=NULL,ref.value=NULL){
 }
 
 
+
 #' @title genGIF()
 #' @description generate gif figures from a image path
+#' @export
 #' 
 genGIF <- function(path,outfile="./figure.gif"){
   require(magick)
@@ -142,10 +148,12 @@ genGIF <- function(path,outfile="./figure.gif"){
               path = outfile)
 }
 
+
 #' @title Correct_by_length()
 #' @description correct count by peak length
 #' @param mat peak-cell count matrix, rowname is in "chrx-xxx-xxx" format
 #' @param unit per base, kb or Mb, default is 1000b (kb).
+#' @export
 Correct_by_length <- function(mat,unit=1000){
   rows <- rownames(mat)
   start <- as.numeric(sapply(strsplit(rows,"_|:|-"),"[",2))
@@ -156,7 +164,9 @@ Correct_by_length <- function(mat,unit=1000){
   return(mat_new)
 }
 
+
 #' @title genProliferationScore()
+#' @export
 genProliferationScore <- function(object,gene.list=NULL,assay="RNA"){
   library(Seurat)
   DefaultAssay(object) <- assay
@@ -176,10 +186,12 @@ genProliferationScore <- function(object,gene.list=NULL,assay="RNA"){
 }
 
 
+
 #' @title cnv_score()
 #' @description Score cells based on their CNV profile, then impute malignant cells.
 #' @param mat CNV matrix (cells in columns, genes or peaks in rows)
 #' @param diploid.base diploid value
+#' @export
 cnv_score <- function(mat,diploid.base=NULL,diploid.base.sd=NULL,Var.cutoff=NULL,ref_cells=NULL,plot_out=TRUE,outdir="./",scaleFactor=1){
   if(is.null(diploid.base)){
     diploid.base <- mean(colMeans(mat,na.rm = TRUE))

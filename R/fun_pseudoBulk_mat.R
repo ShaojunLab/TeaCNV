@@ -1,7 +1,9 @@
+
 #' @title gen_pseudo_mat()
 #' @description generate pseudobulk expression for seurat object based on N neighbors RNA expression
 #' @param obj seurat object, need to run FindNeighbors previously.
 #' @param expMatrix sparse Matrix of class "dgCMatrix" for expression
+#' @export
 gen_pseudo_mat <- function(obj,randomseeds,Neighbors=100,assay="RNA",expMatrix=obj[[assay]]@data,rowValue="rowSums"){
   seedNeighbors <- lapply(randomseeds,function(i,obj){
     return(TopNeighbors(obj@neighbors[[paste0(assay,".nn")]],i,n=Neighbors))
@@ -76,10 +78,12 @@ pseudo_bulk_v2 <- function(mat_obj,group_ano,method="sum",adjust_zero=TRUE){
   return(mat_groups)
 }
 
+
 #' @title .get_ref_median()
-#'@keywords internal function
-#'@param matrix input matrix, group in columns (cells) 
-#'@param ref_indice numeric indices for group
+#' @keywords internal function
+#' @param matrix input matrix, group in columns (cells) 
+#' @param ref_indice numeric indices for group
+#' @export
 .get_ref_median <- function(matrix,ref_indice,zero.rm=FALSE){
   library(matrixStats)
   RN <- rownames(matrix)
@@ -99,16 +103,18 @@ pseudo_bulk_v2 <- function(mat_obj,group_ano,method="sum",adjust_zero=TRUE){
     peak_ref_grp_median <- rowMedians(matrix_data,na.rm=TRUE)
   }
   
-  peak_ref_grp_sd <- matrixStats::rowSds(matrix_data,na.rm=TRUE,useNames = TRUE)
+  peak_ref_grp_sd <- rowSds(matrix_data,na.rm=TRUE)
   peak_ref_grp_sum <- rowSums(matrix_data,na.rm=TRUE)
   peak_ref_grp_means_sd <- data.frame(mean=peak_ref_grp_median,SD=peak_ref_grp_sd,sum=peak_ref_grp_sum)
   rownames(peak_ref_grp_means_sd) <- RN
   return(peak_ref_grp_means_sd)
 }
 
-#'@keywords internal function
-#'@param matrix input matrix, group in columns (cells) 
-#'@param ref_indice numeric indices for group
+#' @title .get_ref_mean()
+#' @keywords internal function
+#' @param matrix input matrix, group in columns (cells) 
+#' @param ref_indice numeric indices for group
+#' @export
 .get_ref_mean <- function(matrix,ref_indice,zero.rm=FALSE){
   library(matrixStats)
   RN <- rownames(matrix)
@@ -136,10 +142,13 @@ pseudo_bulk_v2 <- function(mat_obj,group_ano,method="sum",adjust_zero=TRUE){
   return(peak_ref_grp_means_sd)
 }
 
+
 #' @title .get_ref_density()
-#'@keywords internal function
-#'@param matrix input matrix, group in columns (cells) 
-#'@param ref_indice numeric indices for group
+#' @keywords internal function
+#' @param matrix input matrix, group in columns (cells) 
+#' @param ref_indice numeric indices for group
+#' @export
+
 .get_ref_density <- function(matrix,ref_indice,zero.rm=FALSE){
   library(matrixStats)
   RN <- rownames(matrix)

@@ -1,9 +1,11 @@
 
 library(dplyr)
+
 #' @title findccloneNum()
 #' @description the optimal cluster number
 #' @param CNdata: cell-bin integerCN matrix
 #' @param n: the maximumal number of clusters
+#' @export
 #' 
 findccloneNum <- function(CNdata,n=10){
   set.seed(123)
@@ -49,11 +51,14 @@ findccloneNum <- function(CNdata,n=10){
   }
 }
 
+
+
 #' @title cellRatio_corrected()
 #' @description cell level corrected ratio
 #' @param cellratioID: initial cell ratio
 #' @param finalres: clonal estimation
 #' @return cell-bin matrix: corrected Ratio
+#' @export
 
 cellRatio_corrected <- function(cellratioID,finalres,refClone=NULL){
   cellres <- lapply(names(cellratioID), function(cluster,cellratioID,finalres,refClone){
@@ -118,11 +123,13 @@ cellRatio_corrected <- function(cellratioID,finalres,refClone=NULL){
 }
 
 
+
 #' @title cellintegerCN()
 #' @description cell level integerCN estimation
 #' @param cellratioID: cell ratio
 #' @param finalres: clonal estimation
 #' @return cell-bin matrix: integerCN
+#' @export
 
 cellintegerCN <- function(cellratioID,finalres,refClone=NULL){
   cellres <- lapply(names(cellratioID), function(cluster,cellratioID,finalres,refClone){
@@ -188,12 +195,14 @@ cellintegerCN <- function(cellratioID,finalres,refClone=NULL){
 }
 
 
+
 #' @title cellPloidyCorrection()
 #' @description centering cell ratio both segment and cell level based on the clonal expectation
 #' @param celldata cell level ratio
 #' @param clonalest: clonal ploidy estimation
 #' @param clonalest.Ref reference clone if the user specifies
 #' @return corrected ratio matrix
+#' @export
 
 
 cellPloidyCorrection <- function(celldata,clonalest,clonalest.Ref=NULL){
@@ -241,11 +250,13 @@ cellPloidyCorrection <- function(celldata,clonalest,clonalest.Ref=NULL){
 }
 
 
+
 #' @title cellEst()
 #' @description integer CN estimation at cell level
 #' @param segratio.correct: corrected ratio matrix
 #' @param clonalest: clonal ploidy estimation
 #' @return cell-integerCN matrix
+#' @export
 
 cellEst <- function(segratio.correct,clonalest,clonalest.Ref=NULL){
   if(!is.null(clonalest.Ref)){
@@ -284,6 +295,7 @@ cellEst <- function(segratio.correct,clonalest,clonalest.Ref=NULL){
 
 
 #' @title minPloidysummary()
+#' @export
 minPloidysummary <- function(clusterout){
   delt_set <- do.call(cbind,lapply(1:length(clusterout), function(j,clusterout){
     if (!is.null(clusterout[[j]])){
@@ -330,6 +342,7 @@ minPloidysummary <- function(clusterout){
   return(clustersta)
 }
 
+
 #' @title ploidyRefine()
 #' @description the final estimation : select the optimal ploidy estimation for each cluster and correct the negative integer CN
 #' @param sampleres initial estimation list including all clusters:
@@ -340,6 +353,7 @@ minPloidysummary <- function(clusterout){
 #'                                        $seg.dat
 #'                                        $CNest: ratio corresponding to integerCN
 #'                                        $ploidy: the overall ploidy
+#' @export
 
 ploidyRefine <- function(sampelres,delt.lim = 0.3,minCN.frac=0.01){
   #sampelres <- initialRes[[ID]]
@@ -530,12 +544,15 @@ ploidyRefine <- function(sampelres,delt.lim = 0.3,minCN.frac=0.01){
 
 
 
+
 #' @title refine_segCN.Bayes()
 #' @description This function refines the segCN results using a Bayesian classifier.
 #' @param clonalres A list of clonal segCN results.
 #' @param seg_dat_ref A data frame of segmented data with columns "ratio" and "integerCN".
 #' @return A list of refined segCN results.
 #install.packages("e1071")
+#' @export
+
 #library(e1071)
 refine_segCN.Bayes <- function(clonalres,seg_dat_ref) {
   library(e1071)
@@ -614,9 +631,11 @@ refine_segCN.Bayes <- function(clonalres,seg_dat_ref) {
 
 
 #' @title refine_segCN.dist()
+
 #' @description This function refines segCN based on distance to neighbour segments.
 #' @param clonalres A list of clonal segCN results.
 #' @return A list of refined segCN results.
+#' @export
 refine_segCN.dist <- function(clonalres) {
   clusterout <- lapply(1:length(clonalres), function(j,clonalres){
     if (!is.null(clonalres[[j]])){
@@ -684,6 +703,7 @@ refine_segCN.dist <- function(clonalres) {
 
 
 #' @title refine_segCN.dist_v2()
+#' @export
 refine_segCN.dist_v2 <- function(clonalres,Nadjacent=2) {
   clusterout <- lapply(1:length(clonalres), function(j,clonalres){
     if (!is.null(clonalres[[j]])){
@@ -813,6 +833,7 @@ refine_segCN.dist_v2 <- function(clonalres,Nadjacent=2) {
 
 
 
+
 #' @title ploidyRefine.ref()
 #' @description the final estimation : estimate clonal CNV based on reference ploidy
 #' @param sampleres initial estimation list including all clusters:
@@ -823,6 +844,7 @@ refine_segCN.dist_v2 <- function(clonalres,Nadjacent=2) {
 #'                                        $seg.dat
 #'                                        $CNest: ratio corresponding to integerCN
 #'                                        $ploidy: the overall ploidy
+#' @export
 
 ploidyRefine.ref <- function(sampelres,CNest.ref,minCN.frac=0.01,seg_dat_ref=NULL){
   baseCN<- CNest.ref$CN[CNest.ref$base==1]
@@ -1014,7 +1036,10 @@ ploidyRefine.ref <- function(sampelres,CNest.ref,minCN.frac=0.01,seg_dat_ref=NUL
 }
 
 
+
 #' @title ploidyUpdate()
+#' @export
+
 ploidyUpdate <- function(clusterout,baseCN,delt.lim = NULL){
   baseCN_raw <- baseCN
   clonesummary <- function(clusterout){
@@ -1544,10 +1569,10 @@ ploidyUpdate <- function(clusterout,baseCN,delt.lim = NULL){
 }
 
 
-
 #' @title hist_seg2()
 #' @description plot the barplot of ratio as well as corresponding integer CN
 #' @param clusterEst:the colonal estimation
+#' @export
 hist_seg2 <- function(clusterEst,ylim=NULL,color_limit = c(0.5,4),cluster=NULL,length.out=100,
                       color_hist_gradient=FALSE,hist_color=NULL,gtitle=NULL){
   suppressMessages({
@@ -1682,10 +1707,12 @@ hist_seg2 <- function(clusterEst,ylim=NULL,color_limit = c(0.5,4),cluster=NULL,l
 }
 
 
+
 #' @title PloidyCorrect()
 #' @description the relative ratio baseline and distance of integerCN states correction
 #' @param integerCNV: the initial estimation from ABSOLUTE model
 #' @return corrected estimation 
+#' @export
 
 PloidyCorrect <- function(integerCNV,delt.lim =0.3){
   df_seg_C1 <- integerCNV$input_BinSegRatio
@@ -1746,10 +1773,12 @@ PloidyCorrect <- function(integerCNV,delt.lim =0.3){
 }
 
 
+
 #' @title optimalPloidy()
 #' @description ploidy estimation selecting 
 #' @param clusterEst: the corrected CN estimation
 #' @return the likelihood for each ploidy estimation
+#' @export
 
 optimalPloidy <- function(clusterEst){
   likout <- do.call(rbind,lapply(1:length(clusterEst), function(j,clusterEst){
@@ -1785,11 +1814,14 @@ optimalPloidy <- function(clusterEst){
 }
 
 
+
 #' @title CNupdate()
 #' @description estimating the corrected ratio baseline and distance used in PloidyCorrect
 #' @param df_seg_C2: segmentation data
 #' @param initialCN: the initial estimation from ABSOLUTE model 
 #' @return the likelihood for each ploidy estimation
+#' @export
+
 CNupdate <- function(df_seg_C2,initialCN){
   initialCN1 <- peakIndex(df_seg_C2,initialCN)
   ratioindex <- df_seg_C2[df_seg_C2$integerCNV==initialCN1$CN[initialCN1$base==1],]
@@ -1837,11 +1869,14 @@ CNupdate <- function(df_seg_C2,initialCN){
 }
 
 
+
 #' @title SegFrac()
 #' @description estimating explained genome fraction based on the integerCN estimation used in PloidyCorrect
 #' @param df_seg_C1: segmentation data
 #' @param initialCN: the initial estimation from ABSOLUTE model 
 #' @return the fraction of genome 
+#' @export
+
 SegFrac <- function(df_seg_C1,initialCN,by_term = "SegMean"){
   ratioFre <- as.data.frame(table(df_seg_C1[,by_term]))
   ratioFre$Var1 <- as.numeric(as.character(ratioFre$Var1))
@@ -1872,11 +1907,13 @@ SegFrac <- function(df_seg_C1,initialCN,by_term = "SegMean"){
 }
 
 
+
 #' @title DeltSeek()
 #' @description finding the possible distance between integerCN states used in PloidyCorrect
 #' @param df_seg_C1: segmentation data
 #' @param initialCN1: the estimation of ratio baseline 
 #' @return all distance value
+#' @export
 
 DeltSeek <- function(df_seg_C1,initialCN1,by_term = "SegMean"){
   genoFrac0 <- SegFrac(df_seg_C1,initialCN1)
@@ -1991,7 +2028,7 @@ DeltSeek <- function(df_seg_C1,initialCN1,by_term = "SegMean"){
 #' @param df_seg_C1: segmentation data
 #' @param initialCN: the estimation of ratio baseline 
 #' @return possible ratio vale corresponding to integerCN
-
+#' @export
 
 peakIndex <- function(df_seg_C1,initialCN,index_col="SegMean"){
   colnames(initialCN)[grepl("ratio",colnames(initialCN),ignore.case = T)] <- "ratio"
@@ -2053,6 +2090,7 @@ peakIndex <- function(df_seg_C1,initialCN,index_col="SegMean"){
 #' @param disupdate: all possible distance
 #' @param df_seg_C1: segmentation data
 #' @return CNest: the final integerCN baseline
+#' @export
 #' 
 FinalCN <- function(initialCN1,disupdate,df_seg_C1){
   cnm <- colnames(disupdate)
@@ -2138,11 +2176,13 @@ FinalCN <- function(initialCN1,disupdate,df_seg_C1){
 }
 
 
+
 #' @title ploidyEst()
 #' @description the overall ploidy of tumor clone
 #' @param CNest: the final integerCN baseline
 #' @param df_seg_C1: segmentation data
 #' @return whole genome ploidy
+#' @export
 #' 
 
 ploidyEst <- function(CNest,df_seg_C1){
@@ -2207,7 +2247,10 @@ ploidyEst <- function(CNest,df_seg_C1){
 
 
 
+
 #' @title hist_seg()
+#' @export
+
 #df_seg_C1 is the ratio(segScore$seg_score_binLevel[[i]]); 
 #integCNV_Ci is the CNV estimation result from doCNV1_v2()
 
@@ -2314,7 +2357,10 @@ hist_seg <- function(df_seg_C1,integerCNV,ylim=NULL,color_limit = c(0,3),cluster
 
 
 
+
 #' @title hist_seg1()
+#' @export
+
 hist_seg1 <- function(df_seg_C1,integerCNV,ylim=NULL,color_limit = c(0,3),cluster,length.out=100){
   suppressMessages({
     library(BSgenome)

@@ -1,6 +1,7 @@
 #data pre-process
 #input single cell data to matrix
 #' @title load_scdata()
+#' @export
 load_scdata <- function(mtx_path,feature_path,barcode_path){
   features <- readr::read_tsv(feature_path, col_names = F) %>% tidyr::unite(feature)
   barcodes <- readr::read_tsv(barcode_path, col_names = F) %>% tidyr::unite(barcode)
@@ -31,7 +32,7 @@ load_scdata <- function(mtx_path,feature_path,barcode_path){
 #' @param win_step if method is "winMean", win_step is moving step of a sliding window
 #' @keywords internal
 #' @noRd
-#'
+#' @export
 
 smooth_by_chromosome <-function(mat_obj,wl=200,chr_annotation=NULL,Ncores=1,
                                   method="sum2bin",log_scale=TRUE,win_step=1,
@@ -94,10 +95,11 @@ smooth_by_chromosome <-function(mat_obj,wl=200,chr_annotation=NULL,Ncores=1,
 
 }
 
-#'@title .smooth_by_weighted_mean()
-#'@description calculate mean with weighted by the length of peaks within the window
+#' @title .smooth_by_weighted_mean()
+#' @description calculate mean with weighted by the length of peaks within the window
 #' wl is the window length, which is the number of peaks(default wl=20)
 #' @keywords internal
+#' @export
 
 .smooth_by_weighted_mean<-function(Mat,wl=NULL,step=1,sep_by="-"){
   if(is.null(wl)){wl=20}
@@ -140,12 +142,13 @@ smooth_by_chromosome <-function(mat_obj,wl=200,chr_annotation=NULL,Ncores=1,
   
   
 #'
-#'@title .smooth_by_loess()
-#'@description  loess smoothing
+#' @title .smooth_by_loess()
+#' @description  loess smoothing
 #' The size of the neighborhood can be controlled using the span argument, 
 #' which ranges between 0 to 1. It controls the degree of smoothing. 
 #' So, the greater the value of span, more smooth is the fitted curve. (default=1/3)
 #' @param Mat counts matrix
+#' @export
 .smooth_by_loess <- function(Mat,span=0.33){
   mat_new=do.call(
     cbind,lapply(seq_len(ncol(Mat)), function(i){
@@ -166,10 +169,11 @@ smooth_by_chromosome <-function(mat_obj,wl=200,chr_annotation=NULL,Ncores=1,
   return(mat_new)
 }
 #'
-#'@title .smooth_by_sum()
-#'@description calculate sum within the window
+#' @title .smooth_by_sum()
+#' @description calculate sum within the window
 #' wl is the window length, which is the number of peaks(default wl=200)
 #' @keywords internal
+#' @export
 #' 
 .smooth_by_sum <- function(matrix,wl=NULL,cores=1){
   suppressMessages(library(doParallel))
@@ -199,11 +203,12 @@ smooth_by_chromosome <-function(mat_obj,wl=200,chr_annotation=NULL,Ncores=1,
 }
 
 #'
-#'@title .smooth_by_sum2bin()
-#'@description calculate sum within the window,
+#' @title .smooth_by_sum2bin()
+#' @description calculate sum within the window,
 #' and shrink the raw matrix (rows) by combining the peaks to bins decided by the start and end site of peaks within the window
 #' wl is the window length, which is the number of peaks(default wl=200)
 #' @keywords internal
+#' @export
 #' 
 .smooth_by_sum2bin <- function(Mat,wl=NULL,sep_by="-"){
   row_start <- seq(1,nrow(Mat),by=wl)
@@ -230,16 +235,17 @@ smooth_by_chromosome <-function(mat_obj,wl=200,chr_annotation=NULL,Ncores=1,
 }
 
 #'
-#'@title .smooth_by_windowMean()
-#'@description calculate MEAN within the window,
+#' @title .smooth_by_windowMean()
+#' @description calculate MEAN within the window,
 #' and convert the raw matrix (rows) by combining the peaks to bins decided by the start and end site of peaks within a window step
 #' @param wl window length, which is the number of neighbor features to use for smoothing.
-#'  @param step the moving step of a sliding window
+#' @param step the moving step of a sliding window
 #' @keywords internal
 #' Example:
 #' Mat=matrix(seq(1:150),nrow=30)
 #' rownames(Mat)=paste(rep("chr1",30),seq(1:30),seq(201,230),sep="_")
-#' 
+#' @export
+
 .smooth_by_windowMean <- function(Mat,wl=NULL,step=1,zero.rm=FALSE,sep_by="-"){
   row_start <- seq(1,nrow(Mat),by=step)
   mat_new=do.call(
@@ -282,7 +288,9 @@ smooth_by_chromosome <-function(mat_obj,wl=200,chr_annotation=NULL,Ncores=1,
   return(mat_new)
 }
 
+
 #' @title .smooth_by_windowMedian()
+#' @export
 .smooth_by_windowMedian <- function(Mat,wl=NULL,step=1,sep_by="-"){
   row_start <- seq(1,nrow(Mat),by=step)
   mat_new=do.call(
@@ -312,10 +320,11 @@ smooth_by_chromosome <-function(mat_obj,wl=200,chr_annotation=NULL,Ncores=1,
   return(mat_new)
 }
 
-#'@title .smooth_by_weighted_mean()
-#'@description calculate mean with weighted by the length of peaks within the window
+#' @title .smooth_by_weighted_mean()
+#' @description calculate mean with weighted by the length of peaks within the window
 #' wl is the window length, which is the number of peaks(default wl=20)
 #' @keywords internal
+#' @export
 
 .smooth_by_weighted_mean<-function(Mat,wl=NULL,step=1,sep_by="-"){
   if(is.null(wl)){wl=20}
@@ -356,10 +365,11 @@ smooth_by_chromosome <-function(mat_obj,wl=200,chr_annotation=NULL,Ncores=1,
   return(mat_new)
 }
 
-#'@title .smooth_by_harmonic_mean()
-#'@description calculate harmonic mean with weighted by the number of non-zero within the window
+#' @title .smooth_by_harmonic_mean()
+#' @description calculate harmonic mean with weighted by the number of non-zero within the window
 #' wl is the window length, which is the number of peaks(default wl=20)
 #' @keywords internal
+#' @export
 
 .smooth_by_harmonic_mean<-function(Mat,wl=NULL,step=1,sep_by="-"){
   row_start <- seq(1,nrow(Mat),by=step)
@@ -408,6 +418,7 @@ smooth_by_chromosome <-function(mat_obj,wl=200,chr_annotation=NULL,Ncores=1,
 #' @param wl window length, which is the number of neighbor features to use for smoothing.
 #' @param cores the number of cores if doParallel. Default is 1.
 #' @keywords internal
+#' @export
 #' 
 .smooth_by_maxDensity <- function(matrix,wl=NULL,cores=1,log_scale){
   suppressMessages(library(doParallel))
@@ -440,10 +451,11 @@ smooth_by_chromosome <-function(mat_obj,wl=200,chr_annotation=NULL,Ncores=1,
   return(matrix0)
 }
 
-#'@title .find_max_density()
-#'@param counts_analysis vector of data
-#'@param log_scale if TRUE, density distribution based on log transformed value
-#'@return the value at the max density 
+#' @title .find_max_density()
+#' @param counts_analysis vector of data
+#' @param log_scale if TRUE, density distribution based on log transformed value
+#' @return the value at the max density 
+#' @export
 #'
 .find_max_density <- function(counts_analysis,log_scale=T){
   if(log_scale){counts_analysis=log10(counts_analysis[!is.na(counts_analysis)])}
@@ -462,10 +474,13 @@ smooth_by_chromosome <-function(mat_obj,wl=200,chr_annotation=NULL,Ncores=1,
 
 
 
+
 #' @title .get_ref_mean()
-#'@keywords internal function
-#'@param matrix input matrix, group in columns (cells) 
-#'@param ref_indice numeric indices for group
+#' @keywords internal function
+#' @param matrix input matrix, group in columns (cells) 
+#' @param ref_indice numeric indices for group
+#' @export
+
 .get_ref_mean <- function(matrix,ref_indice,zero.rm=FALSE){
   library(matrixStats)
   RN <- rownames(matrix)
@@ -483,11 +498,11 @@ smooth_by_chromosome <-function(mat_obj,wl=200,chr_annotation=NULL,Ncores=1,
       return(adjusted_mean)
     } )
   }else{
-    peak_ref_grp_mean <- rowMeans(matrix_data)
+    peak_ref_grp_mean <- rowMeans(matrix_data,na.rm=TRUE)
   }
   
-  peak_ref_grp_sd <- rowSds(matrix_data)
-  peak_ref_grp_sum <- rowSums(matrix_data)
+  peak_ref_grp_sd <- rowSds(matrix_data,useNames = TRUE)
+  peak_ref_grp_sum <- rowSums(matrix_data,na.rm=TRUE)
   peak_ref_grp_means_sd <- data.frame(mean=peak_ref_grp_mean,SD=peak_ref_grp_sd,sum=peak_ref_grp_sum)
   rownames(peak_ref_grp_means_sd) <- RN
   return(peak_ref_grp_means_sd)
@@ -503,6 +518,7 @@ smooth_by_chromosome <-function(mat_obj,wl=200,chr_annotation=NULL,Ncores=1,
 #' @param chrom_size the data.frame of chromosome size with two columns: chr and size
 #' @description if do fixed window bin, the bin_bed can be generate by "bedtools makewindows -g chrom.sizes -w 1000000 > genome.1Mb.bed"
 #' or GenomicRanges::tileGenome() function with tilewidth=bin_size for chrosome size
+#' @export
 #' 
 gen_bin_cell_mtx <- function(mat_obj,bin_size=NULL,window_step=NULL,
                              chrom_size=NULL,doFixBin=FALSE,sep_by="-"){
@@ -598,10 +614,13 @@ find_breakpoints.robseg <- function(x,robseg_loss="Outlier",
   return(seg_end)
 }
 
+
 #' @title align_Grange2bin()
 #' @param bed.query A bed file or a data frame of query regions
 #' @param bed.subject A bed file or a data frame of subject regions
 #' @return A data frame of the same order as the reference bed file, with the corresponding bin ID for each query region.
+#' @export
+
 align_Grange2bin = function(bed.query,bed.subject){
   options(scipen = 999)
   suppressMessages({
@@ -664,6 +683,7 @@ align_Grange2bin = function(bed.query,bed.subject){
 #'
 #' @keywords internal
 #' @noRd
+#' @export
 #'
 segment_by_chr_location <- function(mat_obj,cytoBand=NULL,
                                     acen_remove=TRUE,
@@ -806,6 +826,7 @@ segment_by_chr_location <- function(mat_obj,cytoBand=NULL,
 #' @description map to chromosome location,return a GRanges subject
 #' @param mat_obj matrix with 'chr?-startCoordinate-endCoordinate' as rownames,cell Id as colnames
 #' @return res, list of GRanges subject_syto, subject_observe, subject_overlap, and overlap row index
+#' @export
 map2chrLocatio <- function(mat_obj,cytoBand=NULL,merge_cyto=TRUE){
   suppressMessages(require(GenomicRanges))
   subject=GenomicRanges::GRanges(sapply(strsplit(rownames(mat_obj),":|_|-"),'[',1),
@@ -835,6 +856,7 @@ map2chrLocatio <- function(mat_obj,cytoBand=NULL,merge_cyto=TRUE){
 #' @param outdir path for output file
 #' @param Project  Project for the file name output
 #' @param level the output file is "bin" level or "segment" (default) level
+#' @export
 get_seg_data = function(mtx_seg,outdir,Project,level="segment",plot=TRUE){
   suppressMessages(require(ggplot2))
   suppressMessages(require(ggpubr))
@@ -980,6 +1002,7 @@ get_seg_data = function(mtx_seg,outdir,Project,level="segment",plot=TRUE){
 #' @title map2chrLocatio()
 #' @description convert gene symbol to gnomic Coordinate, vecter format
 #' @param refFile Bed format in first three columns "chr" "start" "end"
+#' @export
 symbol2Coordinate = function(vect,refFile){
   if (Reduce("|", is(refFile) == "character")) {
     if(substr(refFile, nchar(refFile)-2, nchar(refFile)) %in% c(".gz","txt")){
@@ -1009,6 +1032,7 @@ symbol2Coordinate = function(vect,refFile){
 
 #' @title merge_atac()
 #' @description merge ATAC objects
+#' @export
 #' 
 merge_atac <- function(obj1,obj2,add_cell_id = NULL){
   suppressMessages({
@@ -1030,8 +1054,10 @@ merge_atac <- function(obj1,obj2,add_cell_id = NULL){
   return(obj)
 }
 
+
 #' @title atac_integration()
 #' @description merge ATAC objects
+#' @export
 #' 
 atac_integration <- function(obj1,obj2,peakwidth.lim =c(200,1e4),reduction="rlsi",dims=2:30){
   #1.1 Creating a common peak set
@@ -1104,7 +1130,8 @@ atac_integration <- function(obj1,obj2,peakwidth.lim =c(200,1e4),reduction="rlsi
 #' @title dataProcess()
 ##input relative copy number ratio and breakpoint data
 ##chrom, start, end,ratio,breakpoint index
-#'@param method "mean", "median" or "density" for calculate the value of segment.
+#' @param method "mean", "median" or "density" for calculate the value of segment.
+#' @export
 dataProcess <- function(CNVdata,method="median"){
   suppressMessages(library(bit64))
   coln <- colnames(CNVdata)  
@@ -1216,9 +1243,11 @@ dataProcess <- function(CNVdata,method="median"){
   return(list(seg=subseg,CNV=CNVdata,chromoPos=chromoPos))
 }
 
+
 #' @title seg_filter()
 #' @description filter out the segment with low number of bins (min_bins_per_seg >1)
 #' @param CNVdata a data.frame with segID or breakpoint in column
+#' @export
 seg_filter <- function(CNVdata,min_bins_per_seg=1){
   coln <- colnames(CNVdata) 
   if(any(grepl('segID',coln))){
@@ -1240,10 +1269,12 @@ seg_filter <- function(CNVdata,min_bins_per_seg=1){
   return(CNVdata)
 }
 
+
 #' @title split_grange()
 #' @param bins_input strings of genomic regions,"chrx-xxx-xxx" format
 #' @param cytoBand the reference annotation of chromosome location, BED format
 #' @return bed, with the fourth column is bins_input, the second column is new bin ID, which
+#' @export
 #' breaks by acen
 split_grange <- function(bins_input,cytoBand=NULL){
   options(scipen = 999)
@@ -1342,7 +1373,9 @@ break_seg_tb <- function(seg_dat,cytoBandFile){
   return(seg_dat_new2)
 }
 
+
 #' @title find_acen_bins()
+#' @export
 find_acen_bins <- function(bins,cytoBandFile){
   suppressPackageStartupMessages({
     library(dplyr)
@@ -1356,7 +1389,8 @@ find_acen_bins <- function(bins,cytoBandFile){
   return(binID_changed)
 }
 
-#'@title find_1st_Trough()
+#' @title find_1st_Trough()
+#' @export
 find_1st_Trough <- function(counts_analysis,log_scale=T){
   if(log_scale){counts_analysis=log10(counts_analysis)}
   Dy <- density(counts_analysis)
@@ -1409,6 +1443,7 @@ find_1st_Trough <- function(counts_analysis,log_scale=T){
 #'
 #' @keywords internal
 #' @noRd
+#' @export
 #'
 
 denoise_via_ref_mean_sd_perFeature <- function(mat_obj,ref_cells=NULL, sd_amplifier=1.5) {
@@ -1443,8 +1478,10 @@ denoise_via_ref_mean_sd_perFeature <- function(mat_obj,ref_cells=NULL, sd_amplif
   return(deno_mat_obj)
 }
 
+
 #' @title denoise_via_global_mean()
 #' @param mat_obj cells in columns
+#' @export
 denoise_via_global_mean <- function(mat_obj,sd_amplifier=1){
   if(!is.matrix(mat_obj)){ mat_obj <- as.matrix(mat_obj)}
   mean_ref_vals = apply(mat_obj, 1, function(x) mean(x, na.rm=TRUE))
@@ -1469,6 +1506,7 @@ denoise_via_global_mean <- function(mat_obj,sd_amplifier=1){
 
 #' @title smooth_and_denoise()
 #' @param mat_obj cells in columns
+#' @export
 smooth_and_denoise <- function(mat_obj,window=10,sd_amplifier=1){
   mt_de <- smooth_by_chromosome(mat_obj,wl=window,method="winMean")
   mt_de <- denoise_via_global_mean(mt_de,sd_amplifier=sd_amplifier)

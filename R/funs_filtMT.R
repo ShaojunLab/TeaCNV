@@ -11,11 +11,13 @@ suppressMessages({
   library(futile.logger)
 })
 
+
 #' @title blacklist.rm()
 #' @description remove peaks in blacklist
 #' @param mat count matrix with peaks on rows, cells on columns. 
 #' Peaks with "chrx-xxx-xxx" format were default separated with "-"
 #' @param blacklist bed format file with path
+#' @export
 #' 
 blacklist.rm <- function(mat,blacklist,peak.sep="-"){
   #mat <- mat[grepl(paste(paste0("chr",c(seq(1:22),"X")),collapse="|"),rownames(mat)),]
@@ -49,11 +51,13 @@ blacklist.rm <- function(mat,blacklist,peak.sep="-"){
   return(mtx_filt)
 }
 
+
 #' @title filt_peak_perChr()
 #' @description Remove peaks with abnormally high total count in all cells per chromosome
 #' @param mat peak-cell count matrix
 #' @param zscore.lim the Zscore cutoff value for distribution of peak total count
 #' @param split_by the delimiter of peak name, e.g. "chrx-xxx-xxx"
+#' @export
 filt_peak_perChr <- function(mat,zscore.lim=2,split_by="-"){
   suppressMessages({ require(data.table)})
   raw_peaks <- rownames(mat)
@@ -90,7 +94,10 @@ filt_peak_perChr <- function(mat,zscore.lim=2,split_by="-"){
   
 }
 
+
 #' @title filt_by_prop()
+#' @export
+
 filt_by_prop <- function(cellprop.lim,cell_anno=NULL,ref_group_names=NULL,mtx_qc_filt0){
   if(!is.null(cell_anno)){
     min_cells_prop_t <- cellprop.lim
@@ -129,9 +136,13 @@ filt_by_prop <- function(cellprop.lim,cell_anno=NULL,ref_group_names=NULL,mtx_qc
   return(peaks_keep)
 }
 
+
+
 #' @title FiltPeak()
+
 #' @param blacklist_file .bed file of blacklist
 #' @param cell_anno annotation of cells with cell groups information on the first column.
+#' @export
 FiltPeak <- function(
     mtx,
     cell_anno=NULL,
@@ -206,6 +217,8 @@ FiltPeak <- function(
   return(mtx_qc_filt)
 }
 
+#' @title FiltCell.mt()
+#' @export
 FiltCell.mt <- function(mtx,
                      nCount_quantile_lim=c(0.05,0.95),
                      nFeature_quantile_lim=c(0.05,0.95)){
@@ -231,8 +244,10 @@ FiltCell.mt <- function(mtx,
   return(mtx_filt)
 }
 
+
 #' @title FiltCell.obj()
 #' @return list of filtered cells and plots
+#' @export
 FiltCell.obj <- function(object,
                         assay="peaks",
                         cell_meta =NULL,
@@ -414,7 +429,10 @@ Group_size <- Group_size[Group_size>10]
   
 
 
+
 #' @title cell_score()
+#' @export
+
 cell_score <- function(data,ZeroProp.max=0.5,byBin=TRUE,binWin=20,outFigure=TRUE,outdir="./",cell_meta=NULL,max.value=NULL){
   suppressMessages({
     library(dplyr)
@@ -483,10 +501,12 @@ cell_score <- function(data,ZeroProp.max=0.5,byBin=TRUE,binWin=20,outFigure=TRUE
   return(cell_scores)
 }
 
+
 #' @title cell_VarScore()
 #' @description score cell based on the arm-levle weighted standard deviation
 #' @param data peak- cell matrix (row:peak,column:cell)
 #' @param genomic_ref Bed file of with genomic range for arms of chromosome (e.g. cytoBand_hg38.tsv)
+#' @export
 cell_VarScore <- function(data,genomic_ref=NULL,Zscore.Label=1){
   suppressMessages({
     library(dplyr)
@@ -551,7 +571,11 @@ cell_VarScore <- function(data,genomic_ref=NULL,Zscore.Label=1){
 }
 
 
+
+#' @description find the intersect of two genomic regions
 #' @title bedtools_intersect()
+#' @export
+
 bedtools_intersect <- function(stringsA,stringsB,wa=TRUE,sepA = c("-", "-"),sepB=c("-", "-")){
   suppressMessages({
     library(Signac)

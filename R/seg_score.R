@@ -4,8 +4,9 @@
 #' and the standard deviation of bin values in this segment
 #' @param data an list output from function 'segment_by_chr_location()', which contains 'changepoint_matrix', 'data_matrix',
 #'  and 'Ncells_groups'. The rownames of matrix are 'chr1_237513_1530360' format.
-#'  @param method is "mean", "median" or "density". For "density", we will take the density$x from the peak of density as the segMean.
-#'  @return res list of two data.frame: segment score at bin-level and segment-level
+#' @param method is "mean", "median" or "density". For "density", we will take the density$x from the peak of density as the segMean.
+#' @return res list of two data.frame: segment score at bin-level and segment-level
+#' @export
 seg_score = function(data,outname=NA,outdir="./",method="density"){
   #filter chr
   changepoint_mat <- data$changepoint_matrix

@@ -4,7 +4,10 @@
 #library("ComplexHeatmap")
 library('RColorBrewer')
 suppressMessages(library(dplyr))
+
 #' @title segPlot()
+#' @export
+
 segPlot<-function(CNVres,cellIntegerCNV,delta,outdir,fname,ylim=NULL){
   plotDir<-outdir
   if(!dir.exists(plotDir)){dir.create(plotDir,recursive=T)}
@@ -54,7 +57,10 @@ segPlot<-function(CNVres,cellIntegerCNV,delta,outdir,fname,ylim=NULL){
   dev.off()
 }
 
+
 #' @title cellLineSeg()
+#' @export
+
 cellLineSeg<-function(CNVres,integerCNV,outdir,fname,ylim=NULL){
   plotDir<-outdir
   if(!dir.exists(plotDir)){dir.create(plotDir,recursive=T)}
@@ -99,11 +105,13 @@ cellLineSeg<-function(CNVres,integerCNV,outdir,fname,ylim=NULL){
 
 }
 
+
 #' @title cellLineSeg_v3()
 #' @description plot dots and histogram of segment ratio at true chromosome location, 
 #' remove bad segment from histogram and hist based on the true genomic length of segments,set a global color
 #' @param CNVres list out put from dataProcess()function
 #' @param integerCNV list output from doCNV1_v2() function
+#' @export
 
 cellLineSeg_v3<-function(binRatio.df = NULL,
                          integerCNV.df=NULL,
@@ -425,7 +433,9 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
   return(p_ls)
 }
 
+
 #' @title hist_seg()
+#' @export
 #df_seg_C1 is the ratio(segScore$seg_score_binLevel[[i]]); 
 #integCNV_Ci is the CNV estimation result from doCNV1_v2()
 hist_seg <- function(df_seg_C1,integerCNV,ylim=NULL,color_limit = c(0,3)){
@@ -506,7 +516,10 @@ return(hist_plt)
 }
 
 
+
 #' @title hist_custom()
+#' @export
+
 hist_custom <- function(data,x,
   color_hist=FALSE, color_col=NULL,row_filt_by=NULL,
   add_density=TRUE,scale_factor=1,adjust=1,
@@ -599,6 +612,7 @@ plot.format=theme(plot.background=element_blank(),panel.grid=element_blank(),pan
 #' @title segPlot4CNV()
 #'plot segment with estimated CNV
 #' @param integerCNV a vector of integerCNV with the same length of CNVres.
+#' @export
 segPlot4CNV<-function(CNVres,integerCNV,outdir,fname){
 plotDir<-outdir
 if(!dir.exists(plotDir)){dir.create(plotDir,recursive=T)}
@@ -628,6 +642,7 @@ dev.off()
 }
 
 #' @title segPlot1()
+#' @export
 #maybe not use
 segPlot1<-function(celltmp,cellIntegerCNV,delta,outdir,fname){
   plotDir<-outdir
@@ -675,11 +690,14 @@ segPlot1<-function(celltmp,cellIntegerCNV,delta,outdir,fname){
 
 }
 
+
 #' @title get_group_color_palette()
+#' @export
 get_group_color_palette <- function (col_nm="Set3") {
   return(colorRampPalette(RColorBrewer::brewer.pal(12, col_nm)))}
 
 #' @title add_ends()
+#' @export
 add_ends <- function(dat,bin_size=50000){
   dat<-dat[order(dat[,1],dat[,2]),]
   for(j in 1:(nrow(dat)-1)){
@@ -698,6 +716,7 @@ add_ends <- function(dat,bin_size=50000){
 #' @param row_anno data.frame with group annotation in columns and cellID as rownames
 #' @param ref_group_names group name in the first column of row_anno
 #' @param custom_colors list of paramters for color values
+#' @export
 HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
                       clust=FALSE,
                       clustering_method_rows = "complete",
@@ -966,6 +985,8 @@ HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
   return(ht_plot)
 }
 
+#' @title abspos()
+#' @export
 abspos <- function(df){
   suppressMessages(library(bit64))
   coln <- colnames(df)  
@@ -1013,6 +1034,8 @@ abspos <- function(df){
   return(df)
 }
 
+#' @title plot_peak()
+#' @export
 plot_peak<-function(y0,aaa,main0="",breaks0=30,Zcut=-Inf)
 {
   y<-y0
@@ -1038,75 +1061,12 @@ plot_peak<-function(y0,aaa,main0="",breaks0=30,Zcut=-Inf)
   }
 }
 
-#plot for count matrix 
-#' @title plot4Count()
-#' @description Data visualization for the # of reads(or peaks) per cell, and # of reads (or cells) per peak (column : cell)
-plot4Count <- function(matrix,outdir="./",outfile="rawdataCheck.pdf",
-                       addline=FALSE,
-                       format = "pdf",
-                       min_Nreads_per_cell=NULL,
-                       min_Nfeature_per_cell=NULL,
-                       min_Nreads_per_feature=NULL,
-                       min_Ncell_per_feature=NULL){
-  if(!is.matrix(matrix)){matrix <- as.matrix(matrix)}
-  suppressMessages(library(pheatmap))
-  suppressMessages(library(RColorBrewer))
-  plotDir <- outdir
-  if(!file.exists(plotDir)){dir.create(plotDir,recursive=T)}
-  reads_per_cell = colSums(matrix)
-  reads_per_peak = rowSums(matrix)
-  peaks_per_cell = colSums(matrix>0)
-  cells_per_peak = rowSums(matrix>0)
-  if(format=="pdf"){
-    pdf(file=paste0(plotDir,"/",outfile),width = 8,height = 8)
-  }else{
-    png(file=paste0(plotDir,"/",outfile),width = 8,height =8,units = 'in',res= 300)
-  }
-  par(mfrow=c(3,2))
-  #layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE))
-  hist(log10(reads_per_cell),main='reads per cell',col='wheat',breaks = 20,prob = TRUE)
-  lines(density(log10(reads_per_cell)), # density plot
-        lwd = 2, # thickness of line
-        col = "chocolate3")
-  abline(v = log10(mean(reads_per_cell)), col = "blue",lty=2)
-  text(x=log10(mean(reads_per_cell))+0.2,y=max(density(log10(reads_per_cell))$y-0.1),paste0("Mean: ",round(mean(reads_per_cell))),cex = .75,col="blue")
-  
-  if(addline){
-    abline(v = log10(min_Nreads_per_cell), col = "red",lty=2)
-  }
-  hist(log10(peaks_per_cell), main='peaks per cell', col='wheat',breaks = 20,prob = TRUE)
-  lines(density(log10(peaks_per_cell)), # density plot
-        lwd = 2, # thickness of line
-        col = "chocolate3")
-  abline(v = log10(mean(peaks_per_cell)), col = "blue",lty=2)
-  text(x=log10(mean(peaks_per_cell))+0.2,y=max(density(log10(peaks_per_cell))$y-0.1),paste0("Mean: ",round(mean(peaks_per_cell))),cex = .75,col="blue")
-  if(addline){abline(v = log10(min_Nfeature_per_cell), col = "red",lty=2)}
-  
-  hist(log10(reads_per_peak),main='reads per peak',col='wheat',breaks=20,prob = TRUE)
-  lines(density(log10(reads_per_peak)), # density plot
-        lwd = 2, # thickness of line
-        col = "chocolate3")
-  abline(v = log10(mean(reads_per_peak)), col = "blue",lty=2)
-  text(x=log10(mean(reads_per_peak)) + 0.2, y=max(density(log10(reads_per_peak))$y*0.6),paste0("Mean: ",round(mean(reads_per_peak))),cex = .75,col="blue")
-  
-  if(addline){abline(v = log10(min_Nreads_per_feature), col = "red",lty=2)}
-  hist(log10(cells_per_peak),main='cells per peak',col='wheat',breaks=20,prob = TRUE)
-  lines(density(log10(cells_per_peak)), # density plot
-        lwd = 2, # thickness of line
-        col = "chocolate3")
-  abline(v = log10(mean(cells_per_peak)), col = "blue",lty=2)
-  text(x=log10(mean(cells_per_peak)) + 0.2, y=max(density(log10(cells_per_peak))$y*0.6),paste0("Mean: ",round(mean(cells_per_peak))),cex = .75,col="blue")
-  if(addline){abline(v = log10(min_Ncell_per_feature), col = "red",lty=2)}
-  plot(reads_per_cell, peaks_per_cell, log='xy', col='wheat')
-  
-  dev.off()
-}
 
 #' @title heatmap4peakMt()
 #' @description heatmap for the 'mat' ordered by row of meta_info
 #' @param mat matrix with peak in row and cells in columns, rownames pattern "chr-xxx-xxx"
 #' @param sep_by a symbol for the row names separation
-#' 
+#' @export 
 heatmap4peakMt <- function(mat,meta_info=NULL,max_lim=NULL,sep_by="-",outdir="./",value.type="count",max.value = NULL,color_bars= "discrete",
                            n_breaks = 5,
                            width=10,height=6,col_list=NULL,fileout_name=NULL,clust_rows=FALSE,clustering_method_rows = "complete",
@@ -1151,6 +1111,8 @@ heatmap4peakMt <- function(mat,meta_info=NULL,max_lim=NULL,sep_by="-",outdir="./
   return(p)
 }
 
+#' @title plot_combine_seg()
+#' @export 
 plot_combine_seg <- function(clonal.res,ylim=NULL,outplot_name=NULL,show_dots=FALSE,outdir="./",ggarrange_width=c(2.5,1)){
   if(is.null(outplot_name)){
     outplot_name <- "clonalCN_seg.pdf"
@@ -1172,12 +1134,13 @@ plot_combine_seg <- function(clonal.res,ylim=NULL,outplot_name=NULL,show_dots=FA
   ggsave(paste0(outdir, "/",outplot_name),pcom, width=14, height=2*length(plt_clones),device = pdf,bg="white")
 }
 
-#' @title rePlot infercnv heatmap
+#' @title replotInfercnv()
 #' @param expr.file data.frame or matrix of tumor cell cnv (row:gene, column:cell)
 #' @param gene.order.file path of gene.order.file
 #' @param metadata metsdata od cell annotation (cell order)
 #' @param ref.mat data.frame or matrix of normal cell cnv (if draw_normal=TRUE)
 #' @param names output name
+#' @export 
 
 replotInfercnv <- function(expr.mat,
                            gene.order.file,
@@ -1324,8 +1287,10 @@ replotInfercnv <- function(expr.mat,
   return(ht_plot)
 }
 
+
 #' @title plot_genome()
 #' @description plot summed count of CNAs (amplifications or deletions)
+#' @export 
 plot_genome <- function(
     chr_bg_color=NULL,
     show_x_axis=TRUE,
@@ -1477,6 +1442,7 @@ plot_theme <- theme(plot.background=element_blank(),
 #plot for count matrix 
 #' @title plot4Count()
 #' @description Data visualization for the # of reads(or peaks) per cell, and # of reads (or cells) per peak (column : cell)
+#' @export 
 plot4Count <- function(matrix,outdir="./",outfile="rawdataCheck.pdf",
                        addline=FALSE,
                        format = "pdf",
@@ -1538,6 +1504,8 @@ plot4Count <- function(matrix,outdir="./",outfile="rawdataCheck.pdf",
   dev.off()
 }
 
+#' @title Vlnplot4Count()
+#' @export 
 Vlnplot4Count <- function(matrix,project=NULL){
   require(ggplot2)
   require(cowplot)
@@ -1575,7 +1543,8 @@ Vlnplot4Count <- function(matrix,project=NULL){
 #' @param seg_value for line
 #' @param chromnum chromosome annotation with the same length of y_value
 #' @param filename output paste0(plotDir,"/",de_noise_lb,"segment_",file_seg,"_sub_",sub_cj,".png")
-#' 
+#' @export 
+
 plot_segment <- function(y_value,seg_value, ylab,main,ylim,chromnum,filename){
   png(filename,width = 10, height = 3,units = 'in',res= 300)
   

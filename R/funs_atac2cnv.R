@@ -8,8 +8,10 @@ suppressMessages({
   library(futile.logger)
 })
 
+
 #' @title CNratioInfer()
 #' @description infer CN ratio for group and segmentation
+#' @export
 
 CNratioInfer <- function(input_matrix,inputcellano,
                          cytoBand,
@@ -135,6 +137,7 @@ CNratioInfer <- function(input_matrix,inputcellano,
 #' @title CNratioInfer.sc()
 #' @description infer CN ratio for individual single cell
 #' @param prop.zero numeric vector with the same length of rows of input_matrix.
+#' @export
 CNratioInfer.sc <- function(input_matrix,
                             cell.name,
                             inputcellano,
@@ -241,6 +244,7 @@ CNratioInfer.sc <- function(input_matrix,
 }
 
 
+
 #' @title pcaClustCN()
 #' @description Perform (1) convert peak to bin matrix if customized required;
 #' (2) Calculate single-cell level ratio relative to bulk normal reference; 
@@ -248,6 +252,7 @@ CNratioInfer.sc <- function(input_matrix,
 #' (4) Calculate sub-cluster level CN ratio
 #' @return list of sub-cluster level segmentation, ratio, and CNVs
 #' @param cnv.ref.df data.frame of reference CNV and ratio.map if 'optimalClust' is TRUE
+#' @export
 pcaClustCN <- function(mtx_qcn_lim,
                        cell_anno,
                        ref_group_names,
@@ -452,7 +457,10 @@ pcaClustCN <- function(mtx_qcn_lim,
               binRatio=clust_res$binRatio))
 }
 
+
 #' @title find_nearst()
+#' @export
+
 find_nearst <- function(df_seg_C1,initialCN,align_by="SegMean"){
   CNs <- initialCN$CN
   Ratio_tar <- initialCN$ratio
@@ -469,9 +477,11 @@ find_nearst <- function(df_seg_C1,initialCN,align_by="SegMean"){
   return(df_seg_C1)
 }
 
+
 #' @title CNV.align()
 #' @description align CNVs based on the baseline
 #' @param rato.correct subclone ratio correction
+#' @export
 CNV.align <- function(df_seg_C1,initialCN,subclone.rawBase=NULL,rato.correct=TRUE,align_by = "SegMean"){
   colnames(initialCN)[grepl("ratio",colnames(initialCN),ignore.case = T)] <- "ratio"
   colnames(initialCN)[grepl("CN",colnames(initialCN),ignore.case = T)] <- "CN"
@@ -517,11 +527,13 @@ CNV.align <- function(df_seg_C1,initialCN,subclone.rawBase=NULL,rato.correct=TRU
 }
 
 
+
 #' @title combine_res_chr()
 #' @description combine the segment ratio result from each chromosome
 #' @return matrix of peak-cell seg.ratio combined different cluster of cells from each chromosome
 #' @param data.dir contains chr folders
 #' @param mtx_seg NA matrix with colname with cell and rowname with peak
+#' @export
 combine_res_chr <- function(data.dir, mtx_seg,chrs,df_meta_slim,
                             groups_col="subclone",
                             outdir=".",outFile=TRUE,estract_by = "SegMean"){
@@ -589,7 +601,6 @@ combine_res_chr <- function(data.dir, mtx_seg,chrs,df_meta_slim,
   return(list(seg_res_ls=seg_res_ls,mtx_seg=mtx_seg_total))
 }
 
-#' @title ls.colummn2mtx()
 #' @param res.ls list of resuts of multiple clusters
 #' @description the names of res.ls should in first column of metadata
 ls.colummn2mtx <- function(res.ls,metadata,extract_by="integerCNV"){
@@ -696,7 +707,10 @@ module_scCNesti <- function(mtx_bin,cellMeta,cells_obs,cells_ref,clonal_res,
 }
 
 
+
 #' @title clone_similarity()
+#' @export
+
 clone_similarity <- function(cellbinCN,cellMeta,group_by="subCluster",Csize.min=20){
   library(MixGHD)
   bincount <- apply(cellbinCN, 2, function(x){length(x[is.na(x)])})
@@ -750,8 +764,10 @@ clone_similarity <- function(cellbinCN,cellMeta,group_by="subCluster",Csize.min=
   return(list(score=score,new_cluster=cellMeta_new))
 }
 
+
 #' @title clonal_ploidy()
 #' @description add clonal ploidy and diploidy annotation to clonal results
+#' @export
 clonal_ploidy <- function(clone_res_update){
   clone_ploidy <- unlist(lapply(clone_res_update,function(x)x$ploidy))
   if(length(clone_res_update)>2){
@@ -777,11 +793,12 @@ clonal_ploidy <- function(clone_res_update){
   return(clone_res_update)
 }
 
+
 #' @title celloutput()
 #' @param cells.obs the input cells
 #' @param cluster1 group annotation for cells.obs
 #' @param cluster2 updated group annotation for cells.obs
-#' 
+#' @export
 celloutput <- function(cells.obs,cluster1,cluster2,clone_res,mtx_bin,
                        CNest.ref,
                        min_cells_in_group=20,
@@ -895,8 +912,10 @@ celloutput <- function(cells.obs,cluster1,cluster2,clone_res,mtx_bin,
                     cellbinCount.norm=binCount_norm)
 }
 
+
 #' @title clone_scoring()
 #' @param cloneRes the output list of ploidyRefine(), i.e. clonal_res
+#' @export
 clone_scoring <- function(cloneRes,scaleFactor=1,y_true.term="ratio",y_pred.term="relativeCN",
                           CNbase =cloneRes$CNest,ploidy.ref=NULL){
   seg.dat <- cloneRes$seg.dat

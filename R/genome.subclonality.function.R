@@ -10,6 +10,7 @@ suppressPackageStartupMessages({
   library(ggpubr)
 })
 
+
 #' @title regionSPlit()
 #' @description check if there is breakpoint for genomic region 
 #' @param regiondata: the ratio of bin
@@ -17,7 +18,8 @@ suppressPackageStartupMessages({
 #' @return update mu for the new split region
 #'          data: the ratio of new split region with new region cluster ID
 #'          clusterindex: 0 no further split
-#' 
+#' @export
+ 
 
 regionSPlit <- function(regiondata,mu){
   if (length(mu) == 1){
@@ -157,10 +159,11 @@ regionSPlit <- function(regiondata,mu){
   return(cluster.info)
 }
 
+
 #' @title regionMerge()
 #' @description merg region split result
 #' @param cluster.res: output of regionSPlit from all initial bin region
-
+#' @export
 
 regionMerge <- function(cluster.res){
   chrratio <- c()
@@ -188,8 +191,10 @@ regionMerge <- function(cluster.res){
 }
 
 
+
 #' @title regionSubclone()
 #' @description check the subclonality for genome region
+#' @export
 #' 
 regionSubclone <- function(chrratio,cluster,overall.mu){
   subratio<- chrratio[chrratio$cluster==cluster,]
@@ -284,10 +289,12 @@ regionSubclone <- function(chrratio,cluster,overall.mu){
 }
 
 
+
 #' @title genomicRegion()
 #' @description collect all genome region  
 #' @param ratiodata: initial clone list
 #' @return all genomic binID
+#' @export
 #' 
 genomicRegion <- function(ratiodata,chr){
   bindata <- c()
@@ -302,10 +309,12 @@ genomicRegion <- function(ratiodata,chr){
 }
 
 
+
 #' @title cloneRatio()
 #' @description collect overall ratio at clone level  
 #' @param ratiodata: initial clone list
 #' @return all ratio value frm all clone and genomic binID
+#' @export
 #' 
 
 cloneRatio <- function(ratiodata,bindata,chr){
@@ -322,9 +331,11 @@ cloneRatio <- function(ratiodata,bindata,chr){
 }
 
 
+
 #' @title relativeRatio.Ref()
 #' @description relative rato data 
 #' @param ratiodata: all ratio value frm all clone and genomic binID
+#' @export
 #' 
 
 relativeRatio.Ref <- function(chrratio,ref=1){
@@ -345,10 +356,12 @@ relativeRatio.Ref <- function(chrratio,ref=1){
 }
 
 
+
 #' @title genomicPartition()
 #' @description genome bin partition based on overall ratio  
 #' @param chrratio: initial clone list
 #' @return genomic region partitioning
+#' @export
 #' 
 
 genomicPartition <- function(chrratio){
@@ -367,7 +380,9 @@ genomicPartition <- function(chrratio){
   return(merge.res)
 }
 
+
 #' @title renewGroup()
+#' @export
 renewGroup <- function(list_data){
   is_equal <- function(x, y) {
     all(sort(x) == sort(y))
@@ -407,7 +422,9 @@ renewGroup <- function(list_data){
   return(results_df)
 }
 
+
 #' @title mergeClones_0()
+#' @export
 mergeClones_0 <- function(ratiodata,chrom = c(1:22),doPlot=FALSE,outdir="./"){
   suppressPackageStartupMessages({
     library(reshape)
@@ -506,9 +523,12 @@ mergeClones_0 <- function(ratiodata,chrom = c(1:22),doPlot=FALSE,outdir="./"){
   return(df_clone)
 }
 
+
 #' @title mergeClones()
 #' @param ratiodata list of "step03.CNV_res_clonal.rds"
 #' @param segdata list of clonal_RelativeRatio_segment
+#' @export
+
 mergeClones <- function(ratiodata,segdata,doPlot=FALSE,outdir="./",Zscore.cutoff=1.28,
   p.adj.cutoff=0.1,p.cutoff=NULL){
   suppressPackageStartupMessages({
@@ -667,11 +687,13 @@ mergeClones <- function(ratiodata,segdata,doPlot=FALSE,outdir="./",Zscore.cutoff
 
 }
 
+
 #' @title refine_clones()
 #' @description This function refines the clonal CNA estimates based on the paired-comparison of segment ratios.
 #' @param ratiodata A list of data.frames containing the bin-level ratio estimates for each clone.
 #' @param seg_compare_ls A list of data.frames containing the segment ratios for each clone compared to the best clone.
 #' @param best_clone_ratiodata The name of the best clone for the segment ratio comparison in ratiodata.
+#' @export
 refine_clones <- function(ratiodata,seg_compare_ls,best_clone_ratiodata,CNest.ref){
   #subseg= seg_ls[[1]]
   delta.ref <- (CNest.ref$ratio[2]-CNest.ref$ratio[1])/(CNest.ref$CN[2]-CNest.ref$CN[1])

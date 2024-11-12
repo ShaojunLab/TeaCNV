@@ -52,6 +52,7 @@ TeaCNV <- methods::setClass("TeaCNV",
 
 #' @title CreateTeaCNVObject()
 #' @param FiltCell_by Filtering method if FiltCell=TRUE, c("Zscore","density","quantile"),default is "Zscore".
+#' @export
 CreateTeaCNVObject <- function(input,
                                   annotationFile,
                                   ref_group_names,
@@ -231,6 +232,7 @@ CreateTeaCNVObject <- function(input,
 #' the cell group classification(first column) and the sample ID (second column), tab-delimited
 #' @param NormalTypeList cell groups in the first column of cell_anno
 #' @param sampleID_normal Normal samples in the second column of cell_anno
+#' @export
 EffectCorrectByRef <- function(mat,cell_anno,sampleID_normal,NormalTypeList,sampleIDs_to_correct,Ncells.min=10){
   library(Matrix) 
   library(progress)
@@ -306,6 +308,7 @@ EffectCorrectByRef <- function(mat,cell_anno,sampleID_normal,NormalTypeList,samp
 #' @param annotationFile annotation of cells, tab-delimited.   
 #' @param seg_method method for segmentation, including "robseg" and "gaussian".
 #' @param penalty paramter if seg_method is "gaussian"
+#' @export
 runTeaCNV <- function(
     input_obj,
     outdir=NULL,
@@ -624,8 +627,8 @@ runTeaCNV <- function(
       cell_anno_cl <- cell_anno_cl[!cell_anno_cl$subCluster %in% "reference",,drop=F]
       clones <- sort(unique(cell_anno_cl$subCluster))
       Nclone <- length(clones)
-      # outdir_clt2 <- paste0(outdir_sub,"/segRatio_compare")
-      # ifelse(!dir.exists(file.path(outdir_clt2)), dir.create(file.path(outdir_clt2)), FALSE)
+      outdir_clt2 <- paste0(outdir_sub,"/segRatio_compare")
+      ifelse(!dir.exists(file.path(outdir_clt2)), dir.create(file.path(outdir_clt2)), FALSE)
       mtx_bin <- input_obj@data.binCount.norm
       
       if(Nclone>1){

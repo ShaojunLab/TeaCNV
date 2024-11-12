@@ -3,6 +3,7 @@
 #' @description segment Plot (on absolute genomic position)
 #' @param data.bin data.frame of bin level segment with chromosome location as rownames (rowname is important!), such as 'chr1_237513_1530360'
 #' @param true_loc plot segments and dots at true genomic location. If not true, plot by order.
+#' @export
 #' 
 seg_plot = function(data.bin,name.data="",num_cells=NULL,plotDir=NULL,
                     show_specific_seg=NULL,
@@ -398,7 +399,10 @@ seg_plot = function(data.bin,name.data="",num_cells=NULL,plotDir=NULL,
 }
 
 
+
 #' @title seg_plot_dot()
+#' @export
+
 seg_plot_dot <- function(data.bin,name.data="",plotDir=NULL,ylab="Count",genome="hg38",outplot=TRUE){
   suppressMessages(require(BSgenome))
   g <- getBSgenome(genome, masked=FALSE)
@@ -513,6 +517,7 @@ seg_plot_dot <- function(data.bin,name.data="",plotDir=NULL,ylab="Count",genome=
 #' @param genome string of reference genome
 #' @param annotations GRanges object
 #' @return a GRanges object of gene annotation
+#' @export
 #' 
 annotate_gene <- function(gene_name,genome="hg38",annotations=NULL){
   suppressMessages({
@@ -529,6 +534,7 @@ annotate_gene <- function(gene_name,genome="hg38",annotations=NULL){
 #' @title CollapseToLongestTranscript()
 #' @importFrom GenomicRanges makeGRangesFromDataFrame
 #' @import data.table
+#' @export
 CollapseToLongestTranscript <- function(ranges) {
   library(data.table)
   range.df <- as.data.table(x = ranges)
@@ -558,7 +564,10 @@ CollapseToLongestTranscript <- function(ranges) {
   return(gene.ranges)
 }
 
+
 #' @title plot_point()
+#' @export
+
 plot_point <- function(df,x_aes,y_aes,colour_item=NULL,size_item=NULL,size_lab=size_item,
                        shape_item=NULL,shape_label = NULL,
                        color_value,color_gradient=FALSE,
@@ -692,6 +701,8 @@ if(ylim.set){
 #' @title abs_pos()
 #' @description add columns of chrosome absolute start and end for "segName" of a data.frame
 #' segName can be chr1-100037672-100038546 or chr1_100037672_100038546 format
+#' @export
+
 abs_pos <- function(data.bin,genome="hg38",true_loc=TRUE){
     suppressMessages({
     library(BSgenome)
@@ -754,11 +765,14 @@ abs_pos <- function(data.bin,genome="hg38",true_loc=TRUE){
 return(data.bin)
 }
 
+
 #' @title seg_compare()
-#‘ @df data.frame input with c("segID","SegMean","segName","Start") on columns
+#' @param df1 data.frame input with c("segID","SegMean","segName","Start") on columns
 #                         segID  SegMean                segName      Start   
 #chr1-100037672-100038546     3 2.578573 chr1_9823588_121519947    100037672 
 #chr1-100132556-100133506     3 2.578573 chr1_9823588_121519947    100132556 
+#' @export
+
 seg_compare <- function(df1,df2,genome="hg38",ylim=NULL,ylab="Relative CN",ggtitle="",
   hline=c(1,2),
   seg_col=c("darkgrey","red"),
@@ -826,6 +840,9 @@ seg_compare <- function(df1,df2,genome="hg38",ylim=NULL,ylab="Relative CN",ggtit
 return(p1)
 }
 
+
+
+
 #' @title seg_split()
 #' @description split intersecting segments
 #' @param binSet data.frame with bins in rowname
@@ -833,6 +850,7 @@ return(p1)
 # chr1-826972-1013895   chr1-826972-1013895       chr1  826972 1013895
 # chr1-1019104-1116833 chr1-1019104-1116833       chr1 1019104 1116833
 # chr1-1121514-1350035 chr1-1121514-1350035       chr1 1121514 1350035
+#' @export
 #' 
 seg_split <- function(segs_input,binSet=NULL,split_by="_|-|:"){
   suppressMessages({
@@ -917,9 +935,11 @@ if(! any(is(binSet) %in% "data.frame")){
   return(res)
 }
 
+
 #' @title seg_overlap_prop()
 #' @description get the percentage of overlap in each region
 #' @param region1 and region2, genomic region with format "chrx-xxx-xxx"
+#' @export
 seg_overlap_prop <- function(region1,region2,split_by="_|-|:"){
   suppressMessages({require(data.table)})
   segs <- c(region1,region2)
@@ -944,10 +964,12 @@ seg_overlap_prop <- function(region1,region2,split_by="_|-|:"){
   return(prop)
 }
 
+
 #' @title seg_slimByAlign()
 #' @description Align and unify highly similar fragments
 #' @param Start_site_error the start site distance for same segment (bp)
 #' @param End_site_error 
+#' @export
 seg_slimByAlign <- function(segs, 
                             split_by = "_|-|:",
                             Start_site_error=1e6,
@@ -1014,12 +1036,14 @@ seg_slimByAlign <- function(segs,
   return(bed_data)
 }
 
+
 #' @title correlat_plot()
 #' @param seu_obj Seurat object
 #' @param mt_atac (Optional)scATAC count matrix (normalized), peaks on row and cells on column
 #' @param mt_rna (Optional)scRNA count matrix (normalized), genes on row and cells on column
 #' @param cellMeta data.frame with cell group annotation on the second column, cellID on the rowname and first column
 #' @param CN_res final CNV result output by runEiCNVs()
+#' @export
 correlat_plot <- function(seu_obj=NULL,
                           mt_atac=NULL,
                           mt_rna=NULL,
@@ -1187,5 +1211,295 @@ correlat_plot <- function(seu_obj=NULL,
 
 
 
+
+#' @param mt_atac scATAC count matrix (normalized), peaks on row and cells on column
+#' @param mt_rna scRNA count matrix (normalized), genes on row and cells on column
+#' @param cellMeta data.frame with cell annotation on the second column, cellID on the rowname and first column
+#' @param segRatio_res segmentation result for the group-level which annotated by cellMeta
+#' @param gene_ls vector of gene names for plot
+#' @export
+correlat_plot_v0 <- function(mt_atac,
+                          mt_rna,
+                          cnv_rna=NULL,
+                          cellMeta,
+                          segRatio_res,
+                          annotations=NULL,
+                          genome="hg38",
+                          segRatio_Correct=TRUE,
+                          df_seg4Correct=NULL,
+                          expand_distance = 0,
+                          FiltSegbyLen =TRUE,
+                          segLen_lim = 1e6,
+                          outdir = "./",
+                          dotPlot4Seg=TRUE,
+                          dotPlot4Gene = TRUE,
+                          gene_ls=NULL,
+                          label_term="Cluster"#"Chromosome"
+                          ){
+  suppressMessages({
+    library(ggplot2)
+    library(ggpubr)
+    library(tidyr)
+    library(ggsci)
+    library(Seurat)
+    library(Signac)
+    library(dplyr)
+    library(plyranges)
+    library(ggrepel)
+    library(GenomicRanges)
+  })
+  if(!file.exists(outdir)){dir.create(outdir,recursive=T)}
+  colnames(cellMeta) <- c("cellID","Cluster")
+  #covert to bulk
+  mt_atac2_bulk <- pseudo_bulk_v2(mt_atac[,rownames(cellMeta)],group_ano = cellMeta,
+                                  method ="mean",adjust_zero=TRUE)
+  Ncol <- ncol(mt_atac2_bulk)
+  mt_atac2_bulk$binID <- rownames(mt_atac2_bulk)
+  mt_atac2_bulk_long <- tidyr::gather(mt_atac2_bulk,Cluster,Clmean_nCountATAC_peak,0:Ncol, factor_key=TRUE)
+  mt_atac2_bulk_long$Chromosome <- sapply(strsplit(mt_atac2_bulk$binID,"-"),"[",1)
+  mt_atac2_bulk_long$Start <- sapply(strsplit(mt_atac2_bulk$binID,"-"),"[",2)
+  mt_atac2_bulk_long$End <- sapply(strsplit(mt_atac2_bulk$binID,"-"),"[",3)
+  
+  ##(2) process to segment matrix 
+  segMT_long <- c()
+  for(i in 1:length(segRatio_res)){
+    Cname <- names(segRatio_res)[i]
+    CNVdata <- segRatio_res[[i]]
+    CNVdata <-CNVdata[CNVdata$binID %in% rownames(mt_atac),,drop=F]
+    CNVdata$Cluster <- Cname
+    CNVdata <- CNVdata[,c("binID","Chromosome","Start","End","binRatio","segName","SegMean","Cluster")]
+    count_i <- mt_atac2_bulk[CNVdata$binID,Cname]
+    CNVdata$Clmean_nCountATAC_peak <- count_i
+    if(segRatio_Correct){
+      CNVdata$SegMean <- as.numeric(CNVdata$Cluster)
+      if(!is.null(df_seg4Correct)){
+        df_seg4Correct <- df_seg4Correct[match(CNVdata$binID,df_seg4Correct$binID),,drop=F]
+        CNVdata$segName <- df_seg4Correct$segName
+      }
+    }
+    
+    CNVdata <- CNVdata %>%
+      dplyr::add_count(Cluster,segName) %>%
+      as.data.frame()
+    colnames(CNVdata)[colnames(CNVdata)=="n"] <- "nFeature_atac_seg"
+    segMT_long <- rbind(segMT_long,CNVdata)
+  }
+
+  segMT_long <- segMT_long %>%
+    dplyr::group_by(Cluster,segName) %>%
+    dplyr::mutate(med_nCountATAC_seg = mean(Clmean_nCountATAC_peak,na.rm = T))%>%
+    as.data.frame()
+  by_cols <- intersect(colnames(segMT_long),colnames(mt_atac2_bulk_long))
+  mt_atac2_bulk_long <- mt_atac2_bulk_long[mt_atac2_bulk_long$Chromosome%in%unique(segMT_long$Chromosome),,drop=F]
+  
+  ### to be used for plot
+  mt_atac2_bulk_long <- merge(mt_atac2_bulk_long,segMT_long,by=by_cols,all=T) 
+  mt_atac2_bulk_long$segStart <- as.numeric(sapply(strsplit(mt_atac2_bulk_long$segName,"_"),"[",2))
+  mt_atac2_bulk_long$segEnd <- as.numeric(sapply(strsplit(mt_atac2_bulk_long$segName,"_"),"[",3))
+  mt_atac2_bulk_long$segLen <- mt_atac2_bulk_long$segEnd-mt_atac2_bulk_long$segStart
+  
+  ##ATAC dataframe
+  segMT_slim <- unique(mt_atac2_bulk_long[,c("Chromosome","segStart","segEnd","segName","SegMean","Cluster","segLen","med_nCountATAC_seg","nFeature_atac_seg")])
+  segMT_slim <- segMT_slim[!is.na(segMT_slim$segName),,drop=F]
+  
+  #Find segment and gene intesect regions
+  seg_gr <- GRanges(seqnames = segMT_slim$Chromosome,
+                    ranges = IRanges(start = as.numeric(segMT_slim$segStart), end = as.numeric(segMT_slim$segEnd)),
+                    strand = "*")
+  seg_gr$segName <- segMT_slim$segName
+  seg_gr$Cluster <- segMT_slim$Cluster
+  
+  peak_gr <- GRanges(seqnames = mt_atac2_bulk_long$Chromosome,
+                     ranges = IRanges(start = as.numeric(mt_atac2_bulk_long$Start), end = as.numeric(mt_atac2_bulk_long$End)),
+                     strand = "*")
+  mcols(peak_gr) <- mt_atac2_bulk_long[,c("segName","SegMean","Cluster","binID","binRatio")]
+  peak_gr$Clmean_nCountATAC_peak <- mt_atac2_bulk_long$Clmean_nCountATAC_peak
+  
+  if (is.null(x = annotations)) {
+    #annotations <- Annotation(object = object[[peak.assay]])
+    if(genome=="hg38"){
+      require(EnsDb.Hsapiens.v86)
+      annotations <- GetGRangesFromEnsDb(ensdb = EnsDb.Hsapiens.v86)
+    }else if (is.null(x = annotations)) {
+      stop("Gene annotations not found")
+    }
+  }
+  
+  genes <- rownames(mt_rna)
+  gene_loc <- annotate_gene(genes,genome="hg38",annotations=annotations)
+  gene_loc_expan <- Extend(x = gene_loc,upstream = expand_distance,downstream = expand_distance)
+  gr_gene_region <- paste(seqnames(gene_loc_expan),ranges(gene_loc_expan),sep="-")
+  gene_loc_expan$gene_region <- gr_gene_region
+  
+  hits <- findOverlaps(gene_loc_expan, peak_gr)
+  idx_seg <- subjectHits(hits)
+  idx_gene <- queryHits(hits)
+  ranges_ov <- gene_loc_expan[idx_gene,]
+  mcols(ranges_ov) <- c(mcols(ranges_ov), mcols(peak_gr[idx_seg,]))
+  
+  #data.frame of gene and segment annotation
+  gene_seg <- data.frame(segName=mcols(ranges_ov)$segName,gene_name=mcols(ranges_ov)$gene_name,Cluster=mcols(ranges_ov)$Cluster,
+                         Clmean_nCountATAC_peak=mcols(ranges_ov)$Clmean_nCountATAC_peak,binID=mcols(ranges_ov)$binID, SegMean=mcols(ranges_ov)$SegMean)
+  #gene expression: bulk 
+  mt_rna_bulk <- pseudo_bulk_v2(mt_rna[,rownames(cellMeta)],group_ano = cellMeta,method ="mean",adjust_zero=TRUE)
+  mt_rna_bulk$gene_name <- rownames(mt_rna_bulk)
+  mt_rna_bulk_long <- tidyr::gather(mt_rna_bulk,Cluster,Clmean_nCountRNA_gene,0:Ncol, factor_key=TRUE)
+  mt_rna_bulk_long <- merge(mt_rna_bulk_long,gene_seg,by=c("gene_name","Cluster"),all=T) #one gene may have multiple peaks in the same cluster
+  
+  gene_seg_dat <-  unique(mt_rna_bulk_long[,c("gene_name","Cluster","segName","Clmean_nCountRNA_gene")])
+  gene_seg_dat <- gene_seg_dat[!is.na(gene_seg_dat$segName),]
+  gene_seg_dat <- gene_seg_dat %>%
+    dplyr::group_by(Cluster,segName) %>%
+    dplyr::mutate(Cluster_nCountRNA_seg=mean(Clmean_nCountRNA_gene,na.rm = T))%>%
+    ungroup()%>%
+    add_count(Cluster,segName) %>%
+    as.data.frame()
+  colnames(gene_seg_dat)[colnames(gene_seg_dat)=="n"] <- "Cluster_nFeatureRNA_seg"
+  
+  mt_rna_bulk_long <- merge(mt_rna_bulk_long,gene_seg_dat,by=intersect(colnames(mt_rna_bulk_long),colnames(gene_seg_dat)),all=T) 
+  
+  ###RNA df
+  mt_rna_bulk_long <- mt_rna_bulk_long %>%
+    dplyr::group_by(Cluster,gene_name) %>%
+    dplyr::mutate(Cluster_nCountATAC_gene=mean(Clmean_nCountATAC_peak,na.rm = T),  ####Mean
+                  Cluster_segName_gene = median(SegMean,na.rm = T))%>%
+    as.data.frame()
+  
+  mt_rna_bulk_l_slim <- mt_rna_bulk_long[!is.na(mt_rna_bulk_long$segName),,drop=F]
+  mt_rna_bulk_l_slim <- unique(mt_rna_bulk_l_slim[,c("Cluster","segName","Cluster_nCountRNA_seg","Cluster_nFeatureRNA_seg")])
+  #add RNA to ATAC dataframe
+  segMT_slim <- merge(segMT_slim,mt_rna_bulk_l_slim,by=intersect(colnames(mt_rna_bulk_l_slim),colnames(segMT_slim)),all=T)
+  
+  if(!is.null(cnv_rna)){
+    cnv_rna_bulk <- pseudo_bulk_v2(cnv_rna[,rownames(cellMeta)],group_ano = cellMeta,method ="median",adjust_zero=TRUE)
+    cnv_rna_bulk$gene_name <- rownames(cnv_rna_bulk)
+    cnv_rna_bulk_long <- tidyr::gather(cnv_rna_bulk,Cluster,med_inferCNV,0:Ncol, factor_key=TRUE)
+    cnv_rna_bulk_long <- merge(cnv_rna_bulk_long,gene_seg,by=c("gene_name","Cluster"),all=T)
+    
+    ###CNV df
+    cnv_seg <- unique(cnv_rna_bulk_long[,c("gene_name","Cluster","segName","med_inferCNV")])
+    cnv_seg <- cnv_seg %>%
+      dplyr::group_by(Cluster,segName) %>%
+      dplyr::mutate(med_inferCNV_seg=median(med_inferCNV,na.rm = T))%>%
+      as.data.frame()
+    
+    cnv_ge <- unique(cnv_seg[,c("gene_name","Cluster","med_inferCNV")])%>%
+      dplyr::group_by(Cluster,gene_name) %>%
+      dplyr::mutate(Cluster_inferCNV_gene=median(med_inferCNV,na.rm = T))%>%
+      as.data.frame()
+    cnv_seg <- merge(cnv_seg,cnv_ge,by=intersect(colnames(cnv_seg),colnames(cnv_ge)),all=T)
+    cnv_seg <- cnv_seg[!is.na(cnv_seg$segName),]
+    
+    cnv_rna_bulk_long <- merge(cnv_rna_bulk_long,cnv_seg,by=intersect(colnames(cnv_rna_bulk_long),colnames(cnv_seg)),all=T)
+    
+    cnv_rna_bulk_l_slim <- cnv_rna_bulk_long[!is.na(cnv_rna_bulk_long$segName),,drop=F]
+    cnv_rna_bulk_l_slim <- unique(cnv_rna_bulk_l_slim[,c("Cluster","segName","med_inferCNV_seg")])
+    #add inferCNV to ATAC dataframe
+    segMT_slim <- merge(segMT_slim,cnv_rna_bulk_l_slim,by=intersect(colnames(cnv_rna_bulk_l_slim),colnames(segMT_slim)),all=T)
+    
+  }
+  
+  color_c <- pal_ucscgb(alpha = 0.8)(length(sort(unique(segMT_slim$Cluster))))
+  names(color_c) <- sort(unique(segMT_slim$Cluster))
+  
+  if(FiltSegbyLen){
+    segMT_slim_filt <- segMT_slim[segMT_slim$segLen>1e6,,drop=F]
+  }else{segMT_slim_filt <- segMT_slim}
+
+  segMT_slim_filt$segLen_MB <- segMT_slim_filt$segLen/1e6
+  segMT_slim_filt$Cluster_nFeatureRNA_segnom <- segMT_slim_filt$Cluster_nFeatureRNA_seg/segMT_slim_filt$segLen_MB
+  segMT_slim_filt$nFeature_atac_segnom <- segMT_slim_filt$nFeature_atac_seg/segMT_slim_filt$segLen_MB
+  
+  #Plot for nCount_RNA vs nCount_ATAC
+  if(dotPlot4Seg){
+    outdir_seg <- paste0(outdir,"/seg-level");if(!file.exists(outdir_seg)){dir.create(outdir_seg,recursive=T)}
+    
+    plot_point(segMT_slim_filt,x_aes = "Cluster_nCountRNA_seg",y_aes="med_nCountATAC_seg",gtitle= paste0("Segment"),
+               x_lab = "lognnCount_RNA",y_lab = "lognCount_ATAC",colour_item = "Cluster",size_item = "segLen_MB",size_lab="length(Mb)",
+               color_value = color_c,outfile = paste0(outdir_seg,"/nCountATAC_nCountRNA_segment.pdf"),
+               log_x=T,log_y=T,label_term=label_term)
+    # plot_point(segMT_slim_filt,x_aes = "Cluster_nFeatureRNA_segnom",y_aes="nFeature_atac_segnom",gtitle= paste0("Segment"),
+    #            x_lab = "lognFeature_RNA",y_lab = "lognFeature_ATAC",colour_item = "Cluster",size_item = "segLen_MB",size_lab="length(Mb)",
+    #            color_value = color_c,outfile = paste0(outdir_seg,"/nFeatureATAC_nFeatureRNA_segment.pdf"),
+    #            log_x=T,log_y=T,label_term="Chromosome")
+    
+    #Figure5: dot:segment (atacCNV vs nCountRNA/nFeatureRNA)
+    plot_point(segMT_slim_filt,x_aes = "Cluster_nCountRNA_seg",y_aes="SegMean",gtitle= paste0("Segment"),
+               x_lab = "lognCount_RNA",y_lab = "Relative CN (ATAC)",colour_item = "Cluster",size_item = "segLen_MB",size_lab="length(Mb)",
+               color_value = color_c,outfile = paste0(outdir_seg,"/atacCNV_vs_nCountRNA_segment.pdf"),
+               log_x=T,log_y=F,label_term=label_term)
+    # plot_point(segMT_slim_filt,x_aes = "Cluster_nFeatureRNA_seg",y_aes="SegMean",gtitle= paste0("Segment"),
+    #            x_lab = "lognFeature_RNA",y_lab = "Relative CN (ATAC)",colour_item = "Cluster",size_item = "segLen_MB",size_lab="length(Mb)",
+    #            color_value = color_c,outfile = paste0(outdir_seg,"/atacCNV_vs_nFeatureRNA_segment.pdf"),
+    #            log_x=T,log_y=F,label_term="Chromosome")
+    
+    #Figure4: dot:segment (CNV_atac vs CNV_rna)
+    if(!is.null(cnv_rna)){
+      plot_point(segMT_slim_filt,x_aes = "med_inferCNV_seg",y_aes="SegMean",gtitle= paste0("Segment"),
+                 x_lab = "Relative CN (RNA)",y_lab = "Relative CN (ATAC)",colour_item = "Cluster",size_item = "segLen_MB",size_lab="length(Mb)",
+                 color_value = color_c,outfile = paste0(outdir_seg,"/atacCNV_vs_rnaCNV_segment.pdf"),
+                 log_x=F,log_y=F,label_term=label_term)
+    }
+      
+  }
+
+    #Figure2: dot:gene
+    ###add inferCNV, ATAC and Ncells to RNA
+    Ncell <- cellMeta%>%
+      dplyr::count(Cluster)%>%
+      as.data.frame()
+    colnames(Ncell)[2]<- "Ncells"
+    
+    if(!is.null(cnv_rna)){
+    mt_rna_bulk_long2 <- merge(mt_rna_bulk_long,cnv_rna_bulk_long,by=intersect(colnames(mt_rna_bulk_long),colnames(cnv_rna_bulk_long)),all.x=T)
+    df_gene0<- unique(mt_rna_bulk_long2[,c("gene_name","Cluster","segName","binID","Cluster_segName_gene","Clmean_nCountRNA_gene","Cluster_nCountRNA_seg",
+                                           "Cluster_nFeatureRNA_seg","Cluster_nCountATAC_gene","med_inferCNV")])
+    df_gene0 <- merge(df_gene0,Ncell,by="Cluster",all=T)
+    df_gene<- unique(df_gene0[,c("Cluster","gene_name","Clmean_nCountRNA_gene","Cluster_nCountATAC_gene",
+                                 "med_inferCNV","Cluster_segName_gene","Ncells")]) 
+    }else{
+      mt_rna_bulk_long2 <- mt_rna_bulk_long
+      df_gene0<- unique(mt_rna_bulk_long2[,c("gene_name","Cluster","segName","binID","Cluster_segName_gene","Clmean_nCountRNA_gene","Cluster_nCountRNA_seg",
+                                             "Cluster_nFeatureRNA_seg","Cluster_nCountATAC_gene")])
+      df_gene0 <- merge(df_gene0,Ncell,by="Cluster",all=T)
+      df_gene<- unique(df_gene0[,c("Cluster","gene_name","Clmean_nCountRNA_gene","Cluster_nCountATAC_gene",
+                                   "Cluster_segName_gene","Ncells")])  
+    }
+    if(dotPlot4Gene){
+      outdir_g <- paste0(outdir,"/gene-level");if(!file.exists(outdir_g)){dir.create(outdir_g,recursive=T)}
+      
+    #dotplot Gene-level for Clusters
+    if(is.null(gene_ls)){
+      gene_ls <- unique(df_gene$gene_name)
+    }
+    for(ge in gene_ls){
+      df_gene_gi <- unique(df_gene[df_gene$gene_name==ge,c("Cluster","gene_name","Cluster_segName_gene","Clmean_nCountRNA_gene","Cluster_nCountATAC_gene","Ncells"),drop=F])
+      plot_point(df_gene_gi,x_aes = "Clmean_nCountRNA_gene",y_aes="Cluster_segName_gene",gtitle=ge,size_item="Ncells",size_lab="N cells",
+                 x_lab = "lognCount_RNA",y_lab = "Relative CN (ATAC)",colour_item = "Cluster",color_gradient=F,
+                 color_value = color_c,outfile = paste0(outdir_g,"/atacCNV_vs_nCountRNA_gene_",ge,".pdf"),
+                 log_x=T,log_y=F,label_term="Cluster",legend_position="right",legend_color="none")
+
+      
+      plot_point(df_gene_gi,x_aes = "Clmean_nCountRNA_gene",y_aes="Cluster_nCountATAC_gene",gtitle= ge,
+                 size_item="Ncells",size_lab="N cells",
+                 x_lab = "lognCount_RNA",y_lab = "lognCount_ATAC",colour_item = "Cluster",color_gradient=F,
+                 color_value = color_c,outfile = paste0(outdir_g,"/nCountATAC_nCountRNA_gene_",ge,".pdf"),
+                 log_x=T,log_y=T,label_term="Cluster",legend_position="right",legend_color="none")
+      # if(!is.null(cnv_rna)){
+      #   df_gene_gi <- unique(df_gene[df_gene$gene_name==ge,c("Cluster","gene_name","Cluster_segName_gene","Clmean_nCountRNA_gene","Cluster_nCountATAC_gene","med_inferCNV","Ncells"),drop=F])
+      #   plot_point(df_gene_gi,x_aes = "med_inferCNV",y_aes="Cluster_segName_gene",gtitle= ge,size_item="Ncells",size_lab="N cells",
+      #              x_lab = "Relative CN (RNA)",y_lab = "Relative CN (ATAC)",colour_item = "Cluster",color_gradient=F,
+      #              color_value = color_c,outfile = paste0(outdir_g,"/atacCNV_vs_rnaCNV_gene_",ge,".pdf"),
+      #              log_x=F,log_y=F,label_term="Cluster",legend_position="right",legend_color="none")
+      # }
+      # 
+    }
+                      
+  }
+  
+  return(list(segPlot.data=segMT_slim_filt,
+              genePlot.data=mt_rna_bulk_long2
+              ))
+}
 
 

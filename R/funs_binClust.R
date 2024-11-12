@@ -11,6 +11,7 @@ suppressPackageStartupMessages({
 # source("mydataProcess.R") 
 # source("figurePlot.R")
 
+
 #' @title binClust()
 #' @description Process the input matrix into a bin count matrix if required, then calculate 
 #' the ratio relative to the reference, and perform PCA dimensional reduction and clustering 
@@ -19,6 +20,7 @@ suppressPackageStartupMessages({
 #' @param ref_group_names the group name as reference
 #' @param chrs analysis for specific chromosomes
 #' @param cytoBandFile the reference annotation of chromosome location, BED format with columns of c("chrom","chromStart","chromEnd","name","gieStain")
+#' @export
 binClust <- function(inputMat,cellMeta,ref_group_names=NULL,
                      chrs = NULL,
                      delimit = "-",

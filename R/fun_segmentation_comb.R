@@ -1,5 +1,7 @@
 suppressMessages({require(data.table)})
+
 #' @title chromosome_order()
+#' @export
 chromosome_order <- function(chrom) {
   sapply(chrom, function(x) {
     if (x == "chrX") {
@@ -14,6 +16,8 @@ chromosome_order <- function(chrom) {
 
 #' @title strings2bed()
 #' @description convert strings (e.g., "chrx-xxx-xxx") to bed format
+#' @export
+
 strings2bed <- function(strings,split_by = "_|-|:",check.sort = TRUE){
     bin_bed <- strsplit(strings, "_|-|:")
     bin_bed <- do.call(rbind,bin_bed)
@@ -33,10 +37,12 @@ strings2bed <- function(strings,split_by = "_|-|:",check.sort = TRUE){
     return(bin_bed)
 }
 
+
 #' @title DEsegs()
 #' @description Test the difference in ratio values of all bins on each segment between the two groups.
 #' @param data.frame with columns: bin name, segment name, ratio of group1, ratio of group2
 #' @return mode=2 in the output data.frame means the segment with differential mean ratio between groups.
+#' @export
 DEsegs <- function(df,group1="refC",group2="obsC",
     wide2long_by="binID",
     p.adj_cutoff = 0.05,
@@ -77,7 +83,10 @@ DEsegs <- function(df,group1="refC",group2="obsC",
     return(stat.test)
 } 
 
+
 #' @title segCNV_refine()
+#' @export
+
 segCNV_refine <- function(clonalRes,CNest.ref,cytoBand,
     seg_method="PELT", # "robseg",#"gaussian", #
     seg.count.lim = 80,

@@ -6,7 +6,7 @@
 #' This function will convert single-cell matrix to cluster-level matrix first based on sub-cluster annotation 
 #' @param colname_ref the name of group taken as reference.
 #' @param ref.value numeric data.frame with the length of nrow(mat)
-#' 
+#' @export
 CNratio_peak <- function(mt,cell_ano,ref.value=NULL,colname_ref="adjacent",Norm_by_ref=FALSE){
   mt_b <- pseudo_bulk_v2(mt,group_ano = cell_ano,method ="mean",adjust_zero =TRUE)
   # ratio matrix
@@ -48,7 +48,7 @@ CNratio_peak <- function(mt,cell_ano,ref.value=NULL,colname_ref="adjacent",Norm_
 #' @param colname_ref the name of group taken as reference.
 #' @param chr_select This is only needed when performed on a specific chromosome.
 #' @return cell_info a data.frame with cell ID and sub-cluster annotation on columns
-#' 
+#' @export
 #source("mydataProcess.R",chdir = T) 
 count2ratio <- function(mt_obs,mt_ref,colname_ref="adjacent",win=10,chr_select=NULL){
   suppressMessages({
@@ -88,7 +88,7 @@ count2ratio <- function(mt_obs,mt_ref,colname_ref="adjacent",win=10,chr_select=N
 #' 
 #' @description  Find sub-cluster based on bin-level ratio using PCA method of seurat
 #' @title find_subclust()
-
+#' @export
 find_subclust <- function(mt,add_metadata=NULL,resolution = 0.8,sep_by = c("-", "-"),assay="binCount"){
   suppressMessages({
     library(Signac)
@@ -134,6 +134,7 @@ find_subclust <- function(mt,add_metadata=NULL,resolution = 0.8,sep_by = c("-", 
 #' AAACTCGTCTCGACAA-1          0
 #' AAACTGCAGTTATGAG-1          0
 #' @title reClustByGroup()
+#' @export
 reClustByGroup <- function(mat,cell_info,cells=NULL,resolution = 0.8,sep_by = c("-", "-"),assay="binCount"){
   cell_info[,1] <- as.character(cell_info[,1])
   if(is.null(cells)){cells=colnames(mat)}
@@ -154,6 +155,7 @@ reClustByGroup <- function(mat,cell_info,cells=NULL,resolution = 0.8,sep_by = c(
 
 
 #' @title huber_loss()
+#' @export
 # Huber Loss Function in R
 huber_loss <- function(y_true, y_pred, delta = 1.35) {
   # Calculate the absolute differences
@@ -185,6 +187,7 @@ huber_loss <- function(y_true, y_pred, delta = 1.35) {
 #' segValue.method is "mean", "median" or "density". For "density", we will take the density$x from the peak of density as the segMean.
 #' @param seg.count.lim the maximum number of segments on whole genome. Default is 80.
 #' cytoBand <- "/Volumes/B/reference/cytoBand_hg38.tsv"
+#' @export
 segment4df_v1 <- function(df,cytoBand=NULL,win=0,outpath="./",
                        doFilt=TRUE, 
                        segLen_min = 1e6,
@@ -319,6 +322,7 @@ segment4df_v1 <- function(df,cytoBand=NULL,win=0,outpath="./",
 }
 
 #' @title segment4df()
+#' @export
 #' segmentation per chromosome
 segment4df <- function(df,cytoBand=NULL,win=0,outpath="./",
                        doFilt=TRUE, 
@@ -488,6 +492,7 @@ segment4df <- function(df,cytoBand=NULL,win=0,outpath="./",
 #' @param mat single-cell matrix with cells on columns for generate cluster-level pseudo-bulk matrix
 #' @param cell_info data.frame with cells as rownames, and clusters on the first column
 #' @param relative_method  ratio or Subtraction for relative value
+#' @export
 seg4clusters <- function(mat,cell_info,
                          cytoBand=NULL,
                          col_ref=NULL,
@@ -570,6 +575,7 @@ seg4clusters <- function(mat,cell_info,
 
 #' @title seg_assess()
 #' @param seg_ls list output from seg4clusters()
+#' @export
 seg_assess <- function(seg_ls,sd.cutoff=NULL,outname=paste0("./hist.seg_segRatio.pdf"),outplot=TRUE){
 
   #filterout bad subCluster
@@ -684,6 +690,7 @@ seg_assess <- function(seg_ls,sd.cutoff=NULL,outname=paste0("./hist.seg_segRatio
 
 #‘ @description add columns of chrosome absolute start, end and segLen for "segName" of a data.frame
 #' @title add_segLen()
+#' @export
 add_segLen <- function(df,genome="hg38",true_loc=TRUE){
   suppressMessages({
     library(BSgenome)
@@ -728,9 +735,10 @@ add_segLen <- function(df,genome="hg38",true_loc=TRUE){
 }
 
 #' @title .get_ref_mean()
-#'@keywords internal function
-#'@param matrix input matrix, group in columns (cells) 
-#'@param ref_indice numeric indices for group
+#' @keywords internal function
+#' @param matrix input matrix, group in columns (cells) 
+#' @param ref_indice numeric indices for group
+#' @export
 .get_ref_mean <- function(matrix,ref_indice,zero.rm=FALSE){
   library(matrixStats)
   RN <- rownames(matrix)
@@ -765,6 +773,7 @@ add_segLen <- function(df,genome="hg38",true_loc=TRUE){
 #' row mean of the selected cells reaches the threshold, and return the selected cells
 #' @param mt matrix with cells in column and features in row
 #' @param order_col order columns from low to high (l2h) or high to low (h2l)
+#' @export
 find_mean <- function(mt,cutoff,order_col="l2h",zero.rm=TRUE){
   if(order_col %in% "l2h"){
   mt <- mt[,order(colSums(mt))]
@@ -800,6 +809,7 @@ find_mean <- function(mt,cutoff,order_col="l2h",zero.rm=TRUE){
 
 #' @title filt_peaks_bySum()
 #' @param mat matrix with peaks on row, cells on clumn
+#' @export
 filt_peaks_bySum <- function(mat,rows,zscore.lim=2){
   totalcount <- rowSums(mat)
   zscore <- scale(totalcount)
@@ -812,6 +822,7 @@ filt_peaks_bySum <- function(mat,rows,zscore.lim=2){
 #' @description find Reference Clone based On Clonal Segmentation for Ratio
 #' @param mat input matrix with cell barcodes on columns
 #' @param cell_metadata data.frame with cell barcodes as rownames and cell annotation on the fist column
+#' @export
 #' 
 findRefClone <- function(mat,cell_metadata,seg.method="gaussian",seg.penalty=0.4,
                          outplot_path="./"
@@ -874,6 +885,7 @@ findRefClone <- function(mat,cell_metadata,seg.method="gaussian",seg.penalty=0.4
 #' @param mat peak-cell count matrix of whole genome. peaks as rownames with "chrx-xxx-xxx", "chrx:xxx-xxx" or "chrx_xxx_xxx" format
 #' @param ref.value 
 #' @param ChrExclude the list of chromosome should be excluded from analysis. Default = c('chrX', 'chrY', 'chrM')
+#' @export
 findClonePerChr <- function(mat,
                             ref.value,
                             outdir=".",
@@ -939,6 +951,7 @@ findClonePerChr <- function(mat,
 }
 
 #' @title findClone.SortCells()
+#' @export
 findClone.SortCells <- function(mtx_sub,
                                 df_seg_baseline,
                                 ref.value,
@@ -1166,6 +1179,8 @@ findClone.SortCells <- function(mtx_sub,
 #' @description the proportion of peaks (or bins) with different integerCNV  between df_query and df_ref
 #' @param df_ref data.frame with c("binID","ratio_map","integerCNV") columns
 #' @param df_query data.frame with "binID", "SegMean" columns
+#' @export
+
 compare2RefSeg <- function(df_ref,df_query,df_binRatio=df_query,delta_base=NULL,diff_prop_lim=0.01,reCalcuCNA=FALSE){
   CNbase_bin <- df_ref[,c("binID","ratio_map","integerCNV")]
   CNbase <- unique(df_ref[,c("ratio_map","integerCNV")])

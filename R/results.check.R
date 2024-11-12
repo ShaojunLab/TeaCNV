@@ -1,5 +1,7 @@
 
 #' @title GenomeHetFilter()
+#' @export
+
 GenomeHetFilter <- function(obs, mode.res, max.non.clonal, max.neg.genome,Q, verbose=FALSE) {
   ## calculate provisional seg_Z_tab and filter out modes that imply > 50% genome het.
   ## and filter out modes with > 2.5% het genome < 0
@@ -42,7 +44,9 @@ GenomeHetFilter <- function(obs, mode.res, max.non.clonal, max.neg.genome,Q, ver
   return(nc.ix | neg.mode.ix)
 }
 
+
 #' @title ReorderModeRes()
+#' @export
 ReorderModeRes = function(mode.res, ix, DROP=FALSE) {
   mode.res[["mode.tab"]] = mode.res[["mode.tab"]][ix,, drop=DROP]
   mode.res[["seg.z.tab"]] = mode.res[["seg.z.tab"]][ix,, drop=DROP]

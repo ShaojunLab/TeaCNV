@@ -4,7 +4,7 @@ suppressMessages({
   library(ggpubr)
   library(tidyr)
   library(ggsci)
-  #library(LaplacesDemon)
+  library(LaplacesDemon)
   library(Seurat)
   library(Signac)
   library(futile.logger)
@@ -14,8 +14,8 @@ cols_Palette <- c("#B0D9A5","#A6DAEF","#D9BDD8","#E58579","#8AB1D2","#F9E9A4","#
 # source("fun_Grange.R")
 
 custom_theme <-
-    ggplot2::theme_classic()+ 
-    ggplot2::theme(plot.background=element_blank(),
+    theme_classic()+ 
+    theme(plot.background=element_blank(),
           legend.position='right',
           plot.title = element_text(hjust = 0.5),
           axis.title = element_text(color="black",size=15),
@@ -29,9 +29,11 @@ custom_theme <-
           axis.ticks.x.top = element_blank()
         )#+guides(fill=guide_legend(title=legend.title))
 
+
 #' @title densityPlot_segs()
 #' @param clonalest_ls list of clonal-CNVs results
 #' @return list of plots
+#' @export
 densityPlot_segs <- function(clonalest_ls,
   seg.bed,
   cols_Palette=NULL,
@@ -85,7 +87,8 @@ densityPlot_segs <- function(clonalest_ls,
       xlim <- c(x_min,x_max)
     }
  
-    custom_theme <-
+
+  custom_theme <-
     theme_classic()+ 
     theme(plot.background=element_blank(),
           legend.position='right',
@@ -100,6 +103,7 @@ densityPlot_segs <- function(clonalest_ls,
           axis.line.x.top = element_blank(),
           axis.ticks.x.top = element_blank()
         )#+guides(fill=guide_legend(title=legend.title))
+
     ht2= ggplot() + 
           geom_density(data = subset(res_sub), aes(x = binRatio, color = clone), 
                        lwd = 0.5, adjust =1.5) +
@@ -117,8 +121,10 @@ densityPlot_segs <- function(clonalest_ls,
 }
 
 
+
 #' @title find_infoSeg()
 #' @param clonalest_ls list of clonal-CNVs results
+#' @export
 find_infoSeg <- function(clonalest_ls,
   seg_len_min=2e6,
   doPlot=TRUE,
@@ -258,6 +264,7 @@ find_infoSeg <- function(clonalest_ls,
       labs <- labs[!is.na(labs[,1]),]
 
       ##Custermrized
+
       custom_theme <-
         theme_classic()+ 
         theme(plot.background=element_blank(),
@@ -313,6 +320,7 @@ find_infoSeg <- function(clonalest_ls,
   CN_InfoSegs <- na.omit(CN_InfoSegs)
 
   if(doPlot){
+  clone_info <- data.frame(row.names=colnames(CN_InfoSegs)[1:(ncol(CN_InfoSegs)-1)],clone=colnames(CN_InfoSegs)[1:(ncol(CN_InfoSegs)-1)])
     cols_Palette <- c("#B0D9A5","#A6DAEF","#D9BDD8","#E58579","#8AB1D2","#F9E9A4","#F1AEA7","#9D9ECD","#C9C780")
     clone_info <- data.frame(row.names=colnames(CN_InfoSegs)[1:(ncol(CN_InfoSegs)-1)],clone=colnames(CN_InfoSegs)[1:(ncol(CN_InfoSegs)-1)])
     color_r <- cols_Palette[1:length(unique(clone_info$clone))]
