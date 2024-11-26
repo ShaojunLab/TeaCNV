@@ -739,8 +739,8 @@ HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
                       ){
   nd <- list("ComplexHeatmap","circlize","ggplot2","ggsci","futile.logger")
   #Plus.library(nd)
-  lapply(nd, require, character.only = TRUE)
-
+  lapply(nd, function(pkg) invisible(require(pkg, character.only = TRUE)))
+  
   if(!dir.exists(plotDir)){dir.create(plotDir,recursive=T)}
   
   dat <- as.data.frame(dat)
