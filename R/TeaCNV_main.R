@@ -16,7 +16,6 @@ suppressPackageStartupMessages({
   library(plyranges)
   library(ggExtra)
   library(stringr)
-  librsry(flog.appender)
 })
 # source("./R/funs_filtMT.R",chdir = T)
 # source("./R/mydataProcess.R",chdir = T) 
