@@ -31,7 +31,8 @@ Imports:
     LaplacesDemon,
     mixtools,
     strucchange,
-    plyranges
+    plyranges,
+    ggExtra
 Depends:
     GenomicRanges,
     data.table,
