@@ -73,10 +73,9 @@ CreateTeaCNVObject <- function(input,
                                   count_lim = 4,
                                   prop_reset=TRUE
 ){
-  require(stringr)
-  require(plyranges)
-  require(tidyr)
-  require(futile.logger)
+  packages <- c("stringr", "dplyr", "tidyr", "Matrix", "irlba","plyranges","futile.logger")
+  invisible(lapply(packages, require, character.only = TRUE))
+  
   logVar <- ""
   log_appender <- function(level, ...) {
     logVar <<- paste0(logVar, level)
