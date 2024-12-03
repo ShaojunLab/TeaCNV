@@ -75,6 +75,7 @@ CreateTeaCNVObject <- function(input,
 ){
   require(stringr)
   require(plyranges)
+  require(tidyr)
   logVar <- ""
   log_appender <- function(level, ...) {
     logVar <<- paste0(logVar, level)
