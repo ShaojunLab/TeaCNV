@@ -32,7 +32,8 @@ Imports:
     mixtools,
     strucchange,
     plyranges,
-    ggExtra
+    ggExtra,
+    stringr
 Depends:
     GenomicRanges,
     data.table,
