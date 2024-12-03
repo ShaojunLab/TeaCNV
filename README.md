@@ -47,15 +47,12 @@ cnv_obj <- CreateTeaCNVObject(input = mtx,
                              ref_group_names = "reference",
                              ChrRemove = c('chrX', 'chrY', 'chrM'),
                              genome = "hg38",
-                             count_lim = 4
-                            )
-res <- runTeaCNV(
-	        input_obj = cnv_obj,
+                             count_lim = 4)
+res <- runTeaCNV(input_obj = cnv_obj,
 	        outdir = "./example",
 	        delt_lim = 0.3,
 		min_cells_in_group = 10,
-	        seu_resolution = 1.2
-	    )
+	        seu_resolution = 1.2)
 ```
 
 The output of TeaCNV is saved in the 'final.CNVres.rds' file. If you need to modify parameters and rerun the analysis, you can load the 'TeaCNV.obj' file as the `cnv_obj` object and continue from there.
