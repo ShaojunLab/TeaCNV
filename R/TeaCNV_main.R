@@ -15,6 +15,7 @@ suppressPackageStartupMessages({
   library(doParallel)
   library(plyranges)
   library(ggExtra)
+  library(stringr)
 })
 # source("./R/funs_filtMT.R",chdir = T)
 # source("./R/mydataProcess.R",chdir = T) 
