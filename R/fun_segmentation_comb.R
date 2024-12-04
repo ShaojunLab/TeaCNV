@@ -240,8 +240,8 @@ segCNV_refine <- function(clonalRes,CNest.ref,cytoBand,
                             #Check the ratio difference between fragments in region_x
                             bin_dat_ref <- BinSegRatio_ref[bins_x,c("binID","binRatio","segName","SegMean","integerCN")]
                             xCNV_ref_prop <- bin_dat_ref %>%
-                              count(segName,integerCN) %>% 
-                              mutate(CNprop = n / sum(n))%>% 
+                              dplyr::count(segName,integerCN) %>% 
+                              dplyr::mutate(CNprop = n / sum(n))%>% 
                               na.omit()
                             dominant_xCNV_ref <- xCNV_ref_prop[which.max(xCNV_ref_prop$CNprop),,drop=F]
                             SegMean_domin<- unique(BinSegRatio_ref$SegMean[BinSegRatio_ref$segName %in%dominant_xCNV_ref$segName])
