@@ -353,7 +353,7 @@ runTeaCNV <- function(
     StopStep = 4,
     choice = ""
 ){
-  packages <- c("Signac", "Seurat", "tidyr", "Matrix", "irlba","plyranges","futile.logger","ggplot2","MatrixGenerics","MixGHD","stringr","data.table","ComplexHeatmap","RColorBrewer")
+  packages <- c("Signac", "Seurat", "tidyr", "Matrix", "irlba","plyranges","futile.logger","ggplot2","MatrixGenerics","MixGHD","stringr","data.table","ComplexHeatmap","RColorBrewer","changepoint")
   invisible(lapply(packages, require, character.only = TRUE))
   
   if (is.null(outdir)) {
