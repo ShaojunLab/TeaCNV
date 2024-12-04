@@ -21,7 +21,7 @@ Alternatively, you can pull the code from github and install it:
 git clone https://github.com/ShaojunLab/TeaCNV
 cd TeaCNV
 R
-install.packages("./", repos=NULL, type="source")
+install.packages("./", repos=NULL, type="source",INSTALL_opts = c("--no-staged-install"))
 ```
 
 ## Usage
