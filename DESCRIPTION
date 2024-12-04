@@ -33,7 +33,8 @@ Imports:
     strucchange,
     plyranges,
     ggExtra,
-    stringr
+    stringr,
+    changepoint
 Depends:
     GenomicRanges,
     data.table,
