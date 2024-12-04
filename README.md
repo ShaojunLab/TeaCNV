@@ -30,7 +30,7 @@ If TeaCNV is already installed, follow the steps below to set up the working dir
 
 ```
 library(TeaCNV)
-setwd("./TeaCNV")
+#Download the 'example' folder to the current  work path
 load("./example/atac_count.RData")
 mtx <- as.matrix(mtx)
 cell_meta <- read.csv("./example/cell_meta.csv",row.name=1)
