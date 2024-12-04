@@ -62,8 +62,9 @@ DEsegs <- function(df,group1="refC",group2="obsC",
 
     ###differential test
     stat.test <- df.long %>%
-        dplyr::group_by(segID, group) %>%
-        dplyr::filter(n() >= 2) %>%
+        dplyr::add_count(segID, group) %>% 
+        dplyr::filter(n >= 2) %>%
+        dplyr::select(-n) %>%
         dplyr::ungroup()%>%
         dplyr::group_by(segID) %>%
         t_test(ratio ~ group) %>%
