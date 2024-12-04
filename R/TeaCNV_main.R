@@ -926,7 +926,7 @@ runTeaCNV <- function(
     rownames(cellMeta)<- cellMeta$row
     cellMeta$CellProportion <- cellMeta$Ncells/nrow(cellMeta)
     cloneInfo_table <- unique(cellMeta[,c("clone","aneuploidy_score","Ncells","CellProportion")])
-    write.csv(cloneInfo_table,paste0(outdir_clt,"/cloneInfo_table.csv"),row.names=F)
+    write.csv(cloneInfo_table,paste0(outdir,"/cloneInfo_table.csv"),row.names=F)
     
     left_anno_cols <- list()
     cellmeta2 <- outres$cellinfo[,c("clone"),drop=F]
