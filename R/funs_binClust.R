@@ -45,6 +45,7 @@ binClust <- function(inputMat,cellMeta,ref_group_names=NULL,
   suppressMessages({
     library(ggplot2)
     library(dplyr)
+    library(stringr)
   })
   flog.info("\n")
   if(outdir != "." && !file.exists(outdir)){
