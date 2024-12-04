@@ -1,5 +1,5 @@
 options(expressions=10000)
-workpath="./"
+workpath=system.file(package = "TeaCNV")
 setwd(workpath)
 suppressPackageStartupMessages({
   library(Matrix)
@@ -121,17 +121,17 @@ CreateTeaCNVObject <- function(input,
   
   if(is.null(blacklistFile)){
     if(genome %in% "hg38"){
-      blacklistFile <- file.path(".", "data", "hg38-blacklist.v2.bed")
+      blacklistFile <- system.file("data", "hg38-blacklist.v2.bed", package = "TeaCNV")
     }else if(genome %in% "hg19"){
-      blacklistFile <- file.path(".", "data", "hg19-blacklist.v2.bed")
+      blacklistFile <- system.file("data", "hg19-blacklist.v2.bed", package = "TeaCNV")
     }
   }
   
   if(is.null(cytoBandFile)){
     if(genome %in% "hg38"){
-      cytoBandFile <- file.path(".", "data", "cytoBand_hg38.tsv")
+      cytoBandFile <- system.file("data", "cytoBand_hg38.tsv", package = "TeaCNV")
     }else if(genome %in% "hg19"){
-      cytoBandFile <- file.path(".", "data", "cytoBand_hg19.txt")
+      cytoBandFile <- system.file( "data", "cytoBand_hg19.txt", package = "TeaCNV")
     }
     
   }
