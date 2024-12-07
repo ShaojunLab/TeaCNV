@@ -96,7 +96,7 @@ CreateTeaCNVObject <- function(input,
       raw.data <- as.matrix(raw.data)
     }
   }else if(Reduce("|", is(input) %in% c("dgCMatrix", "matrix"))){
-    raw.data <- input
+    raw.data <- as.matrix(input)
   }else if (Reduce("|", is(input) %in% c("data.frame"))) {
     raw.data <- as.matrix(input)
   }else if(Reduce("|", is(input) %in% c("Seurat"))){
