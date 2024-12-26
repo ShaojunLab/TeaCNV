@@ -768,7 +768,7 @@ clone_similarity <- function(cellbinCN,cellMeta,group_by="subCluster",Csize.min=
 #' @title clonal_ploidy()
 #' @description add clonal ploidy and diploidy annotation to clonal results
 #' @export
-clonal_ploidy <- function(clone_res_update){
+clonal_ploidy <- function(clone_res_update, baseCN_frac.min = 0.95){
   clone_ploidy <- unlist(lapply(clone_res_update,function(x)x$ploidy))
   if(length(clone_res_update)>2){
     clone_ploidy_mean <- median(clone_ploidy)
@@ -784,7 +784,7 @@ clonal_ploidy <- function(clone_res_update){
     #CNest <- peakIndex(x$input_BinSegRatio,CNest)
     baseCN <- CNest$CN[CNest$base==1]
     baseCN_frac <- sum(seg_dat$w[seg_dat$integerCN==baseCN])/sum(seg_dat$w)
-    if(baseCN_frac>0.95){
+    if(baseCN_frac>baseCN_frac.min){
       x$diploidy <- TRUE
     }else{x$diploidy <- FALSE}
     x$score$baseCN_frac <- baseCN_frac
