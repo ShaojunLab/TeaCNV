@@ -352,7 +352,7 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
     # a<- a[!is.na(a$integerCN),,drop=F]
     # a$integerCN <- factor(a$integerCN,levels = sort(unique(a$integerCN )))
     p3=ggplot(a,aes(x=get(p_x),weight = wei))+
-        geom_histogram(aes(y=..density.., ),breaks=breakshist)
+        geom_histogram(aes(y=after_stat(density), ),breaks=breakshist)
 
     
     plot_build <- ggplot_build(p3)
@@ -389,7 +389,7 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
         scale_fill_manual(values = colorss, breaks = breakshist)
       
       # p3 <- p3+  #a$value.segment.map
-      #   geom_histogram(aes(y=..density.., weight = wei),breaks=breakshist)+ #color="#E69F00",fill="wheat",
+      #   geom_histogram(aes(y=after_stat(density), weight = wei),breaks=breakshist)+ #color="#E69F00",fill="wheat",
       #   #scale_fill_manual(values = colorss) 
       #   scale_fill_gradientn(name = "",colours = colorss,#c("#003049", "#669bbc","#7e7f83","#c1121f","#780000"),
       #                        limits  = color_limit,oob = scales::squish)
@@ -399,7 +399,7 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
           geom_vline(xintercept = na.omit(unique(a$ratio_map)),col="grey",linetype = "dotted")
       }
       p3 <- p3+  #a$value.segment.map
-        geom_histogram(aes(y=..density.., weight = wei),color=colorss,fill=colorss,breaks=breakshist)
+        geom_histogram(aes(y=after_stat(density), weight = wei),color=colorss,fill=colorss,breaks=breakshist)
     }
     
     if(label_CN){
@@ -493,7 +493,7 @@ df_seg_C1$wei <- df_seg_C1$segLen/segLen_sum
 
 hist_plt <- ggplot(df_seg_C1,aes(x=SegMean,fill = ..x..))+
 geom_vline(xintercept = unique(df_seg_C1$ratio_map),col="grey",linetype = "dotted")+ 
-  geom_histogram(aes(y=..density.., weight = wei),breaks=breakshist)+
+  geom_histogram(aes(y=after_stat(density), weight = wei),breaks=breakshist)+
       ggtitle("Summary histogram")+
       coord_cartesian(xlim=ylim)+
       theme_bw() +
@@ -579,10 +579,10 @@ hist_custom <- function(data,x,
   if(add_density){
     if(!log_y){
       p1 <-  p1 +
-            geom_density(data=data,aes(x=get(x),y=scale_factor*..density..),lwd = 0.5,linetype ="dashed",colour = "grey",adjust = adjust)
+            geom_density(data=data,aes(x=get(x),y=scale_factor*after_stat(density)),lwd = 0.5,linetype ="dashed",colour = "grey",adjust = adjust)
     }else{
        p1 <-  p1 +
-            geom_density(data=data,aes(x=get(x),y=scale_factor*log10(..density..+1)),lwd = 0.5,linetype ="dashed",colour = "grey",adjust = adjust)
+            geom_density(data=data,aes(x=get(x),y=scale_factor*log10(after_stat(density)+1)),lwd = 0.5,linetype ="dashed",colour = "grey",adjust = adjust)
  
     }
   }
