@@ -62,7 +62,7 @@ CNV_esti_ini <- function(outdir=".",
       
       CNVdata <- CNVdata %>%
         dplyr::group_by(segID) %>%
-        do(data.frame(., w = length(.$segID)))%>%
+        dplyr::do(data.frame(., w = length(.$segID)))%>%
         dplyr::filter(w>=size_seg_cutoff,length_seg>=length_seg_cutoff)%>%
         as.data.frame()
     }
