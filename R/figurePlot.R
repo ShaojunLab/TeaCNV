@@ -1162,7 +1162,8 @@ replotInfercnv <- function(expr.mat,
                            column.title = "Genomic Region",
                            legend_side = "right",
                            color.breaks=NULL,
-                           plotDir="./"){
+                           plotDir="./",
+                          device="png"){
   nd <- list("data.table","ComplexHeatmap","dplyr","circlize","ggplot2","ggsci")
   lapply(nd, require, character.only = TRUE)
   if(!dir.exists(plotDir)){dir.create(plotDir,recursive=T)}
@@ -1274,16 +1275,19 @@ replotInfercnv <- function(expr.mat,
     
   }
   if(!is.null(names)){
-    if(draw_normal){
+    if(device=="png"){
       png(paste0(plotDir,"/",names,".png"),width = width,height = height,units = 'in',res= 300)
+    }else{
+      pdf(paste0(plotDir,"/",names,".pdf"),width = width,height = height)
+    }
+
+    if(draw_normal){
       draw(ht_normal%v%ht_plot, padding = unit(c(20, 10, 10, 10), "mm"),heatmap_legend_side = legend_side)
       dev.off()
     }else{
-      png(paste0(plotDir,"/",names,".png"),width = width, height = height,units = 'in',res= 300)
-      draw(ht_plot, heatmap_legend_side = legend_side) # 图例位置
+      draw(ht_plot, heatmap_legend_side = legend_side,annotation_legend_side = legend_side) # 图例位置
       dev.off()
-    }
-    
+    }    
   }
   return(ht_plot)
 }
