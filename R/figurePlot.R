@@ -1176,13 +1176,14 @@ replotInfercnv <- function(expr.mat,
   gene_order <- gene_order[pos,]
   
   # top annotation
-  color <- rep(c("grey", "black"), length.out =22)
+  color <- rep(c("grey90", "grey50"), length.out =22)
   text_colors <- rep(c("black", "white"), length.out = 22)
   top_color <- HeatmapAnnotation(
     cluster = anno_block(gp = gpar(fill = color,col = "NA"),
                          labels = 1:22,
-                         labels_gp = gpar(col = text_colors)
-    ))
+                         labels_gp = gpar(col = text_colors),
+                         height = unit(0.5, "cm")
+  ))
   #expr.mat order by metadata
   if(!is.null(metadata)){
     expr.mat <- expr.mat[,match(rownames(metadata),colnames(expr.mat))]
