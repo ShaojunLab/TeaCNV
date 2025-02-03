@@ -30,7 +30,7 @@ strings2bed <- function(strings,split_by = "_|-|:",check.sort = TRUE){
         bin_bed <- bin_bed %>%
         mutate(Chromosome_numeric = chromosome_order(chromosome)) %>%
         arrange(Chromosome_numeric, start, end) %>%
-        select(-Chromosome_numeric)  %>%
+        dplyr::select(-Chromosome_numeric)  %>%
         as.data.frame()
 
     }
