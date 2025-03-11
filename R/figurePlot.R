@@ -974,7 +974,7 @@ HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
         at = gene_annotation$peak_index, 
         labels = gene_annotation$gene,
         side = "top",
-        labels_gp = gpar(fontsize = 5,
+        labels_gp = gpar(fontsize =10,
                         col = label_color
                         )),
      cluster = anno_block(gp = gpar(fill = color,col = "NA"),
