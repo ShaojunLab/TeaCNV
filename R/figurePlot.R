@@ -716,6 +716,9 @@ add_ends <- function(dat,bin_size=50000){
 #' @param row_anno data.frame with group annotation in columns and cellID as rownames
 #' @param ref_group_names group name in the first column of row_anno
 #' @param custom_colors list of paramters for color values
+#' @param label_genes vector of genes
+#' @param annotations GRanges object
+#' @param label_color color for label_genes
 #' @export
 HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
                       clust=FALSE,
@@ -735,7 +738,10 @@ HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
                       ref_group_names=NULL,
                       max.legend.value = NULL,
                       custom_colors=NULL,
-                      device="png"
+                      device="png",
+                      label_genes=NULL,
+                      annotations=NULL,
+                      label_color="black"
                       ){
   nd <- list("ComplexHeatmap","circlize","ggplot2","ggsci","futile.logger")
   #Plus.library(nd)
@@ -924,7 +930,62 @@ HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
     label_brk <- custom_colors$label_brk
   }
   if(!is.null(legend_titles)){titles <- legend_titles}
+  
+  if(!is.null(label_genes)){
+    if(is.null(annotations)){
+      require(EnsDb.Hsapiens.v86)
+      annotations <- GetGRangesFromEnsDb(ensdb = EnsDb.Hsapiens.v86)
+    }
+    peaks <- data.frame(Region=rownames(dat))
+    peaks <- peaks %>%
+    tidyr::separate(
+      col = Region,
+      into = c("chr", "start", "end"),
+      sep = ":|-|_",   
+      remove = FALSE
+    ) %>%
+    dplyr::mutate(
+      start = as.integer(start),
+      end = as.integer(end)
+    ) %>%
+    dplyr::select(chr, start, end, everything())
+    peak_ranges <- GRanges(
+      seqnames = peaks$chr,
+      ranges = IRanges(
+        start = peaks$start,
+        end = peaks$end
+      )
+    )
+    gene_miss <- label_genes[!label_genes %in% annotations$gene_name]
+    if(length(gene_miss)>0){
+      message(paste0(paste(gene_miss,collapse=",")," not found in annotations."))
+    }
+    Genes_gr <- annotations[annotations$gene_name %in% label_genes,,drop=F]
 
+    hits <- findOverlaps(Genes_gr, peak_ranges)
+    gene_annotation <- data.frame(
+      gene = Genes_gr$gene_name[queryHits(hits)],
+      peak_index = subjectHits(hits)  # 对应矩阵的列索引
+    )%>% 
+      distinct(gene, .keep_all = TRUE)
+
+    top_color <- HeatmapAnnotation(
+      gene = anno_mark(
+        at = gene_annotation$peak_index, 
+        labels = gene_annotation$gene,
+        side = "top",
+        labels_gp = gpar(fontsize = 5,
+                        col = label_color
+                        )),
+     cluster = anno_block(gp = gpar(fill = color,col = "NA"),
+                     labels = 1:22,
+                     labels_gp = gpar(col = text_colors),
+                     height = unit(0.5, "cm"))
+      )
+
+  }
+
+    
   ht_plot = Heatmap(as.matrix(t(dat)),
                     cluster_rows = clust,
                     clustering_method_rows = clustering_method_rows,
@@ -1073,7 +1134,8 @@ heatmap4peakMt <- function(mat,meta_info=NULL,max_lim=NULL,sep_by="-",outdir="./
                            legend_direction = "vertical", legend_titles=NULL,heatmap_legend_side="right",
                            show_legend_row = TRUE,
                            column.title = "Genomic Region",draw_normal = FALSE,
-                           ref_group_names=NULL,custom_colors=NULL,device="png"){
+                           ref_group_names=NULL,custom_colors=NULL,device="png",
+                           label_genes=NULL,annotations=NULL,label_color="black"){
   
   if(!is.null(max_lim)){
     mat[mat>max_lim] <- max_lim
@@ -1107,7 +1169,8 @@ heatmap4peakMt <- function(mat,meta_info=NULL,max_lim=NULL,sep_by="-",outdir="./
               column.title = column.title,
               legend.direction=legend_direction,legend_side = heatmap_legend_side,legend_titles=legend_titles,show_legend_row=show_legend_row,
               draw_normal = draw_normal,
-              ref_group_names=ref_group_names,custom_colors=custom_colors,device=device)
+              ref_group_names=ref_group_names,custom_colors=custom_colors,device=device,
+              label_genes=label_genes,annotations=annotations,label_color=label_color)
   return(p)
 }
 
