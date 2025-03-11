@@ -718,7 +718,6 @@ add_ends <- function(dat,bin_size=50000){
 #' @param custom_colors list of paramters for color values
 #' @param label_genes vector of genes
 #' @param annotations GRanges object
-#' @param label_color color for label_genes
 #' @export
 HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
                       clust=FALSE,
@@ -930,11 +929,13 @@ HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
     label_brk <- custom_colors$label_brk
   }
   if(!is.null(legend_titles)){titles <- legend_titles}
-  
+
   if(!is.null(label_genes)){
     if(is.null(annotations)){
+      require(Signac)
       require(EnsDb.Hsapiens.v86)
       annotations <- GetGRangesFromEnsDb(ensdb = EnsDb.Hsapiens.v86)
+      seqlevelsStyle(annotations) <- "UCSC"
     }
     peaks <- data.frame(Region=rownames(dat))
     peaks <- peaks %>%
@@ -969,23 +970,21 @@ HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
     )%>% 
       distinct(gene, .keep_all = TRUE)
 
-    top_color <- HeatmapAnnotation(
+
+    bottom_col <-  HeatmapAnnotation(
       gene = anno_mark(
         at = gene_annotation$peak_index, 
         labels = gene_annotation$gene,
-        side = "top",
-        labels_gp = gpar(fontsize =10,
+        side = "bottom",
+        labels_gp = gpar(fontsize = 10,
                         col = label_color
-                        )),
-     cluster = anno_block(gp = gpar(fill = color,col = "NA"),
-                     labels = 1:22,
-                     labels_gp = gpar(col = text_colors),
-                     height = unit(0.5, "cm"))
+                        ))
       )
 
+  }else{
+    bottom_col <- NULL
   }
 
-    
   ht_plot = Heatmap(as.matrix(t(dat)),
                     cluster_rows = clust,
                     clustering_method_rows = clustering_method_rows,
@@ -1002,6 +1001,7 @@ HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
                       legend_height = unit(3, "cm"), #图例长度
                       color_bar = color_bars),
                     top_annotation = top_color,
+                    bottom_annotation=bottom_col,
                     left_annotation = row_color,
                     column_title = column.title,
                     show_column_names = FALSE,
@@ -1123,57 +1123,6 @@ plot_peak<-function(y0,aaa,main0="",breaks0=30,Zcut=-Inf)
 }
 
 
-#' @title heatmap4peakMt()
-#' @description heatmap for the 'mat' ordered by row of meta_info
-#' @param mat matrix with peak in row and cells in columns, rownames pattern "chr-xxx-xxx"
-#' @param sep_by a symbol for the row names separation
-#' @export 
-heatmap4peakMt <- function(mat,meta_info=NULL,max_lim=NULL,sep_by="-",outdir="./",value.type="count",max.value = NULL,color_bars= "discrete",
-                           n_breaks = 5,
-                           width=10,height=6,col_list=NULL,fileout_name=NULL,clust_rows=FALSE,clustering_method_rows = "complete",
-                           legend_direction = "vertical", legend_titles=NULL,heatmap_legend_side="right",
-                           show_legend_row = TRUE,
-                           column.title = "Genomic Region",draw_normal = FALSE,
-                           ref_group_names=NULL,custom_colors=NULL,device="png",
-                           label_genes=NULL,annotations=NULL,label_color="black"){
-  
-  if(!is.null(max_lim)){
-    mat[mat>max_lim] <- max_lim
-    if(all[mat]==0){
-      stop("All the values are zero. Please check 'max_lim' or input 'mat'.")
-    }
-  }
-  
-  if(!is.null(meta_info)){
-    if(is.data.frame(meta_info)){
-      mat <- mat[,rownames(meta_info),drop=F]
-    }else{
-      print("'meta_info' is not a data.frame. Please check!")
-    }
-    
-  }
-  # 
-  chromInfo <- data.frame(seg=rownames(mat))
-  chromInfo_new <- separate(chromInfo, seg, into = c("chrom", "start","end"), sep =sep_by)
-  if(all(is.na(chromInfo_new$end))|all(is.na(chromInfo_new$start))){
-    message("Please check the separate symbol of row names of 'mat', and re-set 'sep_by'.")
-    stop()
-  }
-  chromInfo_new2 <- abspos(chromInfo_new)
-  mtx_add <- data.frame(chromInfo_new2[,c("chrom","start","abspos","end")],mat)
-  p <- HeatmapPlot(mtx_add,plotDir=outdir,type=value.type,max.legend.value=max.value,fname=fileout_name,color_bars= color_bars,
-              n_breaks=n_breaks,
-              row_anno = meta_info,width=width,height=height,left_anno_col=col_list,
-              clust = clust_rows,
-              clustering_method_rows =clustering_method_rows,
-              column.title = column.title,
-              legend.direction=legend_direction,legend_side = heatmap_legend_side,legend_titles=legend_titles,show_legend_row=show_legend_row,
-              draw_normal = draw_normal,
-              ref_group_names=ref_group_names,custom_colors=custom_colors,device=device,
-              label_genes=label_genes,annotations=annotations,label_color=label_color)
-  return(p)
-}
-
 #' @title plot_combine_seg()
 #' @export 
 plot_combine_seg <- function(clonal.res,ylim=NULL,outplot_name=NULL,show_dots=FALSE,outdir="./",ggarrange_width=c(2.5,1)){
@@ -1226,7 +1175,7 @@ replotInfercnv <- function(expr.mat,
                            legend_side = "right",
                            color.breaks=NULL,
                            plotDir="./",
-                          device="png"){
+                           device="png"){
   nd <- list("data.table","ComplexHeatmap","dplyr","circlize","ggplot2","ggsci")
   lapply(nd, require, character.only = TRUE)
   if(!dir.exists(plotDir)){dir.create(plotDir,recursive=T)}
@@ -1632,5 +1581,65 @@ plot_segment <- function(y_value,seg_value, ylab,main,ylim,chromnum,filename){
   abline(v=chrline, col='blue', lty=1, lwd=1)
   abline(v=1, col='blue', lty=1, lwd=1)
   dev.off()
+}
+
+
+library(ComplexHeatmap)
+library(GenomicRanges)
+library(dplyr)
+
+
+#' @title heatmap4peakMt()
+#' @description heatmap for the 'mat' ordered by row of meta_info
+#' @param mat matrix with peak in row and cells in columns, rownames pattern "chr-xxx-xxx"
+#' @param sep_by a symbol for the row names separation
+#' @param label_genes vector of genes
+#' @param annotations GRanges object
+#' @export 
+heatmap4peakMt <- function(mat,meta_info=NULL,max_lim=NULL,sep_by="-",outdir="./",value.type="count",max.value = NULL,color_bars= "discrete",
+                           n_breaks = 5,
+                           width=10,height=6,col_list=NULL,fileout_name=NULL,clust_rows=FALSE,clustering_method_rows = "complete",
+                           legend_direction = "vertical", legend_titles=NULL,heatmap_legend_side="right",
+                           show_legend_row = TRUE,
+                           column.title = "Genomic Region",draw_normal = FALSE,
+                           ref_group_names=NULL,custom_colors=NULL,device="png",
+                           label_genes=NULL,annotations=NULL,label_color="black"
+                           ){
+  
+  if(!is.null(max_lim)){
+    mat[mat>max_lim] <- max_lim
+    if(all[mat]==0){
+      stop("All the values are zero. Please check 'max_lim' or input 'mat'.")
+    }
+  }
+  
+  if(!is.null(meta_info)){
+    if(is.data.frame(meta_info)){
+      mat <- mat[,rownames(meta_info),drop=F]
+    }else{
+      print("'meta_info' is not a data.frame. Please check!")
+    }
+    
+  }
+  # 
+  chromInfo <- data.frame(seg=rownames(mat))
+  chromInfo_new <- separate(chromInfo, seg, into = c("chrom", "start","end"), sep =sep_by)
+  if(all(is.na(chromInfo_new$end))|all(is.na(chromInfo_new$start))){
+    message("Please check the separate symbol of row names of 'mat', and re-set 'sep_by'.")
+    stop()
+  }
+  chromInfo_new2 <- abspos(chromInfo_new)
+  mtx_add <- data.frame(chromInfo_new2[,c("chrom","start","abspos","end")],mat)
+  p <- HeatmapPlot(mtx_add,plotDir=outdir,type=value.type,max.legend.value=max.value,fname=fileout_name,color_bars= color_bars,
+              n_breaks=n_breaks,
+              row_anno = meta_info,width=width,height=height,left_anno_col=col_list,
+              clust = clust_rows,
+              clustering_method_rows =clustering_method_rows,
+              column.title = column.title,
+              legend.direction=legend_direction,legend_side = heatmap_legend_side,legend_titles=legend_titles,show_legend_row=show_legend_row,
+              draw_normal = draw_normal,
+              ref_group_names=ref_group_names,custom_colors=custom_colors,device=device,
+              label_genes=label_genes,annotations=annotations,label_color=label_color)
+  return(p)
 }
 
