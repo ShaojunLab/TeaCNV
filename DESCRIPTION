@@ -34,7 +34,8 @@ Imports:
     plyranges,
     ggExtra,
     stringr,
-    changepoint
+    changepoint,
+    rstatix
 Depends:
     GenomicRanges,
     data.table,
