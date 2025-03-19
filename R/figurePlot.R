@@ -970,11 +970,16 @@ HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
     )%>% 
       distinct(gene, .keep_all = TRUE)
 
+    gene_annotation_res <- gene_annotation %>%
+    group_by(peak_index) %>%
+    summarise(gene = paste(gene, collapse = ", "))
+
+
 
     bottom_col <-  HeatmapAnnotation(
       gene = anno_mark(
-        at = gene_annotation$peak_index, 
-        labels = gene_annotation$gene,
+        at = gene_annotation_res$peak_index, 
+        labels = gene_annotation_res$gene,
         side = "bottom",
         labels_gp = gpar(fontsize = 10,
                         col = label_color
