@@ -40,7 +40,8 @@ Imports:
     ggpubr,
     BSgenome,
     reshape,
-    tidyverse
+    tidyverse,
+    futile.logger
 Depends:
     GenomicRanges,
     data.table,
