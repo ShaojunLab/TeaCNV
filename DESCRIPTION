@@ -38,7 +38,8 @@ Imports:
     rstatix,
     ComplexHeatmap,
     ggpubr,
-    BSgenome
+    BSgenome,
+    reshape
 Depends:
     GenomicRanges,
     data.table,
