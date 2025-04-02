@@ -1592,7 +1592,7 @@ plot_segment <- function(y_value,seg_value, ylab,main,ylim,chromnum,filename){
 library(ComplexHeatmap)
 library(GenomicRanges)
 library(dplyr)
-
+library(tidyr)
 
 #' @title heatmap4peakMt()
 #' @description heatmap for the 'mat' ordered by row of meta_info
@@ -1628,7 +1628,7 @@ heatmap4peakMt <- function(mat,meta_info=NULL,max_lim=NULL,sep_by="-",outdir="./
   }
   # 
   chromInfo <- data.frame(seg=rownames(mat))
-  chromInfo_new <- separate(chromInfo, seg, into = c("chrom", "start","end"), sep =sep_by)
+  chromInfo_new <- tidyr::separate(chromInfo, seg, into = c("chrom", "start","end"), sep =sep_by)
   if(all(is.na(chromInfo_new$end))|all(is.na(chromInfo_new$start))){
     message("Please check the separate symbol of row names of 'mat', and re-set 'sep_by'.")
     stop()
