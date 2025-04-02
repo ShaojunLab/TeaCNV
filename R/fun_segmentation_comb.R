@@ -68,7 +68,7 @@ DEsegs <- function(df,group1="refC",group2="obsC",
         dplyr::ungroup()%>%
         dplyr::group_by(segID) %>%
         t_test(ratio ~ group) %>%
-        adjust_pvalue(method = "BH") %>%
+        rstatix::adjust_pvalue(method = "BH") %>%
         rstatix::add_significance()
     stat.test <- as.data.frame(stat.test)
     stat.test <- left_join(stat.test,diffMean,by="segID")       
@@ -262,7 +262,7 @@ segCNV_refine <- function(clonalRes,CNest.ref,cytoBand,
                                     if(integerCN_y>0 & length(row_index_ref_y)>=SegSize_min){
                                         segs_x.test <- bin_dat_ref[bin_dat_ref$segName %in% c(seg_y,dominant_xCNV_ref$segName),,drop=F] %>%
                                             t_test(binRatio ~ segName) %>%
-                                            adjust_pvalue(method = "BH") %>%
+                                            rstatix::adjust_pvalue(method = "BH") %>%
                                             rstatix::add_significance()%>%as.data.frame()
                                         if(segs_x.test$p.adj >= p.adj_cutoff ){ #| SegMean_diff<ratio_diff_cutoff
                                             BinSegRatio_ref$integerCN[row_index_ref_y] <- dominant_xCNV_ref$integerCN
