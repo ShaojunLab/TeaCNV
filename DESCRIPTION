@@ -37,7 +37,8 @@ Imports:
     changepoint,
     rstatix,
     ComplexHeatmap,
-    ggpubr
+    ggpubr,
+    BSgenome
 Depends:
     GenomicRanges,
     data.table,
