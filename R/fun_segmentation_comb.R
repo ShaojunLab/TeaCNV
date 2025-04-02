@@ -359,6 +359,9 @@ segCNV_refine <- function(clonalRes,CNest.ref,cytoBand,
                       # cnvObs_s <- unique(BinSegRatio_obs$integerCN[row_index_obs])
   
                       bins_s <- BinSegRatio_obs$binID[row_index_obs]
+                    
+                      BinSegRatio_ref <- left_join(BinSegRatio_ref,segDat_ref,by="segName") 
+                    
                       ref_s <- BinSegRatio_ref[BinSegRatio_ref$binID %in%bins_s,,drop=F ]
                       refCN <- prop.table(table(ref_s$integerCN)) * 100
                       if(length(refCN)>0){
