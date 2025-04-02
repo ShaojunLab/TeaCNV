@@ -1,4 +1,7 @@
-suppressMessages({require(data.table)})
+suppressMessages({
+  require(data.table)
+  require(rstatix)
+})
 
 #' @title chromosome_order()
 #' @export
