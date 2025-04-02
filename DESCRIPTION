@@ -35,7 +35,8 @@ Imports:
     ggExtra,
     stringr,
     changepoint,
-    rstatix
+    rstatix,
+    ComplexHeatmap
 Depends:
     GenomicRanges,
     data.table,
