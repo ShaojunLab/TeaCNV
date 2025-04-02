@@ -39,7 +39,8 @@ Imports:
     ComplexHeatmap,
     ggpubr,
     BSgenome,
-    reshape
+    reshape,
+    tidyverse
 Depends:
     GenomicRanges,
     data.table,
