@@ -285,7 +285,7 @@ EffectCorrectByRef <- function(mat,cell_anno,sampleID_normal,NormalTypeList,samp
         total_factors <- cell_scaleFactor[names(cell_scaleFactor_j)]/cell_scaleFactor_j
         total_factors_mean <- mean(total_factors,na.rm = TRUE)
         #cell_scaleFactor_j <- mean(colSums(mat[,cells_n,drop=F],na.rm = TRUE),na.rm = TRUE)
-        mat_cor[,cells_j] <- t(t(mat[,cells_j])*total_factors_mean)
+        mat_cor[,cells_j] <- sweep(mat[, cells_j, drop = FALSE], 2, total_factors_mean, `*`)
         tag <- cbind(tag,"corrected")
       }
 
@@ -299,7 +299,13 @@ EffectCorrectByRef <- function(mat,cell_anno,sampleID_normal,NormalTypeList,samp
   }
   # cell_left <- rownames(cell_anno)[!rownames(cell_anno) %in% cell_used]
   # cell_left <- unique(c(cell_left,cells_ref4cor))
-  na_index <- which(colSums(!is.na(mat_cor))==0)
+  na_index <- which(
+    vapply(
+      seq_len(ncol(mat_cor)), 
+      function(j) all(is.na(mat_cor[, j])), 
+      logical(1)
+    )
+  )
   mat_cor[,na_index] <- mat[,na_index]
   mat_cor <- as(mat_cor, "sparseMatrix") 
   return(list(matrix=mat_cor,tag=tag))
