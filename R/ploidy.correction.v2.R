@@ -846,7 +846,7 @@ refine_segCN.dist_v2 <- function(clonalres,Nadjacent=2) {
 #'                                        $ploidy: the overall ploidy
 #' @export
 
-ploidyRefine.ref <- function(sampelres,CNest.ref,minCN.frac=0.01,seg_dat_ref=NULL){
+ploidyRefine.ref <- function(sampelres,CNest.ref,minCN.frac=0.01,seg_dat_ref=NULL,Diploid.domin=TRUE){
   baseCN<- CNest.ref$CN[CNest.ref$base==1]
   baseRatio <- CNest.ref$ratio[CNest.ref$base==1]
   delt.ref <- (CNest.ref$ratio[2]-CNest.ref$ratio[1])/(CNest.ref$CN[2]-CNest.ref$CN[1])
@@ -957,8 +957,10 @@ ploidyRefine.ref <- function(sampelres,CNest.ref,minCN.frac=0.01,seg_dat_ref=NUL
         if (m >1 & CNcount$CN[which.max(CNcount$frac)]>2){
           CNest$CN <- CNest$CN-(m-1)
         }else if (CNcount$CN[which.max(CNcount$frac)]==1){
-          CNest$CN <- CNest$CN+1
-          CNcount$CN <- CNcount$CN+1
+          if(Diploid.domin){
+            CNest$CN <- CNest$CN+1
+            CNcount$CN <- CNcount$CN+1
+          }
         }
       }
       baseCN_j_new <- CNcount$CN[which.max(CNcount$frac)]
@@ -1034,6 +1036,7 @@ ploidyRefine.ref <- function(sampelres,CNest.ref,minCN.frac=0.01,seg_dat_ref=NUL
   
   
 }
+
 
 
 
