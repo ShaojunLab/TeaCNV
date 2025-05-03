@@ -822,9 +822,9 @@ celloutput <- function(cells.obs,cluster1,cluster2,clone_res,mtx_bin,
   clone_res_raw <- clone_res
   cellinfo <- data.frame(cellname =cells.obs)
   row.names(cellinfo) <- cells.obs
-  if(length(unique(cluster1))==length(unique(cluster2))){
-    cellinfo$clone <- cluster1
-  }else{
+  # if(length(unique(cluster1))==length(unique(cluster2))){
+  #   cellinfo$clone <- cluster1
+  # }else{
     cellinfo$clone <- cluster2
     ##Repeat step 1, step 2, step 3 according to the new clones
     cells_ref <- colnames(mtx_bin)[!colnames(mtx_bin) %in% cells.obs]
@@ -873,7 +873,7 @@ celloutput <- function(cells.obs,cluster1,cluster2,clone_res,mtx_bin,
       cellinfo$clone <- cluster1
     }
    
-  }
+  # }
   
   clone_res <-  clonal_ploidy(clone_res,baseCN_frac.min=diploidy_cutoff)
   clone_res_update <- segCNV_refine(
