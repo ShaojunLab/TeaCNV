@@ -818,6 +818,7 @@ celloutput <- function(cells.obs,cluster1,cluster2,clone_res,mtx_bin,
                        p.adj_cutoff = 0.05,
                        ratio_diff_cutoff=NULL,
                        diploidy_cutoff = 0.95,
+                       Diploid.domin=TRUE,
                        ...){
   clone_res_raw <- clone_res
   cellinfo <- data.frame(cellname =cells.obs)
@@ -860,7 +861,7 @@ celloutput <- function(cells.obs,cluster1,cluster2,clone_res,mtx_bin,
     if(!all(unlist(lapply(CNV_clone.ini,is.na)))){
       
       clone_res <- ploidyRefine(CNV_clone.ini,delt.lim =delt_lim,minCN.frac=minCN.frac)
-      clone_res <- ploidyRefine.ref(clone_res,CNest.ref,minCN.frac,seg_dat_ref)
+      clone_res <- ploidyRefine.ref(clone_res,CNest.ref,minCN.frac,seg_dat_ref,Diploid.domin=Diploid.domin)
       
       #clone_res <- refine_segCN.Bayes(clone_res,seg_dat_ref)
       if(correct_by_dist){
