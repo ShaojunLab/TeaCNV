@@ -333,7 +333,7 @@ runTeaCNV <- function(
     corrected_group_by=NULL,
     sampleID_normal=NULL,
     batchTag = "raw",
-    global.norm=FALSE,
+    global.norm=TRUE,
     # segmentation setting
     binSize = 1,
     cytoBandFile = NULL,
