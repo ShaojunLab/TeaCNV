@@ -880,7 +880,7 @@ HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
       #colorss <- adjustcolor(colorss, alpha.f = 0.8)
       CN_mean <- quantile(as.numeric(as.matrix(dat[!is.null(dat)])),0.5,na.rm=T)
       if(CN_mean<=2){
-        colorss <- colorss[-1]
+        colorss <- colorss[1:6]
         colors <-colorRamp2(c(1,2,3,4,5,6),colorss)
         at_brk <- c(1:6)
         label_brk <- c(as.character(c(1:5)),"6+")
