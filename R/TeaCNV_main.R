@@ -266,7 +266,8 @@ EffectCorrectByRef <- function(mat,cell_anno,sampleID_normal,NormalTypeList,samp
 
   pb <- progress_bar$new(total = length(sampleIDs_to_correct), format = "[:bar] :percent :elapsed")
   
-  mat_cor <- matrix(NA,nrow = nrow(mat),ncol = ncol(mat))
+  # mat_cor <- matrix(NA,nrow = nrow(mat),ncol = ncol(mat))
+  mat_cor <-sparseMatrix(i = integer(0),j = integer(0), dims = c(nrow(mat), ncol(mat)),x = numeric(0))
   rownames(mat_cor) <- rownames(mat)
   colnames(mat_cor) <- colnames(mat) 
   tag <- c()
