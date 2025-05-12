@@ -244,7 +244,7 @@ EffectCorrectByRef <- function(mat,cell_anno,sampleID_normal,NormalTypeList,samp
   library(Matrix) 
   library(progress)
   invisible(gc())
-  mat <- as.matrix(mat)
+  #mat <- as.matrix(mat)
   cell_anno <- cell_anno[colnames(mat),,drop=F] #match cell order
 
   get_factor <- function(data,cell_meta,sample.in,NormalTypeList){
