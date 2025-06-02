@@ -47,7 +47,9 @@ binClust <- function(inputMat,cellMeta,ref_group_names=NULL,
     library(dplyr)
     library(stringr)
   })
-  if(file.exists("LogInfo.log")){flog.appender(appender.file("LogInfo.log"))}else{
+  appender_func <- flog.logger()$appender
+  log_path <- environment(appender_func)$file
+  if(file.exists(log_path)){flog.appender(appender.file(log_path))}else{
     flog.appender(appender.console())
   }
   flog.info("\n")
@@ -146,7 +148,7 @@ binClust <- function(inputMat,cellMeta,ref_group_names=NULL,
     }
   
   if(onRatio){
-    ##cells from ref_group_names 合为bulk， 其余保留单细胞水平,计算ratio
+    ##cells from ref_group_names are combined into bulk, and the rest are kept at the single cell level to calculate the ratio
 
     cellMeta_new <- data.frame(row.names = rownames(cellMeta),group=rownames(cellMeta))
     cellMeta_new[cells_ref,1] <- "reference"
