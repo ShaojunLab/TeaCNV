@@ -47,7 +47,9 @@ binClust <- function(inputMat,cellMeta,ref_group_names=NULL,
     library(dplyr)
     library(stringr)
   })
-  flog.appender(appender.file("./LogInfo.log"))
+  if(file.exists("LogInfo.log")){flog.appender(appender.file("LogInfo.log"))}else{
+    flog.appender(appender.console())
+  }
   flog.info("\n")
   if(outdir != "." && !file.exists(outdir)){
     flog.info(paste0("Creating output path ", outdir))
