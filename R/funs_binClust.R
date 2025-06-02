@@ -49,7 +49,9 @@ binClust <- function(inputMat,cellMeta,ref_group_names=NULL,
   })
   appender_func <- flog.logger()$appender
   log_path <- environment(appender_func)$file
-  if((!is.null(log_path)) & file.exists(log_path)){flog.appender(appender.file(log_path))}else{
+  if(!is.null(log_path)){
+    if(file.exists(log_path)){flog.appender(appender.file(log_path))}
+  }else{
     flog.appender(appender.console())
   }
   flog.info("\n")
