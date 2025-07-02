@@ -1158,7 +1158,6 @@ plot_combine_seg <- function(clonal.res,ylim=NULL,outplot_name=NULL,show_dots=FA
 #' @param ref.mat data.frame or matrix of normal cell cnv (if draw_normal=TRUE)
 #' @param names output name
 #' @export 
-
 replotInfercnv <- function(expr.mat,
                            gene.order.file,
                            metadata=NULL,
@@ -1175,12 +1174,15 @@ replotInfercnv <- function(expr.mat,
                            clustering_method_rows = "complete",
                            show_row_names=FALSE,
                            direction = "vertical",
-                           titles = "infercnv Ratio",
+                           titles = "inferCNV score",
                            column.title = "Genomic Region",
                            legend_side = "right",
                            color.breaks=NULL,
                            plotDir="./",
-                           device="png"){
+                           device="png",
+                           type="ratio",
+                           color_bars= "continuous" #"discrete"
+                           ){
   nd <- list("data.table","ComplexHeatmap","dplyr","circlize","ggplot2","ggsci")
   lapply(nd, require, character.only = TRUE)
   if(!dir.exists(plotDir)){dir.create(plotDir,recursive=T)}
@@ -1234,22 +1236,34 @@ replotInfercnv <- function(expr.mat,
     row_color=NULL
   }
   
-  if(is.null(color.breaks)){
-    x.center <- 1
-    quantiles = quantile(expr.mat[expr.mat != x.center], c(0.01, 0.99),na.rm =TRUE)
-    # determine max distance from the center.
-    delta = max( abs( c(x.center - quantiles[1],  quantiles[2] - x.center) ) )
-    low_threshold = x.center - delta
-    high_threshold = x.center + delta
-    # bk <-seq(0.5,2,length.out=16)
-    bk <- c(low_threshold,x.center,high_threshold)
-  }else{
-    bk <- color.breaks
+  if(type%in% "ratio"){
+    if(is.null(color.breaks)){
+      x.center <- 1
+      quantiles = quantile(expr.mat[expr.mat != x.center], c(0.01, 0.99),na.rm =TRUE)
+      # determine max distance from the center.
+      delta = max( abs( c(x.center - quantiles[1],  quantiles[2] - x.center) ) )
+      low_threshold = x.center - delta
+      high_threshold = x.center + delta
+      # bk <-seq(0.5,2,length.out=16)
+      bk <- c(low_threshold,x.center,high_threshold)
+    }else{
+      bk <- color.breaks
+    }
+    cols <- colorRampPalette(colors = c("#2A72B2", "grey95", "#6a040f"))(length(bk))
+    colors <- circlize::colorRamp2(bk,cols)
+    label_brk <- as.character(round(bk,2))
+    color_bars <- "continuous"
+  }else if(type%in% "CNV"){
+    CN_max <- quantile(as.numeric(as.matrix(expr.mat[!is.null(expr.mat)])),1,na.rm=T)
+      # colorss <-  c("#1A4E7A","#2A72B2", "#F2F2F2","#B97B77", "#6a040f","#3F0209")
+      colorss <-  c("#1a4fb3", "#6699FF", "grey95","#F6DAC3","#EE9863","#EB6363")
+      colors <-colorRamp2(c(0,1,2,3,4,5),colorss)
+      bk <- c(0,1,2,3,4,5)
+      label_brk <- c(as.character(c(0,1,2,3,4,5)))
+      
+      color_bars <- "discrete"
+      titles <- "CNV"
   }
-  cols <- colorRampPalette(colors = c("#2A72B2", "grey95", "#6a040f"))(length(bk))
-  colors <- circlize::colorRamp2(bk,cols)
-
-  color_bars <- "continuous"
   
   ht_plot <- Heatmap(as.matrix(t(expr.mat)),
                      cluster_rows = clust_rows,
@@ -1261,6 +1275,8 @@ replotInfercnv <- function(expr.mat,
                      column_split = factor(gene_order$V2, paste("chr",1:22,sep = "")),
                      heatmap_legend_param = list(
                        direction = direction,
+                       at = bk,
+                       labels = label_brk,
                        title = titles,
                        title_position = "leftcenter-rot", # 
                        legend_height = unit(3, "cm"), #
@@ -1308,6 +1324,8 @@ replotInfercnv <- function(expr.mat,
   }
   return(ht_plot)
 }
+
+
 
 
 #' @title plot_genome()
