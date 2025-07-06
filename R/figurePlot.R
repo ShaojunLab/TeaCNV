@@ -1040,10 +1040,10 @@ HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
       pdf(paste0(plotDir,"/",fname,".pdf"),width = width,height = height)
     }
     if(draw_normal){
-      draw(ht_normal%v%ht_plot, padding = unit(c(20, 10, 10, 10), "mm"),heatmap_legend_side = legend_side)
+      ComplexHeatmap::draw(ht_normal%v%ht_plot, padding = unit(c(20, 10, 10, 10), "mm"),heatmap_legend_side = legend_side)
       dev.off()
     }else{
-      draw(ht_plot, heatmap_legend_side = legend_side,annotation_legend_side = legend_side) # 图例位置
+      ComplexHeatmap::draw(ht_plot, heatmap_legend_side = legend_side,annotation_legend_side = legend_side) # 图例位置
       dev.off()
     }
 
@@ -1315,10 +1315,10 @@ replotInfercnv <- function(expr.mat,
     }
 
     if(draw_normal){
-      draw(ht_normal%v%ht_plot, padding = unit(c(20, 10, 10, 10), "mm"),heatmap_legend_side = legend_side)
+      ComplexHeatmap::draw(ht_normal%v%ht_plot, padding = unit(c(20, 10, 10, 10), "mm"),heatmap_legend_side = legend_side)
       dev.off()
     }else{
-      draw(ht_plot, heatmap_legend_side = legend_side,annotation_legend_side = legend_side) # 图例位置
+      ComplexHeatmap::draw(ht_plot, heatmap_legend_side = legend_side,annotation_legend_side = legend_side) # 图例位置
       dev.off()
     }    
   }
