@@ -41,7 +41,8 @@ Imports:
     BSgenome,
     reshape,
     tidyverse,
-    futile.logger
+    futile.logger,
+    R.utils
 Depends:
     GenomicRanges,
     data.table,
