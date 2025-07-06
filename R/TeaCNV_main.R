@@ -322,6 +322,7 @@ EffectCorrectByRef <- function(mat,cell_anno,sampleID_normal,NormalTypeList,samp
 #' @param annotationFile annotation of cells, tab-delimited.   
 #' @param seg_method method for segmentation, including "robseg" and "gaussian".
 #' @param penalty paramter if seg_method is "gaussian"
+#' @scFactor scFactor*SegSize_min is the final minimum size of segmentation. (Default is 1)
 #' @export
 runTeaCNV <- function(
     input_obj,
@@ -359,7 +360,8 @@ runTeaCNV <- function(
     minCN_frac = 0.01,
     delt_lim =0.25,
     StopStep = 4,
-    choice = ""
+    choice = "",
+    scFactor=1
 ){
   packages <- c("Signac", "Seurat", "tidyr", "Matrix", "irlba","plyranges","futile.logger","ggplot2","MatrixGenerics","MixGHD","stringr","data.table","ComplexHeatmap","RColorBrewer","changepoint")
   invisible(lapply(packages, require, character.only = TRUE))
@@ -814,7 +816,7 @@ runTeaCNV <- function(
                            seg_method,
                            FiltSeg,
                            SegLen_min,
-                           SegSize_min,
+                           SegSize_min*scFactor,
                            seg.count.lim,
                            cytoBandFile,
                            outdir=outdir,
