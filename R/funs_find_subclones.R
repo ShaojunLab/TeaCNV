@@ -109,7 +109,7 @@ find_subclust <- function(mt,add_metadata=NULL,resolution = 0.8,sep_by = c("-", 
   obj_sub2 <- FindTopFeatures(obj_sub2, min.cutoff = 'q5')
   obj_sub2 <- ScaleData(obj_sub2,features = rownames(obj_sub2) )
   Ncells <- ncol(obj_sub2)
-  if(Ncells<50 & Ncells>1){
+  if(Ncells<=50 & Ncells>1){
     npcs.pca=floor(Ncells/2)
     dims.max=min(npcs.pca,15)
     n.neighbors = min(30,Ncells)
