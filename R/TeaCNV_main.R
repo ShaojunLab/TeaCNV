@@ -669,13 +669,16 @@ runTeaCNV <- function(
           
         }
         saveRDS(seg_ls,paste0(outdir_sub,"/clonal_RelativeRatio_segment.rds"))
+        cluster_new <- suppressMessages(mergeClones(ratiodata=clonal_res,segdata =seg_ls,doPlot=FALSE,outdir=outdir,Zscore.cutoff=Zscore_cutoff))
+
+      }else{
+         cluster_new <- data.frame(subCluster=cell_anno_new$subCluster,clone_merged="1")
       }
       
       #3.5 merge clones
       cluster_rm <- clones[!clones %in% names(clonal_res)]
       cells_rm <- rownames(cell_anno_cl)[cell_anno_cl$subCluster %in% cluster_rm]
       
-      cluster_new <- suppressMessages(mergeClones(ratiodata=clonal_res,segdata =seg_ls,doPlot=FALSE,outdir=outdir,Zscore.cutoff=Zscore_cutoff))
       colnames(cluster_new) <- c("subCluster","clone_merged")
       cell_anno_new$row <- rownames(cell_anno_new)
       cell_anno_new <- cell_anno_new[,!grepl("clone_merged",colnames(cell_anno_new)),drop=F]
