@@ -21,6 +21,8 @@ suppressMessages({
 #' 
 blacklist.rm <- function(mat,blacklist,peak.sep="-|_|:"){
   #mat <- mat[grepl(paste(paste0("chr",c(seq(1:22),"X")),collapse="|"),rownames(mat)),]
+  rows <-rownames(mat)
+  rows <- gsub(peak.sep,"_",rows)
   if (Reduce("|", is(blacklist) == "character")) {
     if(substr(blacklist, nchar(blacklist)-3, nchar(blacklist)) == ".bed"){
       blacklist <- read_bed(blacklist)
@@ -28,9 +30,9 @@ blacklist.rm <- function(mat,blacklist,peak.sep="-|_|:"){
       stop("Cannot find a blacklist file with the suffix '.bed'.")
     }
   }
-  bins <- data.frame(peak=rownames(mat))
+  bins <- data.frame(peak=rows)
   #remove bins within blacklist
-  chromInfo <- separate(bins, peak, into = c("seqnames", "start","end"), sep = peak.sep)
+  chromInfo <- separate(bins, peak, into = c("seqnames", "start","end"), sep = "_")
   bins <- data.frame(bins,chromInfo)
   #make a Grange object
   peak_gr <- GRanges(seqnames = bins$seqnames,
@@ -44,12 +46,13 @@ blacklist.rm <- function(mat,blacklist,peak.sep="-|_|:"){
   peak_gr_use <- peak_gr[idx]
   keep_seqnames <- seqnames(peak_gr_use)
   keep_ranges <- ranges(peak_gr_use)
-  bins_kp <- paste(keep_seqnames,start(keep_ranges),end(keep_ranges),sep=peak.sep)
+  bins_kp <- paste(keep_seqnames,start(keep_ranges),end(keep_ranges),sep="_")
   
-  mtx_filt <- mat[rownames(mat)%in%bins_kp,]
+  mtx_filt <- mat[rows%in%bins_kp,]
  # mtx_filt <- as.matrix(mtx_filt)
   return(mtx_filt)
 }
+
 
 
 #' @title filt_peak_perChr()
