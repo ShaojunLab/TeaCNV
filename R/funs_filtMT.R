@@ -19,7 +19,7 @@ suppressMessages({
 #' @param blacklist bed format file with path
 #' @export
 #' 
-blacklist.rm <- function(mat,blacklist,peak.sep="-"){
+blacklist.rm <- function(mat,blacklist,peak.sep="-|_|:"){
   #mat <- mat[grepl(paste(paste0("chr",c(seq(1:22),"X")),collapse="|"),rownames(mat)),]
   if (Reduce("|", is(blacklist) == "character")) {
     if(substr(blacklist, nchar(blacklist)-3, nchar(blacklist)) == ".bed"){
