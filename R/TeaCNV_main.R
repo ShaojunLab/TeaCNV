@@ -726,16 +726,16 @@ runTeaCNV <- function(
     }
 
     cat("\nSet up one subgroup as the reference to estimate CNVs based on figure 'subgroup_CN_initial.pdf'.\nNOTE:Do NOT selcet a diploidy subgroup!")
-    cat("\n\nWhether to manually select the optimal subgroup as the reference ? (input [the number after 'C' as the clone name] or [Enter] for automatic selection:)\n")
+    # cat("\n\nWhether to manually select the optimal subgroup as the reference ? (input [the number after 'C' as the clone name] or [Enter] for automatic selection:)\n")
     
     choice <- ""
-    tryCatch({
-      choice <- withTimeout({
-        as.character(readline(prompt = "best_clone: "))
-      }, timeout = 5, onTimeout = "silent")
-    }, TimeoutException = function(ex) {
-      message("No input detected within 5 seconds. Continuing...")
-    })
+    # tryCatch({
+    #   choice <- withTimeout({
+    #     as.character(readline(prompt = "best_clone: "))
+    #   }, timeout = 5, onTimeout = "silent")
+    # }, TimeoutException = function(ex) {
+    #   message("No input detected within 5 seconds. Continuing...")
+    # })
     
     ###
     if(choice!=""){
