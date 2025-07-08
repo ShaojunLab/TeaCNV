@@ -739,7 +739,7 @@ runTeaCNV <- function(
     
     ###
     if(choice!=""){
-    	#choice <- as.character(input_obj@options$bestClone)  ###TO BE CHANGED!!!
+    	#choice <- as.character(input_obj@options$bestClone)  
     	
     }else{
       choice <- as.character(input_obj@options$bestClone) 
