@@ -386,7 +386,7 @@ seg_plot = function(data.bin,name.data="",num_cells=NULL,plotDir=NULL,
             axis.text = element_text(size = 12))+
       coord_flip(xlim=ylim)
   }
-  pp=ggarrange(p1, p3, align ="h",ncol = 2, nrow = 1,widths = c(15,4),heights=3 )
+  pp=ggpubr::ggarrange(p1, p3, align ="h",ncol = 2, nrow = 1,widths = c(15,4),heights=3 )
   p_ls <- list(ggarranged_p=pp,p1=p1,p2=p3)
   }else{
     pp <- p1
