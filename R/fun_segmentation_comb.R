@@ -264,7 +264,7 @@ segCNV_refine <- function(clonalRes,CNest.ref,cytoBand,
   
                                     if(integerCN_y>0 & length(row_index_ref_y)>=SegSize_min){
                                         segs_x.test <- bin_dat_ref[bin_dat_ref$segName %in% c(seg_y,dominant_xCNV_ref$segName),,drop=F] %>%
-                                            t_test(binRatio ~ segName) %>%
+                                            rstatix::t_test(binRatio ~ segName) %>%
                                             rstatix::adjust_pvalue(method = "BH") %>%
                                             rstatix::add_significance()%>%as.data.frame()
                                         if(segs_x.test$p.adj >= p.adj_cutoff ){ #| SegMean_diff<ratio_diff_cutoff
