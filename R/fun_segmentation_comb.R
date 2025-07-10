@@ -70,7 +70,7 @@ DEsegs <- function(df,group1="refC",group2="obsC",
         dplyr::select(-n) %>%
         dplyr::ungroup()%>%
         dplyr::group_by(segID) %>%
-        t_test(ratio ~ group) %>%
+        rstatix::t_test(ratio ~ group) %>%
         rstatix::adjust_pvalue(method = "BH") %>%
         rstatix::add_significance()
     stat.test <- as.data.frame(stat.test)
