@@ -369,17 +369,15 @@ segCNV_refine <- function(clonalRes,CNest.ref,cytoBand,
                           dominant_CN <- as.numeric(names(refCN)[which.max(refCN)])
                           #replace relativeCN and integerCN for s
                           BinSegRatio_obs$integerCN[row_index_obs] <- dominant_CN
-                          if(dominant_CN %in% CNest_obs$CN){
+                          res_obs$seg.dat$integerCN[row_index_obsSeg] <- dominant_CN
+                         if(dominant_CN %in% CNest_obs$CN){
                               BinSegRatio_obs$relativeCN[row_index_obs] <- CNest_obs$ratio[CNest_obs$CN == dominant_CN]
+                              res_obs$seg.dat$relativeCN[row_index_obsSeg] <- CNest_obs$ratio[CNest_obs$CN == dominant_CN]
                           }else{
                               delta_obs <- (CNest_obs$ratio[2]-CNest_obs$ratio[1])/(CNest_obs$CN[2]-CNest_obs$CN[1])
                               CNest_obs_ratio <- CNest_obs$ratio[1]+(dominant_CN-CNest_obs$CN[1])*delta_obs
                               BinSegRatio_obs$relativeCN[row_index_obs] <- CNest_obs_ratio
-                          }
-                                          
-                          res_obs$seg.dat$integerCN[row_index_obsSeg] <- dominant_CN
-                          if(dominant_CN %in% CNest_obs$CN){
-                            res_obs$seg.dat$relativeCN[row_index_obsSeg] <- CNest_obs$ratio[CNest_obs$CN == dominant_CN]
+                              res_obs$seg.dat$relativeCN[row_index_obsSeg] <- CNest_obs_ratio
                           }
                           rm(row_index_obs,row_index_obsSeg)
                       }   
