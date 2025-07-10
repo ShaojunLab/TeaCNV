@@ -378,7 +378,9 @@ segCNV_refine <- function(clonalRes,CNest.ref,cytoBand,
                           }
                                           
                           res_obs$seg.dat$integerCN[row_index_obsSeg] <- dominant_CN
-                          res_obs$seg.dat$relativeCN[row_index_obsSeg] <- CNest_obs$ratio[CNest_obs$CN == dominant_CN]
+                          if(dominant_CN %in% CNest_obs$CN){
+                            res_obs$seg.dat$relativeCN[row_index_obsSeg] <- CNest_obs$ratio[CNest_obs$CN == dominant_CN]
+                          }
                           rm(row_index_obs,row_index_obsSeg)
                       }   
                   }
