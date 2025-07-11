@@ -57,6 +57,7 @@ TeaCNV <- methods::setClass("TeaCNV",
 
 #' @title CreateTeaCNVObject()
 #' @param FiltCell_by Filtering method if FiltCell=TRUE, c("Zscore","density","quantile"),default is "Zscore".
+#' @param Correct_by_length Set to FALSE if the input matrix feature bins are of equal length
 #' @export
 CreateTeaCNVObject <- function(input,
                                   annotationFile,
