@@ -40,6 +40,8 @@ TeaCNV takes a peak-cell count matrix as input. A data table is provided via the
 To filter out abnormally high peak counts, the `count_lim` parameter can be used, and it is recommended to set it to the 99th percentile of peak counts. 
 The `seu_resolution` parameter controls the clustering resolution in **Seurat**; a value above 1.2 is suggested if a higher number of clusters is desired (default: 1.0).
 The `min_cells_in_group` parameter sets the minimum required size for each clone, with a default value of 20 cells. `delt_lim` defines the relative copy number (CN) ratio interval for a single absolute CN change (default: 0.3). Increasing `delt_lim` results in a lower clonal-level ploidy estimate.
+
+We set `Correct_by_length = TRUE` to normalize the counts of peaks with different lengths to counts per kilobase. If the input matrix features (bins) are of equal length, we set it to `FALSE`.
 ```
 
 cnv_obj <- CreateTeaCNVObject(input = mtx,
@@ -47,7 +49,9 @@ cnv_obj <- CreateTeaCNVObject(input = mtx,
                              ref_group_names = "reference",
                              ChrRemove = c('chrX', 'chrY', 'chrM'),
                              genome = "hg38",
-                             count_lim = 4)
+                             count_lim = 4,
+			     Correct_by_length = TRUE
+)
 res <- runTeaCNV(input_obj = cnv_obj,
 	        outdir = "./example",
 	        delt_lim = 0.3,
