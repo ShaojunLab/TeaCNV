@@ -73,7 +73,8 @@ CreateTeaCNVObject <- function(input,
                                   CellnFeature_quant=c(0.05,0.95),
                                   cellproplim = 0.05,
                                   count_lim = 4,
-                                  prop_reset=TRUE
+                                  prop_reset=TRUE,
+                                  Correct_by_length=TRUE
 ){
   packages <- c("stringr", "dplyr", "tidyr", "Matrix", "irlba","plyranges","futile.logger")
   invisible(lapply(packages, require, character.only = TRUE))
@@ -204,7 +205,9 @@ CreateTeaCNVObject <- function(input,
   n_remove_pk <- n_raw_peaks - nrow(mtx_qc_filt)
   flog.info(sprintf("Keep %g peaks, removing %g %% of peaks",nrow(mtx_qc_filt), n_remove_pk/n_raw_peaks * 100))
   flog.info("Correct count by the length of peak to count per kb.")
-  mtx_qc_filt <- Correct_by_length(mtx_qc_filt)
+  if(Correct_by_length){
+    mtx_qc_filt <- Correct_by_length(mtx_qc_filt)
+  }
   
   flog.info(paste0("The maximum count is ",round(max(mtx_qc_filt)),"."))
   flog.info(paste0("Set maximum boundary for count to ",count_lim,"."))
