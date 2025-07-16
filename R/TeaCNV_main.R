@@ -367,7 +367,8 @@ runTeaCNV <- function(
     StopStep = 4,
     choice = "",
     scFactor=1,
-    diploidy_pct.max=0.95
+    diploidy_pct.max=0.95,
+    p.adj_CloneMerge=0.1
 ){
   packages <- c("Signac", "Seurat", "tidyr", "Matrix", "irlba","plyranges","futile.logger","ggplot2","MatrixGenerics","MixGHD","stringr","data.table","ComplexHeatmap","RColorBrewer","changepoint")
   invisible(lapply(packages, require, character.only = TRUE))
@@ -674,7 +675,7 @@ runTeaCNV <- function(
           
         }
         saveRDS(seg_ls,paste0(outdir_sub,"/clonal_RelativeRatio_segment.rds"))
-        cluster_new <- suppressMessages(mergeClones(ratiodata=clonal_res,segdata =seg_ls,doPlot=FALSE,outdir=outdir,Zscore.cutoff=Zscore_cutoff))
+        cluster_new <- suppressMessages(mergeClones(ratiodata=clonal_res,segdata =seg_ls,doPlot=FALSE,outdir=outdir,Zscore.cutoff=Zscore_cutoff,p.adj.cutoff=p.adj_CloneMerge))
 
       }else{
          cluster_new <- data.frame(subCluster=cell_anno_new$subCluster,clone_merged="1")
