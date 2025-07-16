@@ -607,13 +607,19 @@ mergeClones <- function(ratiodata,segdata,doPlot=FALSE,outdir="./",Zscore.cutoff
       stat.test <- left_join(stat.test,diffMean)
       z_scores <- (stat.test$diffMean - mean(stat.test$diffMean)) / sd(stat.test$diffMean)
       stat.test$diffMean.Zscore  <- z_scores
+      mode2_index <- stat.test$mode == 2  #####
+      
       if(!is.null(p.cutoff)){
-        stat.test$mode[stat.test$p < p.cutoff & stat.test$diffMean.Zscore>Zscore.cutoff] <- 2
+        sig_index <- stat.test$p < p.cutoff & stat.test$diffMean.Zscore>Zscore.cutoff  #####
+        stat.test$mode[sig_index] <- 2
+        stat.test$mode[mode2_index & (!sig_index)] <- 1 #####
         if (dim(stat.test[stat.test$p < p.cutoff & stat.test$mode > 1,])[1] > 0){
           clonematrix[clone,C2] <- 1
         }
       }else{
-          stat.test$mode[stat.test$p.adj < p.adj.cutoff & stat.test$diffMean.Zscore>Zscore.cutoff] <- 2 ### 90% quantile (Zscore=1.28)
+          sig_index <- stat.test$p.adj < p.adj.cutoff & stat.test$diffMean.Zscore>Zscore.cutoff  #####
+          stat.test$mode[sig_index] <- 2 ### 90% quantile (Zscore=1.28)
+          stat.test$mode[mode2_index & (!sig_index)] <- 1 #####
           if (dim(stat.test[stat.test$p.adj < p.adj.cutoff & stat.test$mode > 1,])[1] > 0){
             clonematrix[clone,C2] <- 1
           }
