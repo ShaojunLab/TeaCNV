@@ -612,14 +612,14 @@ mergeClones <- function(ratiodata,segdata,doPlot=FALSE,outdir="./",Zscore.cutoff
       if(!is.null(p.cutoff)){
         sig_index <- stat.test$p < p.cutoff & stat.test$diffMean.Zscore>Zscore.cutoff  #####
         stat.test$mode[sig_index] <- 2
-        stat.test$mode[mode2_index & (!sig_index)] <- 1 #####
+        #stat.test$mode[mode2_index & (!sig_index)] <- 1 #####
         if (dim(stat.test[stat.test$p < p.cutoff & stat.test$mode > 1,])[1] > 0){
           clonematrix[clone,C2] <- 1
         }
       }else{
           sig_index <- stat.test$p.adj < p.adj.cutoff & stat.test$diffMean.Zscore>Zscore.cutoff  #####
           stat.test$mode[sig_index] <- 2 ### 90% quantile (Zscore=1.28)
-          stat.test$mode[mode2_index & (!sig_index)] <- 1 #####
+         # stat.test$mode[mode2_index & (!sig_index)] <- 1 #####
           if (dim(stat.test[stat.test$p.adj < p.adj.cutoff & stat.test$mode > 1,])[1] > 0){
             clonematrix[clone,C2] <- 1
           }
