@@ -64,3 +64,26 @@ The output of TeaCNV is saved in the 'final.CNVres.rds' file. If you need to mod
 For TeaCNV-related questions, refer to the README, FAQ, and publication. If something is unclear or missing, submit a Documentation Request or Feature Request on GitHub. For further assistance, contact us via email: Ying Wang [yingwang0727@outlook.com].
 
 
+## SessionInfo
+R version 4.4.3 (2025-02-28)
+Platform: x86_64-apple-darwin20
+Running under: macOS Sequoia 15.4.1
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats4    stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] TeaCNV_0.0.0.9000    ggplot2_3.5.2        data.table_1.17.6    GenomicRanges_1.58.0 GenomeInfoDb_1.42.3 
+[6] IRanges_2.40.1       S4Vectors_0.44.0     BiocGenerics_0.52.0 
+
+loaded via a namespace (and not attached):
+ [1] vctrs_0.6.5             httr_1.4.7              cli_3.6.5               rlang_1.1.6             UCSC.utils_1.2.0       
+ [6] generics_0.1.4          jsonlite_2.0.0          glue_1.8.0              scales_1.4.0            grid_4.4.3             
+[11] tibble_3.2.1            lifecycle_1.0.4         compiler_4.4.3          dplyr_1.1.4             RColorBrewer_1.1-3     
+[16] pkgconfig_2.0.3         XVector_0.46.0          rstudioapi_0.17.1       farver_2.1.2            R6_2.6.1               
+[21] tidyselect_1.2.1        dichromat_2.0-0.1       pillar_1.10.2           GenomeInfoDbData_1.2.13 magrittr_2.0.3         
+[26] withr_3.0.2             tools_4.4.3             gtable_0.3.6            zlibbioc_1.52.0   
+
