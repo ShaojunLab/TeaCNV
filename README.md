@@ -65,6 +65,7 @@ For TeaCNV-related questions, refer to the README, FAQ, and publication. If some
 
 
 ## SessionInfo
+```r
 R version 4.4.3 (2025-02-28)
 Platform: x86_64-apple-darwin20
 Running under: macOS Sequoia 15.4.1
@@ -86,4 +87,5 @@ loaded via a namespace (and not attached):
 [16] pkgconfig_2.0.3         XVector_0.46.0          rstudioapi_0.17.1       farver_2.1.2            R6_2.6.1               
 [21] tidyselect_1.2.1        dichromat_2.0-0.1       pillar_1.10.2           GenomeInfoDbData_1.2.13 magrittr_2.0.3         
 [26] withr_3.0.2             tools_4.4.3             gtable_0.3.6            zlibbioc_1.52.0   
+
 
