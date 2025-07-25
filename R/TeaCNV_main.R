@@ -17,6 +17,7 @@ suppressPackageStartupMessages({
   library(ggExtra)
   library(stringr)
   library(dplyr)
+  library(rstatix)
   library(R.utils)
 })
 # source("./R/funs_filtMT.R",chdir = T)
@@ -57,7 +58,6 @@ TeaCNV <- methods::setClass("TeaCNV",
 
 #' @title CreateTeaCNVObject()
 #' @param FiltCell_by Filtering method if FiltCell=TRUE, c("Zscore","density","quantile"),default is "Zscore".
-#' @param Correct_by_length Set to FALSE if the input matrix feature bins are of equal length
 #' @export
 CreateTeaCNVObject <- function(input,
                                   annotationFile,
@@ -249,7 +249,7 @@ EffectCorrectByRef <- function(mat,cell_anno,sampleID_normal,NormalTypeList,samp
   library(Matrix) 
   library(progress)
   invisible(gc())
-  #mat <- as.matrix(mat)
+  # mat <- as.matrix(mat)
   cell_anno <- cell_anno[colnames(mat),,drop=F] #match cell order
 
   get_factor <- function(data,cell_meta,sample.in,NormalTypeList){
@@ -273,6 +273,7 @@ EffectCorrectByRef <- function(mat,cell_anno,sampleID_normal,NormalTypeList,samp
   
   # mat_cor <- matrix(NA,nrow = nrow(mat),ncol = ncol(mat))
   mat_cor <-sparseMatrix(i = integer(0),j = integer(0), dims = c(nrow(mat), ncol(mat)),x = numeric(0))
+
   rownames(mat_cor) <- rownames(mat)
   colnames(mat_cor) <- colnames(mat) 
   tag <- c()
@@ -291,6 +292,7 @@ EffectCorrectByRef <- function(mat,cell_anno,sampleID_normal,NormalTypeList,samp
         total_factors <- cell_scaleFactor[names(cell_scaleFactor_j)]/cell_scaleFactor_j
         total_factors_mean <- mean(total_factors,na.rm = TRUE)
         #cell_scaleFactor_j <- mean(colSums(mat[,cells_n,drop=F],na.rm = TRUE),na.rm = TRUE)
+        # mat_cor[,cells_j] <- t(t(mat[,cells_j])*total_factors_mean)
         mat_cor[,cells_j] <- sweep(mat[, cells_j, drop = FALSE], 2, total_factors_mean, `*`)
         tag <- cbind(tag,"corrected")
       }
@@ -312,6 +314,7 @@ EffectCorrectByRef <- function(mat,cell_anno,sampleID_normal,NormalTypeList,samp
       logical(1)
     )
   )
+  # na_index <- which(colSums(!is.na(mat_cor))==0)
   mat_cor[,na_index] <- mat[,na_index]
   mat_cor <- as(mat_cor, "sparseMatrix") 
   return(list(matrix=mat_cor,tag=tag))
@@ -368,9 +371,11 @@ runTeaCNV <- function(
     choice = "",
     scFactor=1,
     diploidy_pct.max=0.95,
-    p.adj_CloneMerge=0.1
+    p.adj_CloneMerge=0.1,
+    DEsegCoeff = 0.7,
+    correct_by_dist=FALSE
 ){
-  packages <- c("Signac", "Seurat", "tidyr", "Matrix", "irlba","plyranges","futile.logger","ggplot2","MatrixGenerics","MixGHD","stringr","data.table","ComplexHeatmap","RColorBrewer","changepoint")
+  packages <- c("Signac", "Seurat", "tidyr", "Matrix", "irlba","plyranges","futile.logger","ggplot2","MatrixGenerics","MixGHD","stringr","data.table","ComplexHeatmap","RColorBrewer")
   invisible(lapply(packages, require, character.only = TRUE))
   
   if (is.null(outdir)) {
@@ -678,7 +683,7 @@ runTeaCNV <- function(
         cluster_new <- suppressMessages(mergeClones(ratiodata=clonal_res,segdata =seg_ls,doPlot=FALSE,outdir=outdir,Zscore.cutoff=Zscore_cutoff,p.adj.cutoff=p.adj_CloneMerge))
 
       }else{
-         cluster_new <- data.frame(subCluster=cell_anno_new$subCluster,clone_merged="1")
+        cluster_new <- data.frame(subCluster=cell_anno_new$subCluster,clone_merged="1")
       }
       
       #3.5 merge clones
@@ -731,18 +736,17 @@ runTeaCNV <- function(
       stop(paste0("No ",CNVresFile_subC," found."))
     }
 
-    cat("\nSet up one subgroup as the reference to estimate CNVs based on figure 'subgroup_CN_initial.pdf'.\nNOTE:Do NOT selcet a diploidy subgroup!")
-    # cat("\n\nWhether to manually select the optimal subgroup as the reference ? (input [the number after 'C' as the clone name] or [Enter] for automatic selection:)\n")
-    
     choice <- ""
+    cat("\nSet up one subgroup as the reference to estimate CNVs based on figure 'subgroup_CN_initial.pdf'.\nNOTE:Do NOT selcet a diploidy subgroup!")
+    # cat("\n\nWhether to manually select the optimal subgroup as the reference ? (input [the number after 'C' as the clone name] or press Enter to skip:)\n")
+      
     # tryCatch({
-    #   choice <- withTimeout({
+    #   choice <- R.utils::withTimeout({
     #     as.character(readline(prompt = "best_clone: "))
     #   }, timeout = 5, onTimeout = "silent")
     # }, TimeoutException = function(ex) {
     #   message("No input detected within 5 seconds. Continuing...")
     # })
-    
     ###
     if(choice!=""){
     	#choice <- as.character(input_obj@options$bestClone)  
@@ -826,6 +830,7 @@ runTeaCNV <- function(
       ###re-estimate clonal CNVs for merged clones
       cluster1 <- cell_anno_new[cells_obs,"subCluster"]
       cluster2 <- cell_anno_new[cells_obs,"clone_merged"]
+      delt.ref <- (CNest.ref$ratio[2] - CNest.ref$ratio[1])/(CNest.ref$CN[2] - CNest.ref$CN[1])
       outres <- celloutput(cells_obs,cluster1,cluster2,clone_res=clonal_res,mtx_bin=mtx_bin,
                            CNest.ref= CNest.ref,
                            min_cells_in_group,
@@ -839,7 +844,10 @@ runTeaCNV <- function(
                            outdir=outdir,
                            minCN.frac=minCN_frac,
                            seg_dat_ref=seg_dat_ref,
-                           segValue_method=segValue.method)
+                           segValue_method=segValue.method,
+                           ratio_diff_cutoff= delt.ref*DEsegCoeff,
+                           correct_by_dist=correct_by_dist
+                           )
    
       cellbinCount <- input_obj@data.binCount[,outres$cellinfo$cellname]
       outres$cellbinCount <- cellbinCount
