@@ -354,7 +354,7 @@ runTeaCNV <- function(
     CorlorDot4Ratio = TRUE,
     FiltSeg= TRUE,
     SegLen_min = 2e6,
-    SegSize_min = 20,
+    SegSize_min = NULL,
     #find sub-clone settings
     Zscore_cutoff = 1.28,
     ClustOnRatio = TRUE,
@@ -500,12 +500,13 @@ runTeaCNV <- function(
   if(is.null(binSize)){
     binSize <- ceiling(N_peaks/2000)
   }
-  if(N_peaks>1e4 &N_peaks<1.5e4){
-    SegSize_min= ifelse(binSize<6,round(100/binSize),20)
-  }else if(N_peaks>=1.5e4){
-    SegSize_min= ifelse(binSize<6,round(120/binSize),20)
+  if(is.null(SegSize_min)){
+    if(N_peaks>1e4 &N_peaks<1.5e4){
+      SegSize_min= ifelse(binSize<6,round(100/binSize),20)
+    }else if(N_peaks>=1.5e4){
+      SegSize_min= ifelse(binSize<6,round(120/binSize),20)
+    }
   }
-   
   input_obj@options$binSize <- binSize
   input_obj@options$SegSize_min = SegSize_min
 
