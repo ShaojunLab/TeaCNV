@@ -363,7 +363,7 @@ runTeaCNV <- function(
     outputFigures = TRUE,
     min_cells_in_group = 20,
     ChrRemove = c('chrX', 'chrY', 'chrM'),
-    numCores = 6,
+    numCores = 4,
     #Clone optimization setting
     minCN_frac = 0.01,
     delt_lim =0.25,
