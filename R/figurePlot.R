@@ -223,7 +223,7 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
   colnames(a)=c('axis.loc','value.bin','value.segment','segID',"segStrat","segEnd","ratio_map","integerCN","length_bin")
   # a$colour<- ifelse(a$integerCNV==2,"neutral",ifelse(a$integerCNV>2,"gain","loss"))
   # a$colour <- factor(a$colour,levels=c("loss","neutral","gain"))
-  
+  a$ratio_map <- round(a$ratio_map,4)
   if(is.null(ylim)){ylim=c(0,max(data.bin$SegMean[is.finite(data.bin$SegMean)])+0.5)}
   breakshist <- seq(0,max(data.bin$SegMean[is.finite(data.bin$SegMean)]),length.out=100)
   a <- a %>%
