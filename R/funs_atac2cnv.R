@@ -819,6 +819,7 @@ celloutput <- function(cells.obs,cluster1,cluster2,clone_res,mtx_bin,
                        ratio_diff_cutoff=NULL,
                        diploidy_cutoff = 0.95,
                        Diploid.domin=TRUE,
+                       segCNV.refine=TRUE,
                        ...){
   clone_res_raw <- clone_res
   cellinfo <- data.frame(cellname =cells.obs)
@@ -877,7 +878,8 @@ celloutput <- function(cells.obs,cluster1,cluster2,clone_res,mtx_bin,
   # }
   
   clone_res <-  clonal_ploidy(clone_res,baseCN_frac.min=diploidy_cutoff)
-  clone_res_update <- segCNV_refine(
+  if(segCNV.refine){
+      clone_res_update <- segCNV_refine(
         clonalRes=clone_res,
         CNest.ref=CNest.ref,
         seg_method=seg_method,
@@ -889,6 +891,10 @@ celloutput <- function(cells.obs,cluster1,cluster2,clone_res,mtx_bin,
         SegSize_min = SegSize_min,
         p.adj_cutoff = p.adj_cutoff,
         ratio_diff_cutoff=ratio_diff_cutoff)
+      }else{
+        clone_res_update <- clone_res
+      }
+
 
     clone_res_update <-  clonal_ploidy(clone_res_update,baseCN_frac.min=diploidy_cutoff)
   
