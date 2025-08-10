@@ -366,7 +366,7 @@ runTeaCNV <- function(
     numCores = 4,
     #Clone optimization setting
     minCN_frac = 0.01,
-    delt_lim =0.25,
+    delt_lim =0.4,
     StopStep = 4,
     choice = "",
     scFactor=1,
