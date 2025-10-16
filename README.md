@@ -2,13 +2,13 @@
 
 
 ## Description
-TeaCNV is a computational framework designed to estimate tumor absolute copy number variations from epigenomics data by aggregating the sparse signal of multi-individual cells to cell populations.
-TeaCNV allows the inference of absolute copy number profiles from low coverage sparse data, including single-cell ATAC-seq and Multiome-seq data. 
+TeaCNV is a computational framework designed to estimate tumor absolute copy number variations from single-cell chromatin accessibility data by aggregating the sparse signal of multi-individual cells to cell populations.
+TeaCNV allows the inference of absolute copy number profiles from low coverage sparse data, including scATAC-seq and scATAC&RNA-seq co-assay data. 
 
 ## System requirements and dependency
 This framework runs on R (version > 4.2.0)
 
-## Installing TeaCNV
+## Installing
 #### Option A: Install TeaCNV within R using devtools
 If installing from directly within R, you can instead use the following command from within R.
 ```
@@ -27,6 +27,16 @@ install.packages("./", repos=NULL, type="source",INSTALL_opts = c("--no-staged-i
 ## Usage
 
 If TeaCNV is already installed, follow the steps below to set up the working directory. This step is essential if the user has not provided the necessary reference files, as TeaCNV's built-in reference data —defaulting to the HG38 genome version— is stored in the working directory. After setting up, you can load the sample data and run TeaCNV:
+
+### Example Data
+
+Demo data (/example/) includes:
+
+atac_count.RData: raw scATAC count matrix
+
+cell_meta.csv: cell type annotation (e.g., epithelial, immune, stromal)
+
+### Run TeaCNV on the demo dataset
 
 ```
 library(TeaCNV)
