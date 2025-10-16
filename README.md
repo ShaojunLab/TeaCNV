@@ -54,12 +54,12 @@ cnv_obj <- CreateTeaCNVObject(input = mtx,
                              ChrRemove = c('chrX', 'chrY', 'chrM'),
                              genome = "hg38",
                              count_lim = 4,
-			     Correct_by_length = TRUE
+			     			 Correct_by_length = TRUE
 )
 res <- runTeaCNV(input_obj = cnv_obj,
 	        outdir = "./example",
 	        delt_lim = 0.3,
-		min_cells_in_group = 10,
+			min_cells_in_group = 10,
 	        seu_resolution = 1.2)
 ```
 
