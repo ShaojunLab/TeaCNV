@@ -458,7 +458,7 @@ cell_score <- function(data,ZeroProp.max=0.5,byBin=TRUE,binWin=20,outFigure=TRUE
   chrNz <- c()
   for (i in 1:length(chrom)) {
     chrj <- chrom[i]
-    mtx_sub_chrj <- data[grepl(paste0(paste0("^",chrj),c("-",":","_"),collapse = "|"),rownames(data)),]
+    mtx_sub_chrj <- data[grepl(paste0(paste0("^",chrj),c("-",":","_"),collapse = "|"),rownames(data)),drop=FALSE]
     Nz <- colSums(mtx_sub_chrj==0)
     ProZ <- Nz/nrow(mtx_sub_chrj)
     chrNz <- rbind(chrNz,ProZ)
