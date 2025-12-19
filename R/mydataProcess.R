@@ -88,6 +88,7 @@ smooth_by_chromosome <-function(mat_obj,wl=200,chr_annotation=NULL,Ncores=1,
       }
     }else{
       smoothed_chr_data <- chr_data
+      rownames(smoothed_chr_data)<- gsub("_|-|:","-",rownames(smoothed_chr_data))
     }
     new_Mat <- rbind(new_Mat,smoothed_chr_data)
   }
