@@ -272,7 +272,7 @@ binClust <- function(inputMat,cellMeta,ref_group_names=NULL,
                        value.type = "count",max.value=count_lim,
                        legend_titles="bin count", width=Figure.width,height=Figure.height,
                        col_list=left_anno_cols,
-                       clust_rows=F,clustering_method_rows="ward.D2",sep_by="-",
+                       clust_rows=F,clustering_method_rows="ward.D2",sep_by="_|-|:",
                        outdir=outdir,
                        fileout_name = fileout_nameC)
     if(is.null(chrs)){plt4peak=FALSE}
@@ -286,7 +286,7 @@ binClust <- function(inputMat,cellMeta,ref_group_names=NULL,
                            max_lim=NULL,
                            value.type = "any",legend_titles="peak count", width=Figure.width,height=Figure.height,
                            col_list=left_anno_cols,
-                           clust_rows=F,clustering_method_rows="ward.D2",sep_by="-",
+                           clust_rows=F,clustering_method_rows="ward.D2",sep_by="_|-|:",
                            outdir=outdir,
                            fileout_name = fileout_name2C)
     }
@@ -304,7 +304,7 @@ binClust <- function(inputMat,cellMeta,ref_group_names=NULL,
                          max_lim=NULL,
                          value.type = "ratio",legend_titles="bin ratio", width=Figure.width,height=Figure.height,
                          col_list=left_anno_cols,
-                         clust_rows=F,clustering_method_rows="ward.D2",sep_by="-",
+                         clust_rows=F,clustering_method_rows="ward.D2",sep_by="_|-|:",
                          outdir=outdir,
                          fileout_name = fileout_nameR)
 
