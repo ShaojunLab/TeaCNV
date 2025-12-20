@@ -1619,7 +1619,7 @@ library(tidyr)
 #' @param label_genes vector of genes
 #' @param annotations GRanges object
 #' @export 
-heatmap4peakMt <- function(mat,meta_info=NULL,max_lim=NULL,sep_by="-",outdir="./",value.type="count",max.value = NULL,color_bars= "discrete",
+heatmap4peakMt <- function(mat,meta_info=NULL,max_lim=NULL,sep_by="-|_|:",outdir="./",value.type="count",max.value = NULL,color_bars= "discrete",
                            n_breaks = 5,
                            width=10,height=6,col_list=NULL,fileout_name=NULL,clust_rows=FALSE,clustering_method_rows = "complete",
                            legend_direction = "vertical", legend_titles=NULL,heatmap_legend_side="right",
