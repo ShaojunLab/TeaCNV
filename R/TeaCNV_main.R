@@ -974,7 +974,7 @@ runTeaCNV <- function(
 
     p_scRatio <- heatmap4peakMt(mat=plt_mt2[,rownames(cellmeta2)],
                                 meta_info=cellmeta2,
-                                sep_by="-",
+                                sep_by="-|_|:",
                                 outdir= plotdir,value.type="ratio",
                                 clust_rows=F,clustering_method_rows = "ward.D2",
                                 show_legend_row = T,
@@ -1007,7 +1007,7 @@ runTeaCNV <- function(
     # left_anno_cols[["clone"]] <- color_r
     # p_cloneCN <- heatmap4peakMt(mat=new_CNmt,
     #                       meta_info=clone_info,
-    #                       sep_by="-",
+    #                       sep_by="-|_|:",
     #                       outdir= plotdir,value.type="CNV",
     #                       clust_rows=F,clustering_method_rows = "ward.D2",
     #                       show_legend_row = T,
@@ -1023,7 +1023,7 @@ runTeaCNV <- function(
     height <- ifelse(ncol(CNmt)>2,0.35*(ncol(CNmt))+0.5,ifelse(ncol(CNmt)==1,1.2,1.5))
     p_cloneCN <- heatmap4peakMt(mat=CNmt,
                                 meta_info=clone_info,
-                                sep_by="-",
+                                sep_by="-|_|:",
                                 outdir= plotdir,
                                 value.type="CNV",
                                 clust_rows=F,
