@@ -1181,7 +1181,13 @@ replotInfercnv <- function(expr.mat,
                            plotDir="./",
                            device="png",
                            type="ratio",
-                           color_bars= "continuous" #"discrete"
+                           color_bars= "continuous", #"discrete"
+                           ## NEW: auto row split by dynamicTreeCut when metadata is NULL
+                           auto_row_split = FALSE,
+                           dyn_deepSplit = 0.2,
+                           dyn_pamRespectsDendro = FALSE,
+                            hc=NULL,
+                            K=NULL #number of groups for rows
                            ){
   nd <- list("data.table","ComplexHeatmap","dplyr","circlize","ggplot2","ggsci")
   lapply(nd, require, character.only = TRUE)
@@ -1264,8 +1270,47 @@ replotInfercnv <- function(expr.mat,
       color_bars <- "discrete"
       titles <- "CNV"
   }
+  ## =========================
+  ## NEW: Automatically determine the number of clusters and split the rows (effective when metadata=NULL).
+  ## =========================
+  mat_heat <- as.matrix(t(expr.mat))
+  if(is.null(metadata) &&
+     isTRUE(clust_rows) &&
+     is.null(row_split_by) &&
+     isTRUE(auto_row_split)) {
+
+    set.seed(123)
+    d  <- stats::dist(mat_heat)
+    hc <- stats::hclust(d, method = clustering_method_rows)
+
+    grp <- dynamicTreeCut::cutreeDynamic(
+      dendro = hc,
+      distM  = as.matrix(d),
+      deepSplit = dyn_deepSplit,
+      pamRespectsDendro = dyn_pamRespectsDendro
+    )
+    tab_grp <- table(grp)
+    n_grp <- length(tab_grp)
+    message("[auto_row_split] dynamicTreeCut groups (including 0 if present):")
+    print(tab_grp)
+    message(sprintf("[auto_row_split] n_grp (exclude 0) = %d", n_grp))
+    #Cluster using the same tree & split by group (grp)
+    clust_rows <- as.dendrogram(hc)
+    row_split_by <- n_grp
+  }else if(
+    is.null(metadata) &&
+    isTRUE(clust_rows) &&
+    is.null(row_split_by) &&
+    !is.null(hc) &&
+    !is.null(K)
+    ){
+    clust_rows <- as.dendrogram(hc)
+    row_split_by <- K
+  }
+
+
   
-  ht_plot <- Heatmap(as.matrix(t(expr.mat)),
+  ht_plot <- Heatmap(mat_heat,
                      cluster_rows = clust_rows,
                      clustering_method_rows = clustering_method_rows,
                      cluster_columns = F,
@@ -1288,8 +1333,8 @@ replotInfercnv <- function(expr.mat,
                      column_title_side = c("bottom"),
                      col=colors)
   if(draw_normal){
-    if(ncol(ref.mat)>0.5*ncol(dat) &ncol(ref.mat)>3000){
-      n_cells <- min(round(0.25*ncol(dat)),3000)
+    if(ncol(ref.mat)>0.5*ncol(expr.mat) &ncol(ref.mat)>3000){
+      n_cells <- min(round(0.25*ncol(expr.mat)),3000)
       sample_col <- sample(1:ncol(ref.mat),n_cells)
       ref.mat <- ref.mat[,sample_col]
     }
