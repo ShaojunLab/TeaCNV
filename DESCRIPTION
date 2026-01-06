@@ -44,6 +44,7 @@ Imports:
     futile.logger,
     R.utils
 Depends:
+    BSgenome.Hsapiens.UCSC.hg38,
     GenomicRanges,
     data.table,
     ggplot2
