@@ -100,7 +100,7 @@ attached base packages:
 [1] stats4    stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] TeaCNV_0.0.0.9000    ggplot2_3.5.2        data.table_1.17.6    GenomicRanges_1.58.0 GenomeInfoDb_1.42.3 
+[1] TeaCNV_0.1.0    ggplot2_3.5.2        data.table_1.17.6    GenomicRanges_1.58.0 GenomeInfoDb_1.42.3 
 [6] IRanges_2.40.1       S4Vectors_0.44.0     BiocGenerics_0.52.0 
 
 loaded via a namespace (and not attached):
