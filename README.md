@@ -93,9 +93,9 @@ res <- runTeaCNV(input_obj = cnv_obj,
 
 ## Output files
 
-The main TeaCNV results are saved in **‘final.CNVres.rds’**, which contains the complete set of analysis outputs.
+The main TeaCNV results are saved in **‘final.CNVres.rds’**.
 
-### *Result object structure* (the R object stored in `final.CNVres.rds`)
+### *Result object structure*:
 
 - **`cellinfo`** (`data.frame`, *n_cells × 2*): cell-level metadata  
 
