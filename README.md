@@ -99,10 +99,16 @@ To adjust parameters and rerun the analysis, you can reload the intermediate obj
 All figure outputs are saved to the `Figures/` directory. Key result plots include:
 
 - 'heatmap_CNratio.pdf' — heatmap of (denoised) CN ratio signals across bins and cells/clones.
+
+![heatmap_CNratio](example/heatmap_CNratio.png)
   
 - 'heatmap_cloneCNV.pdf' — heatmap summarizing inferred integer CNV across clones.
 
+![heatmap_cloneCNV](example/heatmap_cloneCNV.png)
+
 - 'clonalCN_final_noDots.pdf' — final clone-level CNV profiles (segment-based CNV calls) across the genome.
+
+![clonalCN_final](example/clonalCN_final_noDots.png)
 
 For TeaCNV-related questions, refer to the README, FAQ, and publication. If something is unclear or missing, submit a Documentation Request or Feature Request on GitHub. For further assistance, contact us via email: Ying Wang [yingwang0727@outlook.com].
 
