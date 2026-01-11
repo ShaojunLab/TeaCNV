@@ -103,7 +103,7 @@ The main TeaCNV results are saved in ‘final.CNVres.rds’, which contains the 
 		cell2     1
 		cell3     2
 		cell4     3
-		......     ......
+		......  ......
 
 - **`clonalest`** (`list`, length = *n_clones*): clone-level CNV inference results  
   Each element (e.g., `clonalest[[1]]`) corresponds to one clone and includes:  
