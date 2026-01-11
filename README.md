@@ -31,7 +31,7 @@ install.packages("./", repos=NULL, type="source",INSTALL_opts = c("--no-staged-i
 If TeaCNV is already installed, follow the steps below to set up the working directory. This step is essential if the user has not provided the necessary reference files, as TeaCNV's built-in reference data —defaulting to the HG38 genome version— is stored in the working directory. After setting up, you can load the sample data and run TeaCNV:
 
 ### Input
-TeaCNV takes a peak-by-cell count matrix and a data table of cell annotation as input. The data table is provided via the `annotationFile`, where the first column contains annotations for the cells represented in the columns of the input matrix. These annotations typically distinguish between reference and observed cell groups. 
+TeaCNV takes a peak-by-cell count matrix and a data table of cell annotation as input. 
 
 Input files (demo: `/example/`):
 - `atac_count.RData`: raw scATAC count matrix
@@ -59,7 +59,7 @@ load("./example/atac_count.RData")
 mtx <- as.matrix(mtx)
 cell_meta <- read.csv("./example/cell_meta.csv",row.name=1)
 ```
-Once the input data are prepared, the next step is to initialize a TeaCNV object, which handles data preprocessing and quality control. After initialization, run the main TeaCNV pipeline to perform CNV detection and subclonal inference.
+Once the input data are prepared, the next step is to initialize a TeaCNV object, which handles data preprocessing and quality control. After initialization, run the main TeaCNV pipeline to perform CNV and subclonal inference.
 
 ```
 
@@ -78,13 +78,14 @@ res <- runTeaCNV(input_obj = cnv_obj,
 	        seu_resolution = 1.2)
 ```
 
-- The `ref_group_names` parameter specifies the group label corresponding to the reference cells.
-- To remove peaks with abnormally high counts, use the count_lim parameter. It is recommended to set this threshold to the 99th percentile of peak counts.
-- The `seu_resolution` parameter controls clustering granularity in **Seurat**. A higher value (e.g., > 1.2) will generate more clusters, while the default is 1.0.
-- The `min_cells_in_group` parameter defines the minimum number of cells required per clone, with a default of 20 cells. 
-- The `delt_lim` parameter specifies the relative copy number (CN) ratio interval corresponding to a single absolute CN change (default: 0.3). Increasing `delt_lim` yields a lower estimated ploidy at the clonal level.
+- `annotationFile`: annotation data.
+- `ref_group_names`: one or more group labels in annotation data, and cells assigned to these label(s) are treated as the normal/reference population for baseline normalization in downstream CNV inference.
+- `count_lim`: filters out peaks with abnormally high counts; it is recommended to set this threshold to the 99th percentile of peak counts.
+- `seu_resolution`: controls clustering granularity in **Seurat**; higher values (e.g., > 1.2) produce more clusters, while the default is 1.0.
+- `min_cells_in_group`: sets the minimum number of cells required per clone; the default is 20. 
+- `delt_lim`: defines the relative copy number (CN) ratio interval corresponding to a one-copy change in absolute CN (default: 0.3). Increasing `delt_lim` results in a lower estimated clonal-level ploidy.
+- `Correct_by_length`: when set to `TRUE`, normalizes peak counts to counts per kilobase to account for varying peak lengths; set it to `FALSE` if the input matrix features (bins) are of equal length.
 
-We set `Correct_by_length = TRUE` to normalize the counts of peaks with different lengths to counts per kilobase. If the input matrix features (bins) are of equal length, we set it to `FALSE`.
 
 ### Output and Visualization
 
