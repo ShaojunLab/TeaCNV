@@ -36,18 +36,18 @@ TeaCNV takes a peak-by-cell count matrix and a data table of cell annotation as 
 Demo data (`/example/`) includes:
 - `atac_count.RData`: raw scATAC count matrix
 
-					 cell1  cell2  cell3  ......
-	chr1-9906-10568    0      1      2    ......
-	chr1-16010-16366   2      0      1    ......
+						 cell1  cell2  cell3  ......
+		chr1-9906-10568    0      1      2    ......
+		chr1-16010-16366   2      0      1    ......
 
 
 - `cell_meta.csv`: cell type annotation (e.g., epithelial, immune, stromal)
 
-			   Cluster
-	cell1      observed
-	cell2      observed
-	cell3      reference
-	......     ...... 
+				   Cluster
+		cell1      observed
+		cell2      observed
+		cell3      reference
+		......     ...... 
   
 
 #### Run TeaCNV on the demo dataset
