@@ -78,6 +78,9 @@ res <- runTeaCNV(input_obj = cnv_obj,
 	        seu_resolution = 1.2)
 ```
 
+Parameters:
+
+```
 - `annotationFile`: annotation data.
 - `ref_group_names`: one or more group labels in annotation data, and cells assigned to these label(s) are treated as the normal/reference population for baseline normalization in downstream CNV inference.
 - `count_lim`: filters out peaks with abnormally high counts; it is recommended to set this threshold to the 99th percentile of peak counts.
@@ -85,7 +88,7 @@ res <- runTeaCNV(input_obj = cnv_obj,
 - `min_cells_in_group`: sets the minimum number of cells required per clone; the default is 20. 
 - `delt_lim`: defines the relative copy number (CN) ratio interval corresponding to a one-copy change in absolute CN (default: 0.3). Increasing `delt_lim` results in a lower estimated clonal-level ploidy.
 - `Correct_by_length`: when set to `TRUE`, normalizes peak counts to counts per kilobase to account for varying peak lengths; set it to `FALSE` if the input matrix features (bins) are of equal length.
-
+```
 
 ### Output and Visualization
 
