@@ -89,8 +89,6 @@ res <- runTeaCNV(input_obj = cnv_obj,
 - `delt_lim`: defines the relative copy number (CN) ratio interval corresponding to a one-copy change in absolute CN (default: 0.4). Increasing `delt_lim` results in a lower estimated clonal-level ploidy.
 - `Correct_by_length`: when set to `TRUE`, normalizes peak counts to counts per kilobase to account for varying peak lengths; set it to `FALSE` if the input matrix features (bins) are of equal length.
 
-To adjust parameters and rerun the analysis, you can reload the intermediate object 'TeaCNV.obj' as `cnv_obj` and resume the workflow from that stage, without repeating the upstream preprocessing steps.
-
 
 
 ## Output files
