@@ -94,6 +94,37 @@ res <- runTeaCNV(input_obj = cnv_obj,
 
 The main TeaCNV results are saved in ‘final.CNVres.rds’, which contains the complete set of analysis outputs.
 
+*Result object structure*
+
+- **`cellinfo`** (`data.frame`, *n_cells × 2*): cell-level metadata  
+
+		cellname clone
+		cell1     1
+		cell2     1
+		cell3     2
+		cell4     3
+		......     ......
+
+- **`clonalest`** (`list`, length = *n_clones*): clone-level CNV inference results  
+  Each element (e.g., `clonalest[[1]]`) corresponds to one clone and includes:  
+  - `input_BinSegRatio` (`data.frame`): bin-level ratios and segmentation annotations (bin coordinates, `binRatio`, `segID`, `SegMean`, segment stats, breakpoints, etc.)  
+  - `seg.dat` (`data.frame`): segment-level CNV profile (chromosome, start/end, segment ratio, variance, weights, and inferred CN states such as `relativeCN` / `integerCN`)  
+  - `CNest` (`data.frame`): mapping between ratio levels and inferred integer copy numbers  
+  - `ploidy` (`numeric`): estimated clone-level ploidy  
+  - `score` (`data.frame`): QC/fit metrics for CN estimation (e.g., MSE, segment fraction, aneuploidy score)  
+  - `diploidy` (`logical`): whether the clone is inferred as diploid
+
+- **`cellbinCount.norm`** (`matrix`, *n_bins × n_cells*): normalized bin counts (after length correction / normalization)  
+- **`cellbinCount`** (`matrix`, *n_bins × n_cells*): raw bin counts  
+- **`cellbinRatio_raw`** (`matrix`, *n_bins × n_cells*): raw bin-level ratio matrix before denoising  
+- **`CNest.ref`** (`data.frame`): reference mapping from ratio to integer CN (global/reference-level CN calibration)  
+- **`cellbinRatio_deNoise`** (`matrix`, *n_bins × n_cells*): denoised/smoothed bin-level ratio matrix used for CNV inference and visualization  
+
+---
+
+
+
+
 To adjust parameters and rerun the analysis, you can reload the intermediate object 'TeaCNV.obj' as `cnv_obj` and resume the workflow from that stage, without repeating the upstream preprocessing steps.
 
 All figure outputs are saved to the `Figures/` directory. Key result plots include:
