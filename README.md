@@ -75,7 +75,7 @@ cnv_obj <- CreateTeaCNVObject(input = mtx,
 res <- runTeaCNV(input_obj = cnv_obj,
 	        outdir = "./example",
 	        delt_lim = 0.3,
-			min_cells_in_group = 10,
+			min_cells_in_group = 20,
 	        seu_resolution = 1)
 ```
 
@@ -90,18 +90,19 @@ res <- runTeaCNV(input_obj = cnv_obj,
 - `Correct_by_length`: when set to `TRUE`, normalizes peak counts to counts per kilobase to account for varying peak lengths; set it to `FALSE` if the input matrix features (bins) are of equal length.
 
 
-### Output and Visualization
+### Output files
 
-The final output of TeaCNV is saved in the 'final.CNVres.rds', which contains the complete analysis results.
+The main TeaCNV results are saved in ‘final.CNVres.rds’, which contains the complete set of analysis outputs.
 
-If you wish to adjust parameters and rerun the analysis, you can simply reload the intermediate file 'TeaCNV.obj' as the `cnv_obj` object and continue the workflow from that point without repeating earlier steps.
+To adjust parameters and rerun the analysis, you can reload the intermediate object 'TeaCNV.obj' as `cnv_obj` and resume the workflow from that stage, without repeating the upstream preprocessing steps.
 
-All visualization outputs are stored in the `/Figure/` directory:
-- 'heatmap_CNratio.pdf' — heatmap showing copy-ratio profiles with subclone annotations.
+All figure outputs are saved to the `Figures/` directory. Key result plots include:
 
-- 'heatmap_cloneCNV.pdf' — heatmap displaying the inferred integer copy number states for each subclone.
+- 'heatmap_CNratio.pdf' — heatmap of (denoised) CN ratio signals across bins and cells/clones.
+  
+- 'heatmap_cloneCNV.pdf' — heatmap summarizing inferred integer CNV across clones.
 
-- 'clonalCN_final_noDots.pdf' — composite figure illustrating genome-wide segmentation and corresponding copy-ratio and CN profiles for each subclone.
+- 'clonalCN_final_noDots.pdf' — final clone-level CNV profiles (segment-based CNV calls) across the genome.
 
 For TeaCNV-related questions, refer to the README, FAQ, and publication. If something is unclear or missing, submit a Documentation Request or Feature Request on GitHub. For further assistance, contact us via email: Ying Wang [yingwang0727@outlook.com].
 
