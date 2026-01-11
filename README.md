@@ -33,7 +33,7 @@ If TeaCNV is already installed, follow the steps below to set up the working dir
 ### Input
 TeaCNV takes a peak-by-cell count matrix and a data table of cell annotation as input. The data table is provided via the `annotationFile`, where the first column contains annotations for the cells represented in the columns of the input matrix. These annotations typically distinguish between reference and observed cell groups. 
 
-Demo data (`/example/`) includes:
+Input files (`/example/`):
 - `atac_count.RData`: raw scATAC count matrix
 
 						  cell1  cell2  cell3  ......
