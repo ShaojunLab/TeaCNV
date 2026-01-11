@@ -4,6 +4,7 @@
 ## Description
 TeaCNV is a computational framework designed to estimate tumor absolute copy number variations from single-cell chromatin accessibility data by aggregating the sparse signal of multi-individual cells to cell populations.
 TeaCNV allows the inference of absolute copy number profiles from low coverage sparse data, including scATAC-seq and scATAC&RNA-seq co-assay data. 
+![Overview](TeaCNV/example/Figure1.png)
 
 ## System requirements and dependency
 This framework runs on R (version > 4.2.0)
