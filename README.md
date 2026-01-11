@@ -41,7 +41,7 @@ Input files (demo: `/example/`):
 		chr1-16010-16366   2      0      1    ......
 
 
-- `cell_meta.csv`: cell type annotation (e.g., observed, reference)
+- `annotation.csv`: cell type annotation (e.g., observed, reference)
 
 				     Cluster
 		cell1      observed
@@ -57,14 +57,15 @@ library(TeaCNV)
 #Download the 'example' folder to the current  work path
 load("./example/atac_count.RData")
 mtx <- as.matrix(mtx)
-cell_meta <- read.csv("./example/cell_meta.csv",row.name=1)
+annotation <- read.csv("./example/annotation.csv",row.name=1)
 ```
-Once the input data are prepared, the next step is to initialize a TeaCNV object, which handles data preprocessing and quality control. After initialization, run the main TeaCNV pipeline to perform CNV and subclonal inference.
+
+Once the input data have been prepared, initialize a TeaCNV object to perform data preprocessing and quality control. Then run the main TeaCNV workflow to infer CNVs and identify subclonal structure.
 
 ```
 
 cnv_obj <- CreateTeaCNVObject(input = mtx,
-                             annotationFile = cell_meta,
+                             annotationFile = annotation,
                              ref_group_names = "reference",
                              ChrRemove = c('chrX', 'chrY', 'chrM'),
                              genome = "hg38",
