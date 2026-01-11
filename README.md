@@ -41,9 +41,9 @@ Demo data (`/example/`) includes:
 		chr1-16010-16366   2      0      1    ......
 
 
-- `cell_meta.csv`: cell type annotation (e.g., epithelial, immune, stromal)
+- `cell_meta.csv`: cell type annotation (e.g., observed, reference)
 
-				    Cluster
+				     Cluster
 		cell1      observed
 		cell2      observed
 		cell3      reference
