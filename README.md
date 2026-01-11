@@ -76,6 +76,7 @@ res <- runTeaCNV(input_obj = cnv_obj,
 	        outdir = "./example",
 	        delt_lim = 0.3,
 			min_cells_in_group = 20,
+			#scFactor =1.2,
 	        seu_resolution = 1)
 ```
 
@@ -88,6 +89,7 @@ res <- runTeaCNV(input_obj = cnv_obj,
 - `min_cells_in_group`: sets the minimum number of cells required per clone; the default is 20. 
 - `delt_lim`: defines the relative copy number (CN) ratio interval corresponding to a one-copy change in absolute CN (default: 0.4). Increasing `delt_lim` results in a lower estimated clonal-level ploidy.
 - `Correct_by_length`: when set to `TRUE`, normalizes peak counts to counts per kilobase to account for varying peak lengths; set it to `FALSE` if the input matrix features (bins) are of equal length.
+- `scFactor`: scale factor used to adjust the final segment size; default is 1.
 
 
 
