@@ -94,7 +94,7 @@ res <- runTeaCNV(input_obj = cnv_obj,
 
 The main TeaCNV results are saved in ‘final.CNVres.rds’, which contains the complete set of analysis outputs.
 
-*Result object structure*
+*Result object structure*:
 
 - **`cellinfo`** (`data.frame`, *n_cells × 2*): cell-level metadata  
 
@@ -124,7 +124,9 @@ The main TeaCNV results are saved in ‘final.CNVres.rds’, which contains the 
 
 To adjust parameters and rerun the analysis, you can reload the intermediate object 'TeaCNV.obj' as `cnv_obj` and resume the workflow from that stage, without repeating the upstream preprocessing steps.
 
-All figure outputs are saved to the `Figures/` directory. Key result plots include:
+*Figures*
+
+All figure outputs are saved under the `Figures/` directory. Key result plots include:
 
 - 'heatmap_CNratio.pdf' — heatmap of (denoised) CN ratio signals across bins and cells/clones.
 
