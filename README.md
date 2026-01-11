@@ -75,7 +75,7 @@ res <- runTeaCNV(input_obj = cnv_obj,
 	        outdir = "./example",
 	        delt_lim = 0.3,
 			min_cells_in_group = 10,
-	        seu_resolution = 1.2)
+	        seu_resolution = 1)
 ```
 
 #### Parameters:
