@@ -89,12 +89,15 @@ res <- runTeaCNV(input_obj = cnv_obj,
 - `delt_lim`: defines the relative copy number (CN) ratio interval corresponding to a one-copy change in absolute CN (default: 0.4). Increasing `delt_lim` results in a lower estimated clonal-level ploidy.
 - `Correct_by_length`: when set to `TRUE`, normalizes peak counts to counts per kilobase to account for varying peak lengths; set it to `FALSE` if the input matrix features (bins) are of equal length.
 
+To adjust parameters and rerun the analysis, you can reload the intermediate object 'TeaCNV.obj' as `cnv_obj` and resume the workflow from that stage, without repeating the upstream preprocessing steps.
+
+---
 
 ### Output files
 
 The main TeaCNV results are saved in ‘final.CNVres.rds’, which contains the complete set of analysis outputs.
 
-*Result object structure*:
+#### *Result object structure*:
 
 - **`cellinfo`** (`data.frame`, *n_cells × 2*): cell-level metadata  
 
@@ -122,9 +125,8 @@ The main TeaCNV results are saved in ‘final.CNVres.rds’, which contains the 
 
 ---
 
-To adjust parameters and rerun the analysis, you can reload the intermediate object 'TeaCNV.obj' as `cnv_obj` and resume the workflow from that stage, without repeating the upstream preprocessing steps.
 
-*Figures*
+#### *Figures*
 
 All figure outputs are saved under the `Figures/` directory. Key result plots include:
 
@@ -140,6 +142,7 @@ All figure outputs are saved under the `Figures/` directory. Key result plots in
 
 ![clonalCN_final](example/clonalCN_final_noDots.png)
 
+---
 For TeaCNV-related questions, refer to the README, FAQ, and publication. If something is unclear or missing, submit a Documentation Request or Feature Request on GitHub. For further assistance, contact us via email: Ying Wang [yingwang0727@outlook.com].
 
 
