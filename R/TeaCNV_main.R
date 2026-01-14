@@ -711,6 +711,9 @@ runTeaCNV <- function(
       }
       
       best_clone <- names(clone_scores)[which.max(clone_scores)]
+      if(length(diploidy_indx)==length(clonal_res)){
+        best_clone <- names(diploidy_indx)[1]
+      }                            
       cat("\nThe subgroup scores are:\n")
       cat(clone_scores)
       cat("\n")
@@ -754,6 +757,7 @@ runTeaCNV <- function(
     	
     }else{
       choice <- as.character(input_obj@options$bestClone) 
+      choice <- ifelse(length(choice)==0,best_clone,choice)
       
     }
     if(choice!=best_clone){
