@@ -892,6 +892,7 @@ ploidyRefine.ref <- function(sampelres,CNest.ref,minCN.frac=0.01,seg_dat_ref=NUL
   names(clusterout) <- names(sampelres)
   # 
   #clusterout2 <- clusterout
+   if(is.na(delt.ref)){delt.ref = 0.5}
   clusterout <- lapply(1:length(clusterout), function(j,clusterout,baseCN,delt.ref){
     if (!is.null(clusterout[[j]])){
       res <- clusterout[[j]]
