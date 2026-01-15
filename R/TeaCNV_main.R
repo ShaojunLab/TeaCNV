@@ -602,6 +602,8 @@ runTeaCNV <- function(
   flog.info("\n")
   
   #Step 3: clone-level integer copy numbers estimation
+  plotdir <- paste0(outdir,"/Figures")
+  ifelse(!dir.exists(file.path(plotdir)), dir.create(file.path(plotdir)), FALSE)
   runstep=runstep+1
   if(StopStep>=runstep){
     CNVresFile_subC <- paste0(outdir_sub,"/step03.CNV_res_clonal.rds")
@@ -724,8 +726,6 @@ runTeaCNV <- function(
       saveRDS(input_obj,paste0(outdir,"/",output_obj_name))
      
       ###3.5 visualization
-      plotdir <- paste0(outdir,"/Figures")
-      ifelse(!dir.exists(file.path(plotdir)), dir.create(file.path(plotdir)), FALSE)
 
       flog.info("\n")
       flog.info(paste0("Output figures of initial subgroup-level CN estimation to ", outdir))
