@@ -836,6 +836,7 @@ runTeaCNV <- function(
       cluster1 <- cell_anno_new[cells_obs,"subCluster"]
       cluster2 <- cell_anno_new[cells_obs,"clone_merged"]
       delt.ref <- (CNest.ref$ratio[2] - CNest.ref$ratio[1])/(CNest.ref$CN[2] - CNest.ref$CN[1])
+      if(is.na(delt.ref)){delt.ref <-0.5}
       outres <- celloutput(cells_obs,cluster1,cluster2,clone_res=clonal_res,mtx_bin=mtx_bin,
                            CNest.ref= CNest.ref,
                            min_cells_in_group,
