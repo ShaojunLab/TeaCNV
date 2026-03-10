@@ -1197,7 +1197,7 @@ replotInfercnv <- function(expr.mat,
   inter_genes <- intersect(rownames(expr.mat),gene_order$V1)
   gene_order <- gene_order[gene_order$V1 %in% inter_genes,]
   expr.mat <- expr.mat[gene_order$V1,]
-  pos <- grep(paste0("chr",1:22,collapse = "|"),gene_order$V2)
+  pos <- grep(paste0("chr",c(1:22,"X"),collapse = "|"),gene_order$V2)
   expr.mat <- expr.mat[pos,]
   gene_order <- gene_order[pos,]
   
@@ -1206,7 +1206,7 @@ replotInfercnv <- function(expr.mat,
   text_colors <- rep(c("black", "white"), length.out = 22)
   top_color <- HeatmapAnnotation(
     cluster = anno_block(gp = gpar(fill = color,col = "NA"),
-                         labels = 1:22,
+                         labels = c(1:22,"X"),
                          labels_gp = gpar(col = text_colors),
                          height = unit(0.5, "cm")
   ))
@@ -1262,11 +1262,10 @@ replotInfercnv <- function(expr.mat,
   }else if(type%in% "CNV"){
     CN_max <- quantile(as.numeric(as.matrix(expr.mat[!is.null(expr.mat)])),1,na.rm=T)
       # colorss <-  c("#1A4E7A","#2A72B2", "#F2F2F2","#B97B77", "#6a040f","#3F0209")
-      colorss <-  c("#1a4fb3", "#6699FF", "grey95","#F6DAC3","#EE9863","#EB6363")
-      colors <-colorRamp2(c(0,1,2,3,4,5),colorss)
-      bk <- c(0,1,2,3,4,5)
-      label_brk <- c(as.character(c(0,1,2,3,4,5)))
-      
+      colorss <-  c("#7994cb", "grey95","#F3C3A3","#EE9863","#e75f59","#8B0000") #0:"#1a4fb3"
+      colors <-colorRamp2(c(1,2,3,4,5,6),colorss)
+      bk <- c(1,2,3,4,5,6)
+      label_brk <- c(as.character(c(1,2,3,4,5,6)))
       color_bars <- "discrete"
       titles <- "CNV"
   }
@@ -1369,6 +1368,7 @@ replotInfercnv <- function(expr.mat,
   }
   return(ht_plot)
 }
+
 
 
 
