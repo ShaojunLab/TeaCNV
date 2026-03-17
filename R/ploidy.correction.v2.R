@@ -1226,7 +1226,9 @@ ploidyUpdate <- function(clusterout,baseCN,delt.lim = NULL){
       res <- clusterout[[i]]
       CNestraw <- res$newCN
       baseratio <- ratioreference
-      delt <- (CNestraw$ratio[2]-CNestraw$ratio[1])/(CNestraw$CN[2]-CNestraw$CN[1])
+      if(nrow(CNestraw)>1){
+        delt <- (CNestraw$ratio[2]-CNestraw$ratio[1])/(CNestraw$CN[2]-CNestraw$CN[1])
+      }
       seg.dat <- res$seg.dat
       #fill CN if if CN distance larger than 2
       if((CNestraw$CN[2]-CNestraw$CN[1])>1){
