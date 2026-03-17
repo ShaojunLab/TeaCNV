@@ -1,5 +1,67 @@
 
-library(dplyr)
+library(dplyr)PloidyCorrect <- function(integerCNV,delt.lim =0.3){
+  df_seg_C1 <- integerCNV$input_BinSegRatio
+  CNseg.dat <- integerCNV$seg.dat
+  CNseg.dat$segName <- paste(CNseg.dat$chr,CNseg.dat$start,CNseg.dat$end,sep="_")
+  colnames(CNseg.dat) <- gsub("^relativeCN$","CNV",colnames(CNseg.dat))
+  colnames(CNseg.dat) <- gsub("^integerCN$","integerCNV",colnames(CNseg.dat))
+  
+  CNseg.dat_slim <- CNseg.dat[,c("segName","CNV","integerCNV"),drop=F]
+  df_seg_C2 <- merge(df_seg_C1,CNseg.dat_slim,by="segName",all.x=T)
+  colnames(df_seg_C2)[grepl("^CNV$",colnames(df_seg_C2))] <- "ratio_map"
+  # true_loc = TRUE
+  # if(true_loc){
+  df_seg_C2$segLen <- as.numeric(df_seg_C2$End)-as.numeric(df_seg_C2$Start)
+  # }else{
+  #   df_seg_C2$segLen <- as.numeric(df_seg_C2$length_seg)
+  # }   
+  segLen_sum <- sum(df_seg_C2$segLen)
+  df_seg_C2$wei <- df_seg_C2$segLen/segLen_sum
+  df_seg_C2 <- df_seg_C2[!is.na(df_seg_C2$ratio_map),]
+  initialCN <- as.data.frame(unique(cbind(df_seg_C2$ratio_map,df_seg_C2$integerCNV)))
+  colnames(initialCN) <- c("ratio","CN")
+  initialCN <- initialCN[order(initialCN$CN),]
+  initialCN$base=0
+  
+  if (dim(initialCN)[1]!=1){
+    initialCN1 <- CNupdate(df_seg_C2,initialCN)
+    disupdate <- DeltSeek(df_seg_C2,initialCN1)
+    disupdate=disupdate[disupdate$delt>delt.lim,,drop=FALSE]
+    
+    CNest <- FinalCN(initialCN1,disupdate,df_seg_C2)
+  }else{
+    initialCN1 <- initialCN
+    initialCN1$base = 1
+    CNest <- list(initialCN[,1:2])
+  }
+  clusterEst <- lapply(1:length(CNest), function(i,CNest,CNseg.dat,delt.lim){
+    if(nrow(CNest[[i]])>1){
+      delt <- (CNest[[i]]$ratio[2]-CNest[[i]]$ratio[1])/(CNest[[i]][2,2]-CNest[[i]][1,2])
+    }else{
+      delt <- delt.lim
+    }
+    
+    CNseg.dat$integerCNV <- CNest[[i]][1,2]+round((CNseg.dat$ratio-CNest[[i]]$ratio[1])/delt)
+    CN0=CNest[[i]]$ratio[1]-(CNest[[i]][1,2])*delt
+    CNseg.dat$CNV <- CNseg.dat$integerCNV*delt+CN0
+    CNseg.names <- colnames(CNseg.dat)
+    if (dim(CNest[[i]])[2]>2){
+      CN <- do.call(cbind,lapply(3:dim(CNest[[i]])[2], function(j,i,CNest,delt,CNseg.dat){
+        CN0=CNest[[i]][1,j]
+        CN <- CN0+round((CNseg.dat$ratio-CNest[[i]]$ratio[1])/delt)
+        CN[CN<0] <- 0
+        return(CN)
+      },i,CNest,delt,CNseg.dat))
+      CNseg.dat <- cbind(CNseg.dat,CN)
+      colnames(CNseg.dat) <- c(CNseg.names,paste0("integerCNV",c(1:(dim(CNest[[i]])[2]-2))))
+    }
+    a <- list(input_BinSegRatio = integerCNV$input_BinSegRatio,seg.dat = CNseg.dat,integerCN = CNest[[i]],base=initialCN1$ratio[initialCN1$base==1])
+    return(a)
+  },CNest,CNseg.dat,delt.lim)
+  
+  return(clusterEst)
+}
+
 
 #' @title findccloneNum()
 #' @description the optimal cluster number
@@ -1756,8 +1818,13 @@ PloidyCorrect <- function(integerCNV,delt.lim =0.3){
     initialCN1$base = 1
     CNest <- list(initialCN[,1:2])
   }
-  clusterEst <- lapply(1:length(CNest), function(i,CNest,CNseg.dat){
-    delt <- (CNest[[i]]$ratio[2]-CNest[[i]]$ratio[1])/(CNest[[i]][2,2]-CNest[[i]][1,2])
+  clusterEst <- lapply(1:length(CNest), function(i,CNest,CNseg.dat,delt.lim){
+    if(nrow(CNest[[i]])>1){
+      delt <- (CNest[[i]]$ratio[2]-CNest[[i]]$ratio[1])/(CNest[[i]][2,2]-CNest[[i]][1,2])
+    }else{
+      delt <- delt.lim
+    }
+    
     CNseg.dat$integerCNV <- CNest[[i]][1,2]+round((CNseg.dat$ratio-CNest[[i]]$ratio[1])/delt)
     CN0=CNest[[i]]$ratio[1]-(CNest[[i]][1,2])*delt
     CNseg.dat$CNV <- CNseg.dat$integerCNV*delt+CN0
@@ -1774,7 +1841,7 @@ PloidyCorrect <- function(integerCNV,delt.lim =0.3){
     }
     a <- list(input_BinSegRatio = integerCNV$input_BinSegRatio,seg.dat = CNseg.dat,integerCN = CNest[[i]],base=initialCN1$ratio[initialCN1$base==1])
     return(a)
-  },CNest,CNseg.dat)
+  },CNest,CNseg.dat,delt.lim)
   
   return(clusterEst)
 }
