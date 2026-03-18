@@ -850,11 +850,6 @@ ploidyRefine.ref <- function(sampelres,CNest.ref,minCN.frac=0.01,seg_dat_ref=NUL
   baseCN<- CNest.ref$CN[CNest.ref$base==1]
   baseRatio <- CNest.ref$ratio[CNest.ref$base==1]
   delt.ref <- (CNest.ref$ratio[2]-CNest.ref$ratio[1])/(CNest.ref$CN[2]-CNest.ref$CN[1])
-  if(!is.null(seg_dat_ref)){
-    overallratio <- sum(seg_dat_ref$relativeCN*seg_dat_ref$w,na.rm = TRUE)/sum(seg_dat_ref$w,na.rm = TRUE)
-    
-  }
-    
   
   clusterout <-  lapply(names(sampelres),function(cluster,sampelres){
     res_ini <- sampelres[[cluster]]
@@ -909,9 +904,14 @@ ploidyRefine.ref <- function(sampelres,CNest.ref,minCN.frac=0.01,seg_dat_ref=NUL
       bias <- peak_x - CNestraw$ratio[CNestraw$base==1]
       CNestraw$ratio <- CNestraw$ratio + bias
       
-      #correct clonal average ratio based on ref.
-      ratio_clonalMean <- sum(seg.dat$ratio*seg.dat$w,na.rm = TRUE)/sum(seg.dat$w,na.rm = TRUE)
+      #correct clonal average ratio based on base_CN_ratio of ref.
+      # ratio_clonalMean <- sum(seg.dat$ratio*seg.dat$w,na.rm = TRUE)/sum(seg.dat$w,na.rm = TRUE)
+      seg.dat_base <- seg.dat[seg.dat$integerCN==CNestraw$CN[CNestraw$base==1],,drop=FALSE]
+      ratio_clonalMean <- sum(seg.dat_base$ratio*seg.dat_base$w,na.rm = TRUE)/sum(seg.dat_base$w,na.rm = TRUE)
+
       if(!is.null(seg_dat_ref)){
+        seg_dat_ref_base <- seg_dat_ref[seg_dat_ref$integerCN==baseCN,,drop=FALSE]
+        overallratio <- sum(seg_dat_ref_base$relativeCN*seg_dat_ref_base$w,na.rm = TRUE)/sum(seg_dat_ref_base$w,na.rm = TRUE)
         bias2 <- overallratio - ratio_clonalMean
       }else{
         bias2 <- 0
@@ -1037,7 +1037,6 @@ ploidyRefine.ref <- function(sampelres,CNest.ref,minCN.frac=0.01,seg_dat_ref=NUL
   
   
 }
-
 
 
 
