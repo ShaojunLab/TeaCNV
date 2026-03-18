@@ -1283,46 +1283,47 @@ ploidyUpdate <- function(clusterout,baseCN,delt.lim = NULL){
     ratioreference <- median(clustersta[,2])
     candiateindex <- clustersta[abs(clustersta[,2]-ratioreference) > 0.15,1]
     #clusterout_step2 <- clusterout
-
-    for (i in candiateindex){
-      res <- clusterout[[i]]
-      CNestraw <- res$newCN
-      baseratio <- ratioreference
-      if(nrow(CNestraw)>1){
-        delt <- (CNestraw$ratio[2]-CNestraw$ratio[1])/(CNestraw$CN[2]-CNestraw$CN[1])
-         #fill CN if if CN distance larger than 2
-        if((CNestraw$CN[2]-CNestraw$CN[1])>1){
-          CNestraw <- CNbaseline.fill(CNestraw,delt)
+    if(length(candiateindex)> 0){
+      for (i in candiateindex){
+        res <- clusterout[[i]]
+        CNestraw <- res$newCN
+        baseratio <- ratioreference
+        if(nrow(CNestraw)>1){
+          delt <- (CNestraw$ratio[2]-CNestraw$ratio[1])/(CNestraw$CN[2]-CNestraw$CN[1])
+           #fill CN if if CN distance larger than 2
+          if((CNestraw$CN[2]-CNestraw$CN[1])>1){
+            CNestraw <- CNbaseline.fill(CNestraw,delt)
+          }
         }
+        seg.dat <- res$seg.dat
+  
+        #seg.dat1 <- seg.dat[,-grep("CNV",colnames(seg.dat))]
+        integerCN <- round((seg.dat$ratio-CNestraw$ratio[CNestraw$CN==clustersta[clustersta[,1]==i,5]])/delt)+clustersta[clustersta[,1]==i,5]
+        #Q <- max(integerCN)
+        CNstate <- unique(integerCN)
+        CNstate <- CNstate[order(CNstate)]
+        ratio <- baseratio+(CNstate-clustersta[clustersta[,1]==i,5])*delt
+        #baseratio+(CNstate-CNestraw$CN[1])*delt
+        CNest <- data.frame(ratio=ratio,CN=CNstate)
+        delt <- (baseratio-min(CNest$ratio))/(clustersta[clustersta[,1]==i,5]-1)
+        Mindex <- floor((max(CNest$ratio)-baseratio)/delt)
+        mindex <- (min(CNest$ratio)-baseratio)/delt
+        CNstate <- c((clustersta[clustersta[,1]==i,5]+mindex):(clustersta[clustersta[,1]==i,5]+Mindex))
+        ratio <- min(CNest$ratio)+(CNstate-1)*delt
+        CNestnew <- data.frame(ratio=ratio,CN=CNstate)
+        #integerCN <- round((seg.dat$ratio-baseratio)/delt)+baseCN
+        #Q <- max(integerCN)
+        CNestnew$base <- 0
+        CNestraw$base <- 0
+        df_seg_C1 <- res$input_BinSegRatio
+        df_seg_C1$segLen <- df_seg_C1$End - df_seg_C1$Start
+        fnew <- SegFrac(df_seg_C1,CNestnew,by_term = "SegMean")
+        fraw <- SegFrac(df_seg_C1,CNestraw,by_term = "SegMean")
+        if (fnew > fraw){
+          res$newCN <- CNestnew[,1:2]
+        }
+        clusterout[[i]] <- res
       }
-      seg.dat <- res$seg.dat
-
-      #seg.dat1 <- seg.dat[,-grep("CNV",colnames(seg.dat))]
-      integerCN <- round((seg.dat$ratio-CNestraw$ratio[CNestraw$CN==clustersta[clustersta[,1]==i,5]])/delt)+clustersta[clustersta[,1]==i,5]
-      #Q <- max(integerCN)
-      CNstate <- unique(integerCN)
-      CNstate <- CNstate[order(CNstate)]
-      ratio <- baseratio+(CNstate-clustersta[clustersta[,1]==i,5])*delt
-      #baseratio+(CNstate-CNestraw$CN[1])*delt
-      CNest <- data.frame(ratio=ratio,CN=CNstate)
-      delt <- (baseratio-min(CNest$ratio))/(clustersta[clustersta[,1]==i,5]-1)
-      Mindex <- floor((max(CNest$ratio)-baseratio)/delt)
-      mindex <- (min(CNest$ratio)-baseratio)/delt
-      CNstate <- c((clustersta[clustersta[,1]==i,5]+mindex):(clustersta[clustersta[,1]==i,5]+Mindex))
-      ratio <- min(CNest$ratio)+(CNstate-1)*delt
-      CNestnew <- data.frame(ratio=ratio,CN=CNstate)
-      #integerCN <- round((seg.dat$ratio-baseratio)/delt)+baseCN
-      #Q <- max(integerCN)
-      CNestnew$base <- 0
-      CNestraw$base <- 0
-      df_seg_C1 <- res$input_BinSegRatio
-      df_seg_C1$segLen <- df_seg_C1$End - df_seg_C1$Start
-      fnew <- SegFrac(df_seg_C1,CNestnew,by_term = "SegMean")
-      fraw <- SegFrac(df_seg_C1,CNestraw,by_term = "SegMean")
-      if (fnew > fraw){
-        res$newCN <- CNestnew[,1:2]
-      }
-      clusterout[[i]] <- res
     }
   }
   # 
