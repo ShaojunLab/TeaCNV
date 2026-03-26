@@ -881,9 +881,9 @@ HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
       CN_mean <- quantile(as.numeric(as.matrix(dat[!is.null(dat)])),0.5,na.rm=T)
       if(CN_mean<=2){
         colorss <- colorss[-1]
-        colors <-colorRamp2(c(1,2,3,4,5,6),colorss)
-        at_brk <- c(1:6)
-        label_brk <- c(as.character(c(1:5)),"6+")
+        colors <-colorRamp2(as.numeric(label_brk[-length(label_brk)]),colorss)
+        at_brk <- label_brk[-length(label_brk)]
+        label_brk <- c(as.character(c(label_brk[-c(length(label_brk)-1,length(label_brk))])),paste0(label_brk[length(label_brk)-1],"+"))
       }
 
       
