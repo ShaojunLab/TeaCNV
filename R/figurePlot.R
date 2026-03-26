@@ -882,7 +882,7 @@ HeatmapPlot<-function(dat,plotDir,type="any",fname=NULL,
       if(CN_mean<=2){
         colorss <- colorss[-1]
         colors <-colorRamp2(as.numeric(label_brk[-length(label_brk)]),colorss)
-        at_brk <- label_brk[-length(label_brk)]
+        at_brk <- as.numeric(label_brk[-length(label_brk)])
         label_brk <- c(as.character(c(label_brk[-c(length(label_brk)-1,length(label_brk))])),paste0(label_brk[length(label_brk)-1],"+"))
       }
 
