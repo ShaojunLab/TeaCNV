@@ -131,12 +131,7 @@ seg_plot = function(data.bin,name.data="",num_cells=NULL,plotDir=NULL,
       dplyr::mutate(segStart=min(rank),segEnd=max(rank))%>%
       as.data.frame()
   }
-  if(!is.null(show_specific_seg)){
-    a$axis_seg_specific = NA
-    whichRow = which(a$segName %in% show_specific_seg)
-    a$axis_seg_specific[whichRow] <- maploc[whichRow] 
-     line_df.seg <- a[complete.cases(a), ]
-  }
+
   
   if(is.null(add_yline)){
     if(log_ratio){
@@ -282,9 +277,33 @@ seg_plot = function(data.bin,name.data="",num_cells=NULL,plotDir=NULL,
 
 
   if(!is.null(show_specific_seg)){ 
+    # a$axis_seg_specific = NA
+    # whichRow = which(a$segName %in% show_specific_seg)
+    # a$axis_seg_specific[whichRow] <- maploc[whichRow] 
+    # line_df.seg <- a[complete.cases(a), ]
+
+    show_seg_chr <- sapply(strsplit(show_specific_seg,'-|_|:'),'[',1)
+    show_seg_chr <- gsub("chr","",show_seg_chr)
+    show_seg_chr <- gsub("X","23",show_seg_chr)
+    show_seg_chr <- gsub("Y","24",show_seg_chr)
+    show_seg_start <- as.numeric(sapply(strsplit(show_specific_seg,'-|_|:'),'[',2))
+    show_seg_end <- as.numeric(sapply(strsplit(show_specific_seg,'-|_|:'),'[',3))
+    df_show <- data.frame(Chromosome=show_seg_chr,cnv_start=show_seg_start,cnv_end=show_seg_end)
+    line_df.seg <- cbind(data.bin[,c("chrom","Start","End","chrPosStart_abs")],a) %>%
+      dplyr::inner_join(df_show%>% dplyr::select(Chromosome, cnv_start, cnv_end), 
+        join_by(chrom == Chromosome,
+          Start <= cnv_end,
+          End >= cnv_start)) %>%
+      dplyr::mutate(
+        seg_show = paste(chrom, cnv_start, cnv_end, sep = "_"),
+        seg_show_start = cnv_start+chrPosStart_abs,
+        seg_show_end = cnv_end +chrPosStart_abs
+      ) %>%
+      dplyr::select(-cnv_start, -cnv_end)
+        
     p1=p1+geom_segment(
       data = line_df.seg, 
-      mapping = aes(x=segStart, y=value.segment, xend=segEnd, yend=value.segment), 
+      mapping = aes(x=seg_show_start, y=value.segment, xend=seg_show_end, yend=value.segment), 
       col=specific_seg_color,na.rm =T,size = 1.5,
       inherit.aes = FALSE)
   }
