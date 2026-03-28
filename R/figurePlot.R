@@ -136,7 +136,9 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
                          outPlot=TRUE,length.out=100,
                          value.bin="ratio",
                          value.segment="SegMean",
-                         label_CN=TRUE
+                         label_CN=TRUE,
+                         show_specific_seg=NULL,
+                         specific_seg_color="green"
 ){
   suppressMessages({
     library(BSgenome)
@@ -219,8 +221,8 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
   breakss<-cumsum(chrPosStart)+chrLine[1:(nrow(chrLine)),2]*0.5
   breakss<-breakss[which_chrom]
 
-  a<-data.frame(maploc=maploc,data.bin[,value.bin],data.bin[,value.segment],data.bin[,c("segID","seg_start_abs","seg_end_abs","relativeCN","integerCN","length_bin")])
-  colnames(a)=c('axis.loc','value.bin','value.segment','segID',"segStrat","segEnd","ratio_map","integerCN","length_bin")
+  a<-data.frame(maploc=maploc,data.bin[,value.bin],data.bin[,value.segment],data.bin[,c("segID","seg_start_abs","seg_end_abs","relativeCN","integerCN","length_bin","segName")])
+  colnames(a)=c('axis.loc','value.bin','value.segment','segID',"segStrat","segEnd","ratio_map","integerCN","length_bin","segName")
   # a$colour<- ifelse(a$integerCNV==2,"neutral",ifelse(a$integerCNV>2,"gain","loss"))
   # a$colour <- factor(a$colour,levels=c("loss","neutral","gain"))
   a$ratio_map <- round(a$ratio_map,4)
@@ -270,15 +272,22 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
           axis.title=element_text(size=15),
           axis.text = element_text(size = 15))+
     scale_x_continuous(guide = guide_axis(check.overlap = TRUE),breaks=breakss,labels=chr_name_label)
-  odd_positions <- chrLine$chrPosStart_abs[seq(1, length(chrLine$chrPosStart_abs), by = 2)]
-  even_positions <- chrLine$chrPosStart_abs[seq(2, length(chrLine$chrPosStart_abs), by = 2)]
-  ## highlight region data
-  rects <- data.frame(start=odd_positions, end=even_positions)
-  p1 <- p1+
-    geom_rect(data=rects, inherit.aes=FALSE, 
-              aes(xmin=start, xmax=end, ymin=-Inf,ymax=Inf),
-              color="transparent", fill="grey50", alpha=0.3)
+    if(length(chrLine$chrPosStart_abs)>1){
+      odd_positions <- chrLine$chrPosStart_abs[seq(1, length(chrLine$chrPosStart_abs), by = 2)]
+      even_positions <- chrLine$chrPosStart_abs[seq(2, length(chrLine$chrPosStart_abs), by = 2)]
+      if(length(odd_positions)!=length(even_positions)){
+          nrow <- min(length(odd_positions),length(even_positions))
+      }else{nrow=length(odd_positions)}
+        ## highlight region data
+      rects <- data.frame(start=odd_positions, end=even_positions)
+      p1 <- p1+
+        geom_rect(data=rects, inherit.aes=FALSE, 
+                  aes(xmin=start, xmax=end, ymin=-Inf,ymax=Inf),
+                  color="transparent", fill="grey50", alpha=0.3)
 
+    }
+
+  
   if(plot_seg){
 
     if(color_seg_gradient){
@@ -315,8 +324,36 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
           na.rm =T,size = 1,
           inherit.aes = FALSE)
     }
+
+     if(!is.null(show_specific_seg)){
+      show_seg_chr <- sapply(strsplit(show_specific_seg,'-|_|:'),'[',1)
+      show_seg_chr <- gsub("chr","",show_seg_chr)
+      show_seg_chr <- gsub("X","23",show_seg_chr)
+      show_seg_chr <- gsub("Y","24",show_seg_chr)
+      show_seg_start <- as.numeric(sapply(strsplit(show_specific_seg,'-|_|:'),'[',2))
+      show_seg_end <- as.numeric(sapply(strsplit(show_specific_seg,'-|_|:'),'[',3))
+      df_show <- data.frame(Chromosome=show_seg_chr,cnv_start=show_seg_start,cnv_end=show_seg_end)
+      line_df.seg <- cbind(data.bin[,c("chrom","start","End","chrPosStart_abs")],a) %>%
+        dplyr::inner_join(df_show%>% dplyr::select(Chromosome, cnv_start, cnv_end), 
+          join_by(chrom == Chromosome,  
+                start <= cnv_end,     
+                End >= cnv_start)) %>%
+        dplyr::mutate(
+          seg_show = paste(chrom, cnv_start, cnv_end, sep = "_"),
+          seg_show_start = cnv_start+chrPosStart_abs,
+          seg_show_end = cnv_end +chrPosStart_abs
+        ) %>%
+        dplyr::select(-cnv_start, -cnv_end)
+
+      p1=p1+geom_segment(
+      data = line_df.seg, 
+      mapping = aes(x=seg_show_start, y=value.segment, xend=seg_show_end, yend=value.segment), 
+      col=specific_seg_color,na.rm =T,size = 1.5,
+      inherit.aes = FALSE)
+
+    }
     
-    
+
     
   }
   if(!is.null(label_gene)){
@@ -333,6 +370,9 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
                    linetype = "dashed")  
     
   }
+
+
+  
   if(plot_hist){
     a$segLen <- as.numeric(a$segEnd)-as.numeric(a$segStrat)
     
