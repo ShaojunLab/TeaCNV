@@ -14,8 +14,13 @@ This framework runs on R (version > 4.2.0)
 #### Option A: Install TeaCNV within R using devtools
 If installing from directly within R, you can instead use the following command from within R.
 ```
-library("devtools")
-devtools::install_github("ShaojunLab/TeaCNV",build_opts = c("--no-staged-install"))
+if (!requireNamespace("remotes", quietly = TRUE)) {
+    install.packages("remotes")
+}
+remotes::install_github(
+    "ShaojunLab/TeaCNV",
+    INSTALL_opts = "--no-staged-install"
+)
 ```
 #### Option B: Install TeaCNV by pulling the code using git followed by source installation:
 Alternatively, you can pull the code from github and install it:
