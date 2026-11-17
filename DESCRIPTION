@@ -47,3 +47,8 @@ Depends:
     GenomicRanges,
     data.table,
     ggplot2
+Suggests:
+    BiocManager,
+    BSgenome.Hsapiens.UCSC.hg19,
+    BSgenome.Mmusculus.UCSC.mm10,
+    BSgenome.Mmusculus.UCSC.mm39
