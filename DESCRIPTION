@@ -49,6 +49,13 @@ Depends:
     ggplot2
 Suggests:
     BiocManager,
+    ensembldb,
+    AnnotationFilter,
+    AnnotationHub,
+    EnsDb.Hsapiens.v75,
+    EnsDb.Hsapiens.v86,
+    EnsDb.Mmusculus.v79,
     BSgenome.Hsapiens.UCSC.hg19,
+    BSgenome.Hsapiens.UCSC.hg38,
     BSgenome.Mmusculus.UCSC.mm10,
     BSgenome.Mmusculus.UCSC.mm39
