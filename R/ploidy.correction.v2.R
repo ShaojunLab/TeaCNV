@@ -2288,39 +2288,73 @@ DeltSeek <- function(df_seg_C1,initialCN1,by_term = "SegMean"){
 #' @export
 
 peakIndex <- function(df_seg_C1,initialCN,index_col="SegMean"){
+  # Normalize the two required column names without renaming extra columns.
+  initialCN <- as.data.frame(initialCN)
   colnames(initialCN)[grepl("ratio",colnames(initialCN),ignore.case = T)] <- "ratio"
   colnames(initialCN)[grepl("CN",colnames(initialCN),ignore.case = T)] <- "CN"
   initialCN <- initialCN[order(initialCN$ratio),,drop=F]
   initialCN$base = 0
-  pp <- density(df_seg_C1[,index_col],width=0.05)
-  dens <- pp$y
-  ratioX <- pp$x
-  ratio.pos <- unlist(lapply(2:(length(ratioX)), function(i,ratioX,dens){
-    if (dens[i-1]<dens[i] & dens[i+1]<dens[i]){
-      return(i)
-    }
-  },ratioX,dens))
-  ratioPeak <- data.frame(ratio=ratioX[ratio.pos],dens=dens[ratio.pos])
-  ratioPeak <- ratioPeak[order(ratioPeak$dens,decreasing=T),]
-  delt <- abs(ratioPeak$dens[2:dim(ratioPeak)[1]]-ratioPeak$dens[1:(dim(ratioPeak)[1]-1)])
-  deltd <- abs(delt[2:length(delt)]-delt[1:(length(delt)-1)])
-  peakpos <- which.max(deltd)
-  
-  if(length(deltd)>2){
-    for (i in 1:(length(deltd)-2)){
-      if ( deltd[i] < 0.1 & deltd[i+1] < 0.1){
-        peakpos <- i-1
-        break
+  # A single state already has an unambiguous baseline.
+  # Preserve its estimated ratio and CN, as in the original function.
+  if (nrow(initialCN) == 1L) {
+    initialCN$base <- 1L
+    return(initialCN)
+  }
+  x <- df_seg_C1[[index_col]]
+  x <- x[is.finite(x)]
+  if (length(x) == 1L || all(x == x[1L])) {
+    # Constant or singleton data: no density peak search is necessary.
+    a <- x[1L]
+  } else {
+    pp <- density(df_seg_C1[,index_col],width=0.05)
+    dens <- pp$y
+    ratioX <- pp$x
+    n <- length(dens)
+
+    # Search interior points only, avoiding out-of-range i + 1.
+    ii <- seq.int(2L, n - 1L)
+    ratio.pos <- ii[dens[ii - 1L] < dens[ii] & dens[ii + 1L] < dens[ii]]
+    # ratio.pos <- unlist(lapply(2:(length(ratioX)), function(i,ratioX,dens){
+    #   if (dens[i-1]<dens[i] & dens[i+1]<dens[i]){
+    #     return(i)
+    #   }
+    # },ratioX,dens))
+
+    ## If no strict local maximum is found, use the global density mode.
+    if (length(ratio.pos) == 0L) { ratio.pos <- which.max(dens)}
+
+    ratioPeak <- data.frame(ratio=ratioX[ratio.pos],dens=dens[ratio.pos])
+    ratioPeak <- ratioPeak[order(ratioPeak$dens,decreasing=T),, drop = FALSE]
+    ## One or two peaks: second differences cannot be estimated.
+    ## Retain the strongest peak rather than averaging distinct CN modes.
+    peakpos <- 1L
+    if (nrow(ratioPeak) >= 3L) {
+      delt <- abs(diff(ratioPeak$dens))
+      deltd <- abs(diff(delt))
+     # delt <- abs(ratioPeak$dens[2:dim(ratioPeak)[1]]-ratioPeak$dens[1:(dim(ratioPeak)[1]-1)])
+     # deltd <- abs(delt[2:length(delt)]-delt[1:(length(delt)-1)])
+      if (length(deltd) > 0L && any(is.finite(deltd))) {
+        peakpos <- which.max(deltd)
+        # Retain the original multi-peak heuristic, but never select 0 peaks.
+        if(length(deltd)>2){
+          for (i in 1:(length(deltd)-2)){
+            if ( deltd[i] < 0.1 & deltd[i+1] < 0.1){
+              peakpos <- max(1L, i - 1L)
+              break
+            }
+          }
+        }
       }
     }
+    peakpos <- max(1L, min(peakpos, nrow(ratioPeak)))
+    ratioPeak <- ratioPeak[seq_len(peakpos), , drop = FALSE]
+
+    ratiomax <-ratioPeak$ratio[which.max(ratioPeak$dens)]
+    ratioPeak <- ratioPeak[ratioPeak$ratio >= ratiomax-0.25 & ratioPeak$ratio <= ratiomax+0.25,, drop = FALSE]
+    
+    a <- mean(ratioPeak$ratio)
   }
-
-
-  ratioPeak <- ratioPeak[1:peakpos,]
-  ratiomax <-ratioPeak$ratio[which.max(ratioPeak$dens)]
-  ratioPeak <- ratioPeak[ratioPeak$ratio >= ratiomax-0.25 & ratioPeak$ratio <= ratiomax+0.25,]
   
-  a <- mean(ratioPeak$ratio)
   dis <- na.omit(abs(a-initialCN$ratio))
   if (min(dis) < 0.02){
     initialCN$base[which.min(dis)]=1
