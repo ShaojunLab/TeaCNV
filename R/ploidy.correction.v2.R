@@ -348,17 +348,51 @@ minPloidysummary <- function(clusterout){
   ]
 
   if (length(delt_set) == 0L) {
+    baseratio_set <- vapply(
+        clusterout,
+        function(res) {
 
-      stop(
-          paste0(
-              "No valid delta is available for ploidy refinement. ",
-              "All clones may contain only one CN state."
-          ),
-          call. = FALSE
-      )
+            if (is.null(res) ||
+                is.null(res$newCN) ||
+                NROW(res$newCN) == 0L ||
+                !("ratio" %in% names(res$newCN))) {
+                return(NA_real_)
+            }
+
+            as.numeric(res$newCN$ratio[1])
+        },
+        numeric(1)
+    )
+
+    baseratio_set <- baseratio_set[
+        is.finite(baseratio_set) & baseratio_set > 0
+    ]
+
+    if (length(baseratio_set) > 0L) {
+
+        delt_mean <- median(baseratio_set) / 2
+
+        warning(
+            paste0(
+                "No valid delta estimated from multiple CN states. ",
+                "Using diploid-based delta = ",
+                round(delt_mean, 4)
+            ),
+            call. = FALSE
+        )
+
+    } else {
+
+        delt_mean <- NA_real_
+
+        warning(
+            "No valid baseline ratio is available.",
+            call. = FALSE
+        )
+    }
+  }else {
+    delt_mean <- median(delt_set, na.rm = TRUE)
   }
-
-  delt_mean <- median(delt_set)
 
   clustersta <- do.call(rbind,lapply(1:length(clusterout), function(j,clusterout,delt_mean){
     if (!is.null(clusterout[[j]])){
@@ -1260,7 +1294,11 @@ ploidyUpdate <- function(clusterout,baseCN,delt.lim = NULL){
         CNest <- res$newCN
         baseratio <- CNest$ratio[1]
         baseCN <- CNest$CN[1]
-        delt <- (CNest$ratio[2]-CNest$ratio[1])/(CNest$CN[2]-CNest$CN[1])
+        if (nrow(CNest) > 1L) {
+          delt <- (CNest$ratio[2] - CNest$ratio[1]) /(CNest$CN[2] - CNest$CN[1])
+        } else {
+          delt <- baseratio / 2
+        }
         seg.dat1 <- seg.dat[,-grep("CNV",colnames(seg.dat))]
         integerCN <- round((seg.dat$ratio-baseratio)/delt)+baseCN
         seg.dat1$CN <- integerCN
