@@ -297,19 +297,69 @@ cellEst <- function(segratio.correct,clonalest,clonalest.Ref=NULL){
 #' @title minPloidysummary()
 #' @export
 minPloidysummary <- function(clusterout){
-  delt_set <- do.call(cbind,lapply(1:length(clusterout), function(j,clusterout){
-    if (!is.null(clusterout[[j]])){
-      res <- clusterout[[j]]
-      CNest <- res$newCN
-      if(nrow(CNest)>1){
-        delt <- (CNest$ratio[2]-CNest$ratio[1])/(CNest$CN[2]-CNest$CN[1])
-        return(delt)
-      }
-    }
+  # delt_set <- do.call(cbind,lapply(1:length(clusterout), function(j,clusterout){
+  #   if (!is.null(clusterout[[j]])){
+  #     res <- clusterout[[j]]
+  #     CNest <- res$newCN
+  #     if(nrow(CNest)>1){
+  #       delt <- (CNest$ratio[2]-CNest$ratio[1])/(CNest$CN[2]-CNest$CN[1])
+  #       return(delt)
+  #     }
+  #   }
     
-  },clusterout))
+  # },clusterout))
+  # delt_mean <- median(delt_set)
+  delt_set <- vapply(
+    seq_along(clusterout),
+    function(j) {
+
+        res <- clusterout[[j]]
+
+        if (is.null(res)) {
+            return(NA_real_)
+        }
+
+        CNest <- res$newCN
+
+        if (is.null(CNest) || nrow(CNest) <= 1L) {
+            return(NA_real_)
+        }
+
+        delt <- (CNest$ratio[2] - CNest$ratio[1]) /
+                (CNest$CN[2] - CNest$CN[1])
+
+        if (length(delt) != 1L ||
+            !is.finite(delt) ||
+            delt <= 0) {
+
+            stop(
+                sprintf("Clone %s: invalid CN spacing.", j),
+                call. = FALSE
+            )
+        }
+
+        return(delt)
+    },
+    numeric(1)
+  )
+
+  delt_set <- delt_set[
+      is.finite(delt_set) & delt_set > 0
+  ]
+
+  if (length(delt_set) == 0L) {
+
+      stop(
+          paste0(
+              "No valid delta is available for ploidy refinement. ",
+              "All clones may contain only one CN state."
+          ),
+          call. = FALSE
+      )
+  }
+
   delt_mean <- median(delt_set)
-  
+
   clustersta <- do.call(rbind,lapply(1:length(clusterout), function(j,clusterout,delt_mean){
     if (!is.null(clusterout[[j]])){
       res <- clusterout[[j]]
@@ -355,7 +405,7 @@ minPloidysummary <- function(clusterout){
 #'                                        $ploidy: the overall ploidy
 #' @export
 
-ploidyRefine <- function(sampelres,delt.lim = 0.3,minCN.frac=0.01){
+ploidyRefine <- function(sampelres,delt.lim = 0.3,minCN.frac=0.01,assume_diploid = TRUE){
   #sampelres <- initialRes[[ID]]
   clusterout <- lapply(names(sampelres), function(cluster,sampelres){
     if ("seg.dat" %in% names(sampelres[[cluster]])){
@@ -435,6 +485,161 @@ ploidyRefine <- function(sampelres,delt.lim = 0.3,minCN.frac=0.01){
     }
   }
   
+  # ---------------------------------------------------
+  # Handle samples with only one CN state in all clones
+  # ---------------------------------------------------
+  valid_idx <- which(!vapply(clusterout, is.null, logical(1)))
+  if (length(valid_idx) == 0L) {
+    stop("No valid clones are available for ploidy refinement.")
+  }
+  if (!is.numeric(delt.lim) ||
+    length(delt.lim) != 1L ||
+    !is.finite(delt.lim) ||
+    delt.lim <= 0) {
+    stop("delt.lim must be a positive finite number.")
+  }
+
+  n_CNstates <- vapply(valid_idx, function(j) {
+
+    CNest <- clusterout[[j]]$newCN
+
+    if (is.null(CNest) ||
+        !is.data.frame(CNest) ||
+        nrow(CNest) == 0L ||
+        !all(c("ratio", "CN") %in% names(CNest))) {
+
+        stop(
+            sprintf("Clone %s: invalid newCN.", j),
+            call. = FALSE
+        )
+    }
+
+    nrow(CNest)
+
+  }, integer(1))
+
+  if (all(n_CNstates == 1L)) {
+
+    if (!assume_diploid) {
+
+        stop(
+            paste0(
+                "All clones contain only one CN state. ",
+                "Absolute ploidy cannot be reliably refined ",
+                "without additional calibration. ",
+                "Set assume_diploid = TRUE only if ",
+                "diploidy is independently supported."
+            ),
+            call. = FALSE
+        )
+    }
+
+    # Return single-state results under the
+    # explicit diploid assumption.
+
+    finalres <- lapply(valid_idx, function(j) {
+
+        res <- clusterout[[j]]
+
+        seg.dat <- res$seg.dat
+        CNest <- res$newCN
+
+        baseratio <- CNest$ratio[1]
+
+        if (!is.numeric(baseratio) ||
+            !is.finite(baseratio) ||
+            baseratio <= 0 ||
+            nrow(seg.dat) == 0L ||
+            !all(c("ratio", "w") %in% names(seg.dat)) ||
+            !is.numeric(seg.dat$ratio) ||
+            !is.numeric(seg.dat$w) ||
+            any(!is.finite(seg.dat$ratio)) ||
+            any(!is.finite(seg.dat$w)) ||
+            any(seg.dat$w < 0) ||
+            sum(seg.dat$w) <= 0) {
+
+            stop(
+                sprintf(
+                    "Clone %s: invalid segment data.",
+                    j
+                ),
+                call. = FALSE
+            )
+        }
+
+        # Conservative check:
+        # avoid assigning CN = 2 to segments showing
+        # deviations that may represent real CNVs.
+
+        if (any(
+            abs(seg.dat$ratio - baseratio) >=
+                delt.lim / 2
+        )) {
+
+            stop(
+                sprintf(
+                    paste0(
+                        "Clone %s contains segment ratios ",
+                        "inconsistent with the single-state ",
+                        "diploid approximation."
+                    ),
+                    j
+                ),
+                call. = FALSE
+            )
+        }
+
+        # Remove original relative CNV annotations
+        seg.dat1 <- seg.dat[
+            ,
+            !grepl("CNV", names(seg.dat)),
+            drop = FALSE
+        ]
+
+        # Explicit diploid assumption
+        seg.dat1$relativeCN <- rep(
+            baseratio,
+            nrow(seg.dat1)
+        )
+
+        seg.dat1$integerCN <- rep(
+            2L,
+            nrow(seg.dat1)
+        )
+
+        CNestnew <- data.frame(
+            ratio = baseratio,
+            CN = 2,
+            base = 1
+        )
+
+        ploidy <- sum(
+            seg.dat1$integerCN * seg.dat1$w
+        ) / sum(seg.dat1$w)
+
+        return(list(
+            input_BinSegRatio = res$input_BinSegRatio,
+            seg.dat = seg.dat1,
+            CNest = CNestnew,
+            ploidy = ploidy
+        ))
+    })
+
+    names(finalres) <- names(sampelres)[valid_idx]
+
+    warning(
+        paste0(
+            "All clones have one CN state. ",
+            "Multi-clone ploidy refinement was skipped. ",
+            "Absolute CN = 2 was assigned under ",
+            "the explicit diploid assumption."
+        ),
+        call. = FALSE
+    )
+
+    return(finalres)
+  } 
+
   outcorrect <- ploidyUpdate(clusterout,baseCN,delt.lim = delt.lim)
   clusterout <- outcorrect$clusterout
   clusterout_summary <- minPloidysummary(clusterout)
@@ -1037,6 +1242,7 @@ ploidyRefine.ref <- function(sampelres,CNest.ref,minCN.frac=0.01,seg_dat_ref=NUL
   
   
 }
+
 
 
 
