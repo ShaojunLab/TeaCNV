@@ -136,8 +136,38 @@ CreateTeaCNVObject <- function(input,
       cytoBandFile <- system.file("data", "cytoBand_hg38.tsv", package = "TeaCNV")
     }else if(genome %in% "hg19"){
       cytoBandFile <- system.file( "data", "cytoBand_hg19.txt", package = "TeaCNV")
+    }else{
+      message("Downloading cytoBand for ", genome, " from UCSC...")
+      cytoBand_url <- sprintf(
+        "https://hgdownload.soe.ucsc.edu/goldenPath/%s/database/cytoBand.txt.gz",
+        genome
+      )
+
+      cytoBandFile <- tryCatch({
+
+        tmp <- tempfile(fileext = ".txt.gz")
+
+        download.file(cytoBand_url, destfile = tmp,
+                      mode = "wb", quiet = TRUE)
+
+        dat <- read.table(
+          tmp,
+          sep = "\t",
+          header = FALSE,
+          check.names = FALSE,
+          stringsAsFactors = FALSE
+        )
+
+        unlink(tmp)
+
+        dat
+
+      }, error = function(e) {
+        stop("Failed to download cytoBand for genome ", genome,
+             ". Please provide a valid cytoBand file. ",
+             conditionMessage(e))
+      })
     }
-    
   }
   
   flog.info("\n")
@@ -711,11 +741,14 @@ runTeaCNV <- function(
       if(length(diploidy_indx)>0){
         clone_scores <- clone_scores[-diploidy_indx]
       }
-      
+
       best_clone <- names(clone_scores)[which.max(clone_scores)]
+
       if(length(diploidy_indx)==length(clonal_res)){
         best_clone <- names(diploidy_indx)[1]
-      }                            
+      }
+      
+      
       cat("\nThe subgroup scores are:\n")
       cat(clone_scores)
       cat("\n")
@@ -1012,7 +1045,7 @@ runTeaCNV <- function(
     # left_anno_cols[["clone"]] <- color_r
     # p_cloneCN <- heatmap4peakMt(mat=new_CNmt,
     #                       meta_info=clone_info,
-    #                       sep_by="-|_|:",
+    #                       sep_by="-",
     #                       outdir= plotdir,value.type="CNV",
     #                       clust_rows=F,clustering_method_rows = "ward.D2",
     #                       show_legend_row = T,
