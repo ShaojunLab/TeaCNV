@@ -670,8 +670,16 @@ align_Grange2bin = function(bed.query,bed.subject){
 #'  (e.g., peaks or bins across chromosome p arm and q arm location)
 #'  
 #' @param mat_obj matrix with ordered by chromosome 'chr?-startCoordinate-endCoordinate' as rownames, cell Id as colnames. NA value was not allowed in the matrix.
-#' @param cytoBand the reference annotation of chromosome location, BED format
-#' @param acen_remove whether the features which located in Centromere region were removed (default is T)
+#' @param cytoBand A five-column data.frame or file containing
+#'   cytoband annotations. Chromosome arms are identified from
+#'   the p/q prefixes of cytoband names, independently of acen
+#'   annotations. Both human and mouse cytoband formats are
+#'   supported. If NULL, segmentation is performed separately
+#'   for each chromosome.
+#' @param acen_remove Logical. Whether to exclude bins overlapping
+#'   annotated centromeric regions from changepoint detection.
+#'   This parameter has no effect when acen annotations are absent
+#'   or cytoBand is NULL.
 #' @param clust_by_cell_group if TRUE, take the mean of group as the feature value
 #' @param cell_group if clust_by_cell_group=T, a data.frame of cell_group needs to be provided, the first column is cell ID, the second column is cell groups
 #' @param method use 'opart' package to segment which provides 2 functions:(i) opart_gaussian，(ii) opart_poisson
@@ -698,9 +706,56 @@ segment_by_chr_location <- function(mat_obj,cytoBand=NULL,
   suppressMessages({
     library(dplyr)
   })
+  method <- match.arg(method)
+
   if(!is.matrix(mat_obj)){ mat_obj <- as.matrix(mat_obj)}
   myrowname <- rownames(mat_obj)
   raw_mat <- mat_obj
+  # --------------------------------------------------
+  # 1. Extract genomic coordinates from bin names
+  # --------------------------------------------------
+  bins_input <- rownames(mat_obj)
+  if (is.null(bins_input) || nrow(mat_obj) == 0L ||
+    ncol(mat_obj) == 0L) {
+    stop("mat_obj must be a non-empty matrix with genomic bin names")
+  }
+
+  bins_split <- regmatches(
+    bins_input,
+    regexec("^(.+)[_:-]([0-9]+)[_:-]([0-9]+)$",
+            bins_input)
+  )
+  if (any(lengths(bins_split) != 4L)) {
+      stop("Invalid bin names. Expected format: chr1:1000-2000 or chr1_1000_2000")
+  }
+  bins_chr <- vapply(bins_split, `[`, character(1), 2L)
+  bins_start <- as.numeric(
+    vapply(bins_split, `[`, character(1), 3L)
+  )
+  bins_end <- as.numeric(
+    vapply(bins_split, `[`, character(1), 4L)
+  )
+  if (any(!is.finite(bins_start)) ||
+    any(!is.finite(bins_end)) ||
+    any(bins_end <= bins_start)) {
+    stop("Invalid genomic bin coordinates")
+  }
+  bins_mid <- bins_start + (bins_end - bins_start) / 2
+  # Default: segmentation by chromosome
+  arm_id <- bins_chr
+  # Indicator of centromeric bins
+  is_acen <- rep(FALSE, nrow(mat_obj))
+  chr_indices <- split(
+      seq_len(nrow(mat_obj)),
+      bins_chr
+  )
+
+  # --------------------------------------------------
+  # 2. Process cytoband annotation
+  # --------------------------------------------------
+
+
+
   if(!is.null(cytoBand)){
     if (Reduce("|", is(cytoBand) == "character")) {
       if(substr(cytoBand, nchar(cytoBand)-2, nchar(cytoBand)) %in% c("txt","tsv","csv")){
@@ -714,27 +769,93 @@ segment_by_chr_location <- function(mat_obj,cytoBand=NULL,
       message("CytoBand isn't recognized as data.frame, or filename")
     }
     #check the columns of cytoBand
-    if(ncol(cytoBand)==5){
-      colnames(cytoBand)=c("chrom","chromStart","chromEnd","name","gieStain")
-    }else{
-      stop("Error, the columns of cytoBand do NOT match the columns of the cytoBand table in the database underlying the UCSC Genome Browser")
+    if (ncol(cytoBand) != 5L) {
+        stop("cytoBand must contain five columns (as UCSC Genome Browser)")
     }
-    cyto_gr <- cytoBand[which(cytoBand$gieStain %in% "acen"),]
-    colnames(cyto_gr)[1:3]<- c("chr","start","end")
     
-    
-    # remove Centromere region 
-    if(acen_remove){
-      cytoBand = cytoBand[which(!cytoBand$gieStain %in% "acen"),]
+    colnames(cytoBand)=c("chrom","chromStart","chromEnd","name","gieStain")
+    cytoBand$chrom <- as.character(cytoBand$chrom)
+    cytoBand$chromStart <- as.numeric(as.character(cytoBand$chromStart))
+    cytoBand$chromEnd <- as.numeric(as.character(cytoBand$chromEnd))
+    if (any(!is.finite(cytoBand$chromStart)) ||
+      any(!is.finite(cytoBand$chromEnd)) ||
+      any(cytoBand$chromEnd <= cytoBand$chromStart)) {
+      stop("Invalid cytoband coordinates")
     }
+
+    # Identify chromosome arms from cytoband names
+    # Human: p36.33, p11.1, q11.1, q21.1, etc.
+    # Mouse: qA1, qA2, qB, qC1, etc.
+    cytoBand$arm <- tolower(
+        substr(trimws(as.character(cytoBand$name)), 1, 1)
+    )
+
+    for (chr in names(chr_indices)) {
+      idx <- chr_indices[[chr]]
+      cb <- cytoBand[which(cytoBand$chrom == chr),,drop = FALSE]
+
+      if (nrow(cb) == 0L) {next}
+
+      p_band <- cb[which(cb$arm == "p"),,drop = FALSE]
+
+      q_band <- cb[which(cb$arm == "q"),,drop = FALSE]
+
+      has_p <- nrow(p_band) > 0L
+      has_q <- nrow(q_band) > 0L
+
+      if (has_p && has_q) {
+
+        # Determine the p/q boundary independently
+        # of the gieStain column
+
+        p_end <- max(p_band$chromEnd)
+        q_start <- min(q_band$chromStart)
+
+        arm_boundary <- p_end +(q_start - p_end) / 2
+
+        arm_id[idx] <- paste0(chr,":",ifelse(bins_mid[idx] < arm_boundary,"p", "q"))
+
+      } else if (has_q) {
+
+        # Single q arm, e.g. mouse autosomes
+        arm_id[idx] <- paste0(chr, ":q")
+
+      } else if (has_p) {
+        # Single p arm
+        arm_id[idx] <- paste0(chr, ":p")
+
+      }
+
+      # Optional centromere removal
+      # Only performed if acen annotations exist
+
+      if (acen_remove) {
+
+          cen <- cb[which(cb$gieStain %in% "acen"),,drop = FALSE]
+
+          if (nrow(cen) > 0L) {
+
+            for (k in seq_len(nrow(cen))) {
+
+                is_acen[idx] <- is_acen[idx] |
+                  (
+                      bins_start[idx] < cen$chromEnd[k] &
+                      bins_end[idx] > cen$chromStart[k]
+                  )
+
+            }
+          }
+      }
+    }
+
   }
 
-  
- 
-  
+  # --------------------------------------------------
+  # 3. Aggregate cells by cell group if requested
+  # -------------------------------------------------- 
   #segment for clusters
   if(clust_by_cell_group){
-    if(any(is.na(cell_group))){
+    if(anyNA(cell_group)){
       stop("Error, clust_by_cell_group=T, but data.frame 'cell_group' with two columns of cell ID and cell group isn't provided")
     }else{
       unique_groups <- unique(cell_group[,2])
@@ -754,14 +875,35 @@ segment_by_chr_location <- function(mat_obj,cytoBand=NULL,
       
     }
   }
-  #divide the features based on chromosome region
-  chr_region_mat <- map2chrLocatio(mat_obj,cytoBand,merge_cyto=TRUE)
-  changepoint_mat=matrix(ncol=ncol(mat_obj), nrow=nrow(mat_obj))
-  colnames(changepoint_mat)=colnames(mat_obj)
-  rownames(changepoint_mat)=rownames(mat_obj)
 
-  for(ii in 1:length(chr_region_mat$subject_overlap)){ #for each region (p and q arm in each chromosome)
-    mat_obj_sub=mat_obj[chr_region_mat$overlap[which(chr_region_mat$overlap[,1]==ii),2],, drop=F] 
+  # --------------------------------------------------
+  # 4. Initialize changepoint matrix
+  # --------------------------------------------------
+
+  #divide the features based on chromosome region
+  # chr_region_mat <- map2chrLocatio(mat_obj,cytoBand,merge_cyto=TRUE)
+  changepoint_mat=matrix(0,ncol=ncol(mat_obj), nrow=nrow(mat_obj),dimnames = dimnames(mat_obj))
+  # Group bins by chromosome arm
+  # Centromeric bins are excluded only when requested
+
+  arm_indices <- split(
+      which(!is_acen),
+      arm_id[!is_acen]
+  )
+
+  # --------------------------------------------------
+  # 5. Changepoint detection for each chromosome arm
+  # --------------------------------------------------
+  for (idx in arm_indices) { #for each region (p and q arm in each chromosome)
+    # Ensure genomic coordinate order
+    idx <- idx[order(bins_start[idx],bins_end[idx])]
+    mat_obj_sub <- mat_obj[idx, , drop = FALSE]
+    # Single-bin chromosome arm
+    if (length(idx) == 1L) {
+      changepoint_mat[idx, ] <- 1
+      next
+    }
+
     if(nrow(mat_obj_sub)>1){
       changepoint_mat_sub = apply(mat_obj_sub,2,function(x){
         if(method=="gaussian"){
@@ -775,7 +917,7 @@ segment_by_chr_location <- function(mat_obj,cytoBand=NULL,
           }else{
             if(segSize_min>(length(x)/2)){segSize_min=max(floor(length(x)/2),2)}
             seg_end <- find_breakpoints.strucchange(x,segSize.lim=segSize_min)
-            }
+          }
         }else if(method=="PELT"){
           seg_end <- find_breakpoints.changepoint(x,minseglen=segSize_min)
         }else{
@@ -786,32 +928,50 @@ segment_by_chr_location <- function(mat_obj,cytoBand=NULL,
         return(y)
       })
       rownames(changepoint_mat_sub)=rownames(mat_obj_sub)
-    }else{
-      changepoint_mat_sub <- as.matrix(mat_obj_sub)
     }
-    rowInd_changepoint_mat <- which(rownames(changepoint_mat) %in% rownames(changepoint_mat_sub))
-    changepoint_mat[rowInd_changepoint_mat,] <- changepoint_mat_sub
-    changepoint_mat[is.na(changepoint_mat)] <- 0
+
+    changepoint_mat[idx, ] <- changepoint_mat_sub
     
   }
 
-  #add break by acen
-  bins_input <- rownames(changepoint_mat)
-  bins_chr <- sapply(strsplit(bins_input, "_|-|:"), "[", 1)
-  bins_start <- sapply(strsplit(bins_input, "_|-|:"), "[", 2)
-  bins_end <- sapply(strsplit(bins_input, "_|-|:"), "[", 3)
+  # --------------------------------------------------
+  # 6. Optional centromeric boundary handling
+  # --------------------------------------------------
+  if (acen_remove && any(is_acen)) {
+
+    changepoint_mat[which(is_acen), ] <- 1
+
+    # Mark preceding bins without crossing chromosomes
+    for (idx in chr_indices) {
+      idx <- idx[order(bins_start[idx],bins_end[idx])]
+      cen_pos <- which(is_acen[idx])
+      prev_pos <- cen_pos[cen_pos > 1L] - 1L
+      if (length(prev_pos) > 0L) {
+        changepoint_mat[idx[prev_pos], ] <- 1
+      }
+    }
+  }
+  # #add break by acen
+  # bins_input <- rownames(changepoint_mat)
+  # bins_chr <- sapply(strsplit(bins_input, "_|-|:"), "[", 1)
+  # bins_start <- sapply(strsplit(bins_input, "_|-|:"), "[", 2)
+  # bins_end <- sapply(strsplit(bins_input, "_|-|:"), "[", 3)
   
-  bins_bed <- data.frame(chr=bins_chr,bins_start,bins_end)
-  bins_acen <- align_Grange2bin(bed.query=cyto_gr,bed.subject=bins_bed)
-  bins_acen <- na.omit(bins_acen)
+  # bins_bed <- data.frame(chr=bins_chr,bins_start,bins_end)
+  # bins_acen <- align_Grange2bin(bed.query=cyto_gr,bed.subject=bins_bed)
+  # bins_acen <- na.omit(bins_acen)
   
-  bins_input2 <- gsub("_|-|:","_",bins_input)
-  binID_acen <- paste(bins_acen$chr.subject,bins_acen$start.subject,bins_acen$end.subject,sep ="_")
-  bins_indx <- which(bins_input2 %in% binID_acen)
-  changepoint_mat[bins_indx,] <- 1
-  changepoint_mat[(bins_indx-1),] <- 1
-  
+  # bins_input2 <- gsub("_|-|:","_",bins_input)
+  # binID_acen <- paste(bins_acen$chr.subject,bins_acen$start.subject,bins_acen$end.subject,sep ="_")
+  # bins_indx <- which(bins_input2 %in% binID_acen)
+  # changepoint_mat[bins_indx,] <- 1
+  # changepoint_mat[(bins_indx-1),] <- 1
+
   invisible(gc())
+  # --------------------------------------------------
+  # 7. Return results
+  # --------------------------------------------------
+
   res=list(data_raw=raw_mat,data_matrix=mat_obj,changepoint_matrix=changepoint_mat)
   if(method %in%c("gaussian","poisson")){
     res$penalty=penalty
