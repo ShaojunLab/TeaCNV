@@ -106,12 +106,457 @@ cellLineSeg<-function(CNVres,integerCNV,outdir,fname,ylim=NULL){
 }
 
 
+
+getGenome_auto <- function(genome = "hg38",
+                           auto_install = TRUE) {
+
+    genome_packages <- c(
+        hg19 = "BSgenome.Hsapiens.UCSC.hg19",
+        hg38 = "BSgenome.Hsapiens.UCSC.hg38",
+        mm10 = "BSgenome.Mmusculus.UCSC.mm10",
+        mm39 = "BSgenome.Mmusculus.UCSC.mm39"
+    )
+
+    if (!is.character(genome) ||
+        length(genome) != 1L ||
+        is.na(genome) ||
+        !nzchar(trimws(genome))) {
+        stop("Invalid genome name.")
+    }
+
+    genome <- trimws(genome)
+    genome_key <- tolower(genome)
+
+    if (genome_key %in% names(genome_packages)) {
+        genome_pkg <- unname(genome_packages[genome_key])
+    } else if (startsWith(genome, "BSgenome.")) {
+        genome_pkg <- genome
+    } else {
+        genome_pkg <- NULL
+    }
+
+    required_pkgs <- c("BSgenome", genome_pkg)
+
+    missing_pkgs <- required_pkgs[
+        !vapply(
+            required_pkgs,
+            requireNamespace,
+            logical(1),
+            quietly = TRUE
+        )
+    ]
+
+    if (length(missing_pkgs) > 0L) {
+
+        if (!auto_install) {
+            stop(
+                "Missing required packages: ",
+                paste(missing_pkgs, collapse = ", ")
+            )
+        }
+
+        if (!requireNamespace("BiocManager", quietly = TRUE)) {
+            install.packages(
+                "BiocManager",
+                repos = "https://cloud.r-project.org"
+            )
+        }
+
+        message(
+            "Installing genome dependencies: ",
+            paste(missing_pkgs, collapse = ", ")
+        )
+
+        BiocManager::install(
+            missing_pkgs,
+            ask = FALSE,
+            update = FALSE
+        )
+    }
+
+    for (pkg in required_pkgs) {
+        if (!requireNamespace(pkg, quietly = TRUE)) {
+            stop("Failed to load package: ", pkg)
+        }
+    }
+
+    g <- BSgenome::getBSgenome(
+        if (is.null(genome_pkg)) genome else genome_pkg,
+        masked = FALSE,
+        load.only = TRUE
+    )
+
+    return(g)
+}
+
+
 #' @title cellLineSeg_v3()
 #' @description plot dots and histogram of segment ratio at true chromosome location, 
 #' remove bad segment from histogram and hist based on the true genomic length of segments,set a global color
 #' @param CNVres list out put from dataProcess()function
 #' @param integerCNV list output from doCNV1_v2() function
 #' @export
+
+# cellLineSeg_v3<-function(binRatio.df = NULL,
+#                          integerCNV.df=NULL,
+#                          CNVres=NULL,integerCNV=NULL,
+#                          outdir,fname,ylim=NULL,
+#                          genome="hg38",
+#                          ylab="Relative CN",
+#                          plot_seg = TRUE,
+#                          color_seg_gradient = TRUE,
+#                          seg.color = "#0d3b66",
+#                          ggarrange_width=c(10,5),#c(10,5),
+#                          height = 2,width=15,
+#                          plot_dots = TRUE,
+#                          color_dot =FALSE,
+#                          plot_hist = TRUE,
+#                          color_hist_gradient = TRUE,
+#                          hist_color = NULL,
+#                          color_limit = c(1,6),
+#                          label_gene=NULL,
+#                          label_gene_color="blue",
+#                          annotations=NULL,
+#                          outPlot=TRUE,length.out=100,
+#                          value.bin="ratio",
+#                          value.segment="SegMean",
+#                          label_CN=TRUE,
+#                          show_specific_seg=NULL,
+#                          specific_seg_color="green"
+# ){
+#   suppressMessages({
+#     library(BSgenome)
+#     library(ggplot2)
+#     library(dplyr)
+#     library(ggpubr)
+#   })
+#   g <- getBSgenome(genome, masked=FALSE)
+#   chrLine <- data.frame(chrom=1:24, length=seqlengths(g)[1:24])
+#   if(is.null(integerCNV.df)){
+#     seg.dat <- integerCNV$seg.dat
+#   }else{
+#     seg.dat <- integerCNV.df
+#   } 
+#   colnames(seg.dat)[grepl("^CNV$",colnames(seg.dat))] <- "relativeCN"
+#   colnames(seg.dat)[grepl("^integerCNV$",colnames(seg.dat))] <-"integerCN"
+  
+#   if(is.null(binRatio.df)){
+#     data.bin=CNVres$CNV
+#   }else{
+#     data.bin <- binRatio.df
+#   }
+#   colnames(data.bin)[grepl("chrom|Chromosome",colnames(data.bin))] <- "chrom"
+#   colnames(data.bin)[grepl("^Start$",colnames(data.bin),ignore.case = TRUE)] <- "start"
+#   colnames(data.bin)[grepl("^binRatio$",colnames(data.bin),ignore.case = TRUE)] <- "ratio"
+#   ploidy <- sum(seg.dat$integerCN*seg.dat$w)/sum(seg.dat$w)
+  
+#   chr_name=as.character(unique(data.bin$chrom))
+#   #chromnum=sapply(strsplit(rownames(CNV),'-|_|:'),'[',1)
+#   chromnum <- data.bin$chrom
+#   if(grepl('chr',chromnum[1])){
+#     chromnum=sapply(strsplit(chromnum,'hr'),'[',2) ## if chrommnum with chr
+#   }else{
+#     chromnum=chromnum
+#   }
+#   chromnum <- gsub("X","23",chromnum)
+#   chromnum <- gsub("Y","24",chromnum)
+#   data.bin$chrom <- chromnum
+#   chrLine <- chrLine[chrLine$chrom %in% as.character(unique(chromnum)),,drop=F] 
+#   genomeLength <- sum(chrLine)
+#   if(nrow(chrLine)>1){
+#     chrPosStart = c(0,chrLine[1:(nrow(chrLine)-1),2])
+#   }else(
+#     chrPosStart = 0
+#   )
+#   chrLine$chrPosStart_abs <- cumsum(chrPosStart)
+#   data.bin <- merge(data.bin,chrLine,by=intersect(colnames(data.bin),colnames(chrLine)),all.x=T)
+#   data.bin <- data.bin[order(as.integer(data.bin$chrom),data.bin$start),]
+#   data.bin$seg_start_abs <- as.numeric(sapply(strsplit(data.bin$segName,'_|-|:'),'[',2))+as.numeric(data.bin$chrPosStart_abs)
+#   data.bin$seg_end_abs <- as.numeric(sapply(strsplit(data.bin$segName,'_|-|:'),'[',3))+as.numeric(data.bin$chrPosStart_abs)
+  
+#   seg.dat$segName <- paste(seg.dat$chr,seg.dat$start,seg.dat$end,sep="_")
+#   if(any(grepl("SegMean|ratio",colnames(seg.dat)))){
+#     colnames(seg.dat)[grepl("SegMean|ratio",colnames(seg.dat))] <- "SegMean"
+#     seg.dat_slim <- seg.dat[,c("segName","SegMean","relativeCN","integerCN"),drop=F]
+#     data.bin <- data.bin[,!grepl("relativeCN|integerCN|SegMean",colnames(data.bin))]
+#   }else{
+#     seg.dat_slim <- seg.dat[,c("segName","relativeCN","integerCN"),drop=F]
+#     data.bin <- data.bin[,!grepl("relativeCN|integerCN",colnames(data.bin))]
+#   }
+  
+#   data.bin <- merge(data.bin,seg.dat_slim,by="segName",all.x=T)
+#   data.bin <- data.bin[!is.na(data.bin$integerCN),,drop=F]
+  
+#   data.bin <- data.bin[,!grepl("segID",colnames(data.bin)),drop=F]
+#   data.bin <- data.bin %>%
+#     group_by(segName) %>%
+#     dplyr::mutate(segID = cur_group_id()) %>%
+#     ungroup()%>% as.data.frame()
+#   data.bin <- data.bin[order(as.integer(data.bin$chrom),data.bin$chrPosStart_abs),]
+    
+#   maploc <- data.bin$chrPosStart_abs+data.bin$start
+#   if(grepl('chr',chr_name[1])){
+#     chr_name <- sapply(strsplit(chr_name,'hr'),'[',2)
+#   }
+#   chr_name_nm <- gsub("X","23",chr_name)
+#   chr_name_nm <- gsub("Y","24",chr_name_nm)
+#   which_chrom <- which(as.character(chrLine$chrom) %in% chr_name_nm)
+  
+#   breakss<-cumsum(chrPosStart)+chrLine[1:(nrow(chrLine)),2]*0.5
+#   breakss<-breakss[which_chrom]
+
+#   a<-data.frame(maploc=maploc,data.bin[,value.bin],data.bin[,value.segment],data.bin[,c("segID","seg_start_abs","seg_end_abs","relativeCN","integerCN","length_bin","segName")])
+#   colnames(a)=c('axis.loc','value.bin','value.segment','segID',"segStart","segEnd","ratio_map","integerCN","length_bin","segName")
+#   # a$colour<- ifelse(a$integerCNV==2,"neutral",ifelse(a$integerCNV>2,"gain","loss"))
+#   # a$colour <- factor(a$colour,levels=c("loss","neutral","gain"))
+#   a$ratio_map <- round(a$ratio_map,4)
+#   if(is.null(ylim)){ylim=c(0,max(data.bin$SegMean[is.finite(data.bin$SegMean)])+0.5)}
+#   breakshist <- seq(0,max(data.bin$SegMean[is.finite(data.bin$SegMean)]),length.out=100)
+#   a <- a %>%
+#     group_by(integerCN) %>%
+#     mutate(value.segment.map = median(value.segment))%>%
+#     as.data.frame()
+#   if(color_hist_gradient){
+#     if(is.null(hist_color)){
+#       colorss <- c("#023e8a","grey50", "#cb793a", "#9a031e","#6a040f","#370617")
+
+#     }else{
+#       colorss <- hist_color
+#     }
+#   }else{
+#     if(is.null(hist_color)){
+#       colorss <- "#472d30"
+#     }else{
+#       colorss <- hist_color[1]
+#     }
+    
+#   }
+  
+  
+#   chr_name_label <- chr_name
+#   chr_name_label[as.character(chr_name_label)%in%c("19","21")] <- ""
+  
+#   if(plot_dots){
+#     p1 <- ggplot2::ggplot(a) +
+#       geom_point(aes(x = axis.loc, y = value.bin), colour="darkgrey", alpha = 0.6, shape = 16,size=0.4) 
+#   }else{
+#     p1 <- ggplot2::ggplot(a,aes(x = axis.loc, y = value.bin)) 
+#   }
+  
+#   p1 <- p1+
+#     theme_bw() +
+#     labs(x = "", y = ylab)+
+#     coord_cartesian(ylim = ylim)+
+#     ggtitle(fname)+
+#     geom_hline(yintercept =c(1,2,3),col="grey",linetype = "dashed")+
+#     #geom_vline(xintercept =chrLine$chrPosStart_abs,col="grey")+
+#     theme(plot.margin = unit(c(0.5,0,0,0.5), 'lines'), #c(top, right, bottom, left)
+#           panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
+#           legend.position = "none",plot.title = element_text(size = 15),
+#           axis.title=element_text(size=15),
+#           axis.text = element_text(size = 15))+
+#     scale_x_continuous(guide = guide_axis(check.overlap = TRUE),breaks=breakss,labels=chr_name_label)
+#   if(length(chrLine$chrPosStart_abs)>1){
+#     odd_positions <- chrLine$chrPosStart_abs[seq(1, length(chrLine$chrPosStart_abs), by = 2)]
+#     even_positions <- chrLine$chrPosStart_abs[seq(2, length(chrLine$chrPosStart_abs), by = 2)]
+#     if(length(odd_positions)!=length(even_positions)){
+#         nrow <- min(length(odd_positions),length(even_positions))
+#     }else{nrow=length(odd_positions)}
+#       ## highlight region data
+#     rects <- data.frame(start=odd_positions, end=even_positions)
+#     p1 <- p1+
+#       geom_rect(data=rects, inherit.aes=FALSE, 
+#                 aes(xmin=start, xmax=end, ymin=-Inf,ymax=Inf),
+#                 color="transparent", fill="grey50", alpha=0.3)
+
+#   }
+
+
+#   if(plot_seg){
+
+#     if(color_seg_gradient){
+
+#      if(max(a$integerCN,na.rm=TRUE)<=6){
+#        names(colorss) <- seq(1:6)
+#      }else{
+#        add_Ncolor <- as.numeric(max(a$integerCN,na.rm=TRUE))-6
+#        colorss_add <- colorRampPalette(c(colorss[6],"black"))(add_Ncolor)
+#        colorss <- c(colorss,colorss_add)
+#        names(colorss) <- seq(1,max(a$integerCN,na.rm=TRUE))
+#        color_limit <- c(1,max(a$integerCN,na.rm=TRUE))
+#      }
+     
+#       p1 <- p1+
+#         #geom_line(aes(x = maploc,y=value.segment),col="red")+
+#         geom_hline(yintercept =1,col="grey",linetype = 2)+
+#         geom_segment(
+#           data = a, 
+#           mapping = aes(x=segStart, y=value.segment, xend=segEnd, yend=value.segment,colour=integerCN), 
+#           na.rm =T,size = 1.5,
+#           inherit.aes = FALSE)+
+#         scale_color_gradientn(name = "",colours = colorss,#c("#003049", "#669bbc","#7e7f83","#c1121f","#780000"),
+#                               limits  = color_limit,
+#                               oob = scales::squish)
+#     }else{
+#       p1 <- p1+
+#         #geom_line(aes(x = maploc,y=value.segment),col="red")+
+#         geom_hline(yintercept =1,col="grey",linetype = 2)+
+#         geom_segment(
+#           data = a, 
+#           mapping = aes(x=segStart, y=value.segment, xend=segEnd, yend=value.segment), 
+#           colour = seg.color,
+#           na.rm =T,size = 1,
+#           inherit.aes = FALSE)
+#     }
+    
+#     if(!is.null(show_specific_seg)){
+#       show_seg_chr <- sapply(strsplit(show_specific_seg,'-|_|:'),'[',1)
+#       show_seg_chr <- gsub("chr","",show_seg_chr)
+#       show_seg_chr <- gsub("X","23",show_seg_chr)
+#       show_seg_chr <- gsub("Y","24",show_seg_chr)
+#       show_seg_start <- as.numeric(sapply(strsplit(show_specific_seg,'-|_|:'),'[',2))
+#       show_seg_end <- as.numeric(sapply(strsplit(show_specific_seg,'-|_|:'),'[',3))
+#       df_show <- data.frame(Chromosome=show_seg_chr,cnv_start=show_seg_start,cnv_end=show_seg_end)
+#       line_df.seg <- cbind(data.bin[,c("chrom","start","End","chrPosStart_abs")],a) %>%
+#         dplyr::inner_join(df_show%>% dplyr::select(Chromosome, cnv_start, cnv_end), 
+#           join_by(chrom == Chromosome,  
+#                 start <= cnv_end,     
+#                 End >= cnv_start)) %>%
+#         dplyr::mutate(
+#           seg_show = paste(chrom, cnv_start, cnv_end, sep = "_"),
+#           seg_show_start = cnv_start+chrPosStart_abs,
+#           seg_show_end = cnv_end +chrPosStart_abs
+#         ) %>%
+#         dplyr::select(-cnv_start, -cnv_end)
+
+#       p1=p1+geom_segment(
+#       data = line_df.seg, 
+#       mapping = aes(x=seg_show_start, y=value.segment, xend=seg_show_end, yend=value.segment), 
+#       col=specific_seg_color,na.rm =T,size = 1.5,
+#       inherit.aes = FALSE)
+
+#     }
+
+    
+    
+#   }
+#   if(!is.null(label_gene)){
+#     gene_loc <- annotate_gene(label_gene,genome=genome,annotations=annotations)
+#     gene_chr <- as.character(seqnames(gene_loc))
+#     label_x <- chrLine[chrLine$chrom==gene_chr,"chrPosStart_abs"]+start(gene_loc)
+#     label_y <- unique(data.bin[data.bin$chrom==gene_chr&data.bin$seg_start_abs<=label_x&data.bin$seg_end_abs>=label_x,"SegMean"])[1]
+    
+#     p1=p1+
+#       geom_point(aes(x = label_x, y = label_y), alpha = 1, shape = 17,size=1,colour=label_gene_color)+
+#       geom_text(aes(label_x,label_y,label = label_gene),color=label_gene_color,vjust = -1)+
+#       geom_segment(aes(x = label_x, y = label_y, xend = label_x, yend = label_y -1),
+#                    color = label_gene_color,  # 指定指引线颜色
+#                    linetype = "dashed")  
+    
+#   }
+
+
+
+#   if(plot_hist){
+#     a$segLen <- as.numeric(a$segEnd)-as.numeric(a$segStart)
+    
+#     segLen_sum <- sum(unique(a[,c("segID","segLen")]$segLen))
+#     a$wei <- a$length_bin/segLen_sum
+#     integerCNVcolumn <- grep("integerCN",colnames(a))
+#     labs <- unique(a[integerCNVcolumn])
+#     labs <- labs[!is.na(labs[,1]),]
+    
+#     if(plot_seg){
+#       p_x <- "value.segment"
+#     }else{
+#       p_x <- "value.bin"
+#     }
+    
+#     clone_name <- strsplit(fname,":|_|-")[[1]][1]
+#     # a<- a[!is.na(a$integerCN),,drop=F]
+#     # a$integerCN <- factor(a$integerCN,levels = sort(unique(a$integerCN )))
+#     p3=ggplot(a,aes(x=get(p_x),weight = wei))+
+#         geom_histogram(aes(y=after_stat(density), ),breaks=breakshist)
+
+    
+#     plot_build <- ggplot_build(p3)
+#     hist_data <- plot_build$data[[1]]
+#     a$bin <- cut(a$value.segment, breaks = breakshist, include.lowest = TRUE)
+#     a$bin_center <- with(a, (as.numeric(bin) - 0.5) * diff(breakshist)[1] + min(breakshist))
+    
+#     CN_ano <- na.omit(unique(a[,c("bin_center","integerCN")]))
+#     find_nearest <- function(value, reference_vector) {
+#       reference_vector[which.min(abs(reference_vector - value))]
+#     }
+#     nearest_values <- sapply(hist_data$x, find_nearest, reference_vector = CN_ano$bin_center)
+#     CNindex <- match(nearest_values,CN_ano$bin_center)
+#     CNgroup <- CN_ano$integerCN[CNindex]
+#     hist_data$group <- factor(CNgroup)
+#     p4<- ggplot(hist_data, aes(x = x, y = density, fill = group))
+
+#     if(color_hist_gradient){
+#       if(max(CN_ano$integerCN)<=6){
+#         names(colorss) <- seq(1:6)
+#       }else{
+#         add_Ncolor <- as.numeric(max(CN_ano$integerCN))-6
+#         colorss_add <- colorRampPalette(c(colorss[6],"black"))(add_Ncolor)
+#         colorss <- c(colorss,colorss_add)
+#         names(colorss) <- seq(1,max(CN_ano$integerCN))
+#       }
+     
+#       if(label_CN){
+#         p4=p4+
+#           geom_vline(xintercept = na.omit(unique(a$ratio_map)),col="grey",linetype = "dotted")
+#       }
+#       p3 <- p4 +
+#         geom_bar(stat = "identity", color = NA) +
+#         scale_fill_manual(values = colorss, breaks = breakshist)
+      
+#       # p3 <- p3+  #a$value.segment.map
+#       #   geom_histogram(aes(y=after_stat(density), weight = wei),breaks=breakshist)+ #color="#E69F00",fill="wheat",
+#       #   #scale_fill_manual(values = colorss) 
+#       #   scale_fill_gradientn(name = "",colours = colorss,#c("#003049", "#669bbc","#7e7f83","#c1121f","#780000"),
+#       #                        limits  = color_limit,oob = scales::squish)
+#     }else{
+#       if(label_CN){
+#         p3=p3+
+#           geom_vline(xintercept = na.omit(unique(a$ratio_map)),col="grey",linetype = "dotted")
+#       }
+#       p3 <- p3+  #a$value.segment.map
+#         geom_histogram(aes(y=after_stat(density), weight = wei),color=colorss,fill=colorss,breaks=breakshist)
+#     }
+    
+#     if(label_CN){
+#        p3=p3+ scale_x_continuous(
+#           sec.axis = sec_axis( trans = ~.,breaks=unique(a$ratio_map)[!is.na(unique(a$ratio_map))], labels =labs, name="")
+#         )
+#     }
+#     p3 <- p3 +
+#       ggtitle(paste0("Ploidy of ",clone_name,": ",round(ploidy,2)))+
+#       coord_cartesian(xlim=ylim)+
+#       theme_bw() +
+#       theme_classic()+
+#       coord_flip(xlim=ylim)+
+#       #guides(fill = guide_legend( reverse = TRUE)) +
+#       theme(plot.margin = unit(c(0.5,0.5,0,0), 'lines'),
+#           plot.title = element_text(size = 15), #legend.position = "none",
+#           axis.line.y.right = element_blank(),
+#           axis.ticks.y.right = element_blank(),
+#           axis.title=element_text(size=15),
+#           axis.text = element_text(size = 12))+
+#     labs(x = "", y = "",fill="")
+#     pp=ggarrange(p1, p3, align ="h",ncol = 2, nrow = 1,widths =ggarrange_width,heights=3 )
+#     p_ls <- list(ggarranged_p=pp,p1=p1,p2=p3)
+#   }else{
+#     pp <- p1
+#     p_ls <- list(p1=p1)
+#   }
+#   if(outPlot){
+#     ggsave(paste0(outdir,"/",fname,".png"),pp,height = height,width=width,dpi = 300)
+#   }
+#   return(p_ls)
+# }
+
 
 cellLineSeg_v3<-function(binRatio.df = NULL,
                          integerCNV.df=NULL,
@@ -140,19 +585,54 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
                          show_specific_seg=NULL,
                          specific_seg_color="green"
 ){
+
+  
+
   suppressMessages({
     library(BSgenome)
     library(ggplot2)
     library(dplyr)
     library(ggpubr)
   })
-  g <- getBSgenome(genome, masked=FALSE)
-  chrLine <- data.frame(chrom=1:24, length=seqlengths(g)[1:24])
+  # Load the reference genome
+  g <- getGenome_auto(genome,auto_install = TRUE)
+
+  # Keep chromosome identities as character strings, not species-specific IDs.
+  normalize_chr <- function(x) {
+    x <- sub("^chr", "", trimws(as.character(x)), ignore.case = TRUE)
+    x[toupper(x) %in% c("X", "Y", "M", "MT")] <-
+      toupper(x[toupper(x) %in% c("X", "Y", "M", "MT")])
+    x[x %in% "MT"] <- "M"
+    x
+  }
+  parse_region <- function(x) {
+    # Split from the right; chromosome names may contain underscores.
+    x <- as.character(x)
+    number <- "[0-9]+(?:[.][0-9]+)?(?:[eE][+]?[0-9]+)?"
+    tokens <- regmatches(x, regexec(paste0("^(.+)[_:-](", number,")[_:-](", number, ")$"),x, perl = TRUE))
+    if (anyNA(x) || any(lengths(tokens) != 4L)) {
+      stop("Invalid region names; expected chr:start-end or chr_start_end.", call. = FALSE)
+    }
+    data.frame(chrom = normalize_chr(vapply(tokens, `[`, character(1), 2L)),
+               start = as.numeric(vapply(tokens, `[`, character(1), 3L)),
+               end = as.numeric(vapply(tokens, `[`, character(1), 4L)),
+               stringsAsFactors = FALSE)
+  }
+  make_key <- function(chr, start, end) {
+    paste(normalize_chr(chr), format(start, scientific = FALSE, trim = TRUE),
+          format(end, scientific = FALSE, trim = TRUE), sep = "_")
+  }
+  lens <- seqlengths(g)
+  ref_chr <- normalize_chr(names(lens))
+  if (anyDuplicated(ref_chr)) {
+    stop("Reference chromosome names are ambiguous after normalization.", call. = FALSE)
+  }
   if(is.null(integerCNV.df)){
     seg.dat <- integerCNV$seg.dat
   }else{
     seg.dat <- integerCNV.df
   } 
+  seg.dat <- as.data.frame(seg.dat)
   colnames(seg.dat)[grepl("^CNV$",colnames(seg.dat))] <- "relativeCN"
   colnames(seg.dat)[grepl("^integerCNV$",colnames(seg.dat))] <-"integerCN"
   
@@ -161,97 +641,125 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
   }else{
     data.bin <- binRatio.df
   }
-  colnames(data.bin)[grepl("chrom|Chromosome",colnames(data.bin))] <- "chrom"
-  colnames(data.bin)[grepl("^Start$",colnames(data.bin),ignore.case = TRUE)] <- "start"
-  colnames(data.bin)[grepl("^binRatio$",colnames(data.bin),ignore.case = TRUE)] <- "ratio"
-  ploidy <- sum(seg.dat$integerCN*seg.dat$w)/sum(seg.dat$w)
-  
-  chr_name=as.character(unique(data.bin$chrom))
-  #chromnum=sapply(strsplit(rownames(CNV),'-|_|:'),'[',1)
-  chromnum <- data.bin$chrom
-  if(grepl('chr',chromnum[1])){
-    chromnum=sapply(strsplit(chromnum,'hr'),'[',2) ## if chrommnum with chr
-  }else{
-    chromnum=chromnum
+  data.bin <- as.data.frame(data.bin)
+  colnames(data.bin)[tolower(colnames(data.bin)) %in% c("chr", "chrom", "chromosome")] <- "chrom"
+  colnames(data.bin)[tolower(colnames(data.bin)) == "start"] <- "start"
+  colnames(data.bin)[tolower(colnames(data.bin)) == "end"] <- "End"
+  colnames(data.bin)[tolower(colnames(data.bin)) == "binratio"] <- "ratio"
+  if (anyDuplicated(names(data.bin)) || anyDuplicated(names(seg.dat))) {
+    stop("Ambiguous input column names after normalization.")
   }
-  chromnum <- gsub("X","23",chromnum)
-  chromnum <- gsub("Y","24",chromnum)
-  data.bin$chrom <- chromnum
-  chrLine <- chrLine[chrLine$chrom %in% as.character(unique(chromnum)),,drop=F] 
-  genomeLength <- sum(chrLine)
-  if(nrow(chrLine)>1){
-    chrPosStart = c(0,chrLine[1:(nrow(chrLine)-1),2])
-  }else(
-    chrPosStart = 0
-  )
-  chrLine$chrPosStart_abs <- cumsum(chrPosStart)
-  data.bin <- merge(data.bin,chrLine,by=intersect(colnames(data.bin),colnames(chrLine)),all.x=T)
-  data.bin <- data.bin[order(as.integer(data.bin$chrom),data.bin$start),]
-  data.bin$seg_start_abs <- as.numeric(sapply(strsplit(data.bin$segName,'_|-|:'),'[',2))+as.numeric(data.bin$chrPosStart_abs)
-  data.bin$seg_end_abs <- as.numeric(sapply(strsplit(data.bin$segName,'_|-|:'),'[',3))+as.numeric(data.bin$chrPosStart_abs)
-  
-  seg.dat$segName <- paste(seg.dat$chr,seg.dat$start,seg.dat$end,sep="_")
-  if(any(grepl("SegMean|ratio",colnames(seg.dat)))){
-    colnames(seg.dat)[grepl("SegMean|ratio",colnames(seg.dat))] <- "SegMean"
-    seg.dat_slim <- seg.dat[,c("segName","SegMean","relativeCN","integerCN"),drop=F]
-    data.bin <- data.bin[,!grepl("relativeCN|integerCN|SegMean",colnames(data.bin))]
-  }else{
-    seg.dat_slim <- seg.dat[,c("segName","relativeCN","integerCN"),drop=F]
-    data.bin <- data.bin[,!grepl("relativeCN|integerCN",colnames(data.bin))]
+  if (!all(c("chrom", "start", "segName", "length_bin") %in% names(data.bin)) ||
+      !all(c("chr", "start", "end", "relativeCN", "integerCN", "w") %in% names(seg.dat))) {
+    stop("Missing required bin or segment columns.")
   }
-  
-  data.bin <- merge(data.bin,seg.dat_slim,by="segName",all.x=T)
-  data.bin <- data.bin[!is.na(data.bin$integerCN),,drop=F]
-  
-  data.bin <- data.bin[,!grepl("segID",colnames(data.bin)),drop=F]
-  data.bin <- data.bin %>%
-    group_by(segName) %>%
-    dplyr::mutate(segID = cur_group_id()) %>%
-    ungroup()%>% as.data.frame()
-  data.bin <- data.bin[order(as.integer(data.bin$chrom),data.bin$chrPosStart_abs),]
-    
-  maploc <- data.bin$chrPosStart_abs+data.bin$start
-  if(grepl('chr',chr_name[1])){
-    chr_name <- sapply(strsplit(chr_name,'hr'),'[',2)
+  data.bin$chrom <- normalize_chr(data.bin$chrom)
+  data.bin$start <- as.numeric(as.character(data.bin$start))
+  if ("End" %in% names(data.bin)) data.bin$End <- as.numeric(as.character(data.bin$End))
+  if (nrow(data.bin) == 0L || anyNA(data.bin$chrom) ||
+      any(!is.finite(data.bin$start))) stop("Invalid or empty bin data.")
+  # The axis includes only chromosomes represented in the input, in natural order.
+  used_chr <- unique(data.bin$chrom)
+  idx <- match(used_chr, ref_chr)
+  if (anyNA(idx)) {
+    stop("Chromosomes not in the selected genome: ",
+         paste(used_chr[is.na(idx)], collapse = ", "), call. = FALSE)
   }
-  chr_name_nm <- gsub("X","23",chr_name)
-  chr_name_nm <- gsub("Y","24",chr_name_nm)
-  which_chrom <- which(as.character(chrLine$chrom) %in% chr_name_nm)
-  
-  breakss<-cumsum(chrPosStart)+chrLine[1:(nrow(chrLine)),2]*0.5
-  breakss<-breakss[which_chrom]
+  if (any(!is.finite(lens[idx]) | lens[idx] <= 0)) stop("Invalid reference sequence lengths.")
+  autosomes <- used_chr[grepl("^[0-9]+$", used_chr)]
+  autosomes <- autosomes[order(as.numeric(autosomes))]
+  special <- intersect(c("X", "Y", "M"), used_chr)
+  other <- ref_chr[ref_chr %in% setdiff(used_chr, c(autosomes, special))]
+  chr_order <- c(autosomes, special, other)
+  chrLine <- data.frame(chrom = chr_order,
+                       length = as.numeric(lens[match(chr_order, ref_chr)]),
+                       stringsAsFactors = FALSE)
+  chrLine$chrPosStart_abs <- c(0, head(cumsum(chrLine$length), -1L))
+  chrLine$chrPosEnd_abs <- chrLine$chrPosStart_abs + chrLine$length
+  chr_index <- match(data.bin$chrom, chrLine$chrom)
+  data.bin$chrPosStart_abs <- chrLine$chrPosStart_abs[chr_index]
+  bin_region <- parse_region(data.bin$segName)
+  if (anyNA(bin_region$chrom) || any(bin_region$chrom != data.bin$chrom)) stop("Bin and segName chromosomes disagree.")
+  if (any(!is.finite(bin_region$start) | !is.finite(bin_region$end) |
+          bin_region$start < 0 | bin_region$end <= bin_region$start |
+          bin_region$end > chrLine$length[chr_index] |
+          data.bin$start < 0 | data.bin$start > chrLine$length[chr_index])) {
+    stop("Bin/segment coordinates are inconsistent with the selected genome.")
+  }
+  data.bin$segName <- make_key(bin_region$chrom, bin_region$start, bin_region$end)
+  data.bin$seg_start_abs <- bin_region$start + data.bin$chrPosStart_abs
+  data.bin$seg_end_abs <- bin_region$end + data.bin$chrPosStart_abs
 
-  a<-data.frame(maploc=maploc,data.bin[,value.bin],data.bin[,value.segment],data.bin[,c("segID","seg_start_abs","seg_end_abs","relativeCN","integerCN","length_bin","segName")])
-  colnames(a)=c('axis.loc','value.bin','value.segment','segID',"segStrat","segEnd","ratio_map","integerCN","length_bin","segName")
+  seg.dat$chr <- normalize_chr(seg.dat$chr)
+  seg.dat$start <- as.numeric(as.character(seg.dat$start))
+  seg.dat$end <- as.numeric(as.character(seg.dat$end))
+  if (anyNA(seg.dat$chr) || any(!is.finite(seg.dat$start) | !is.finite(seg.dat$end) |
+      seg.dat$start < 0 | seg.dat$end <= seg.dat$start)) stop("Invalid segment coordinates.")
+  seg.dat$segName <- make_key(seg.dat$chr, seg.dat$start, seg.dat$end)
+  if (anyDuplicated(seg.dat$segName)) stop("Duplicate segment coordinates.")
+  if (!"SegMean" %in% names(seg.dat) && "ratio" %in% names(seg.dat)) {
+    seg.dat$SegMean <- seg.dat$ratio
+  }
+  seg_cols <- intersect(c("segName", "SegMean", "relativeCN", "integerCN"), names(seg.dat))
+  for (nm in setdiff(seg_cols, "segName")) data.bin[[nm]] <- NULL
+  m <- match(data.bin$segName, seg.dat$segName)
+  if (anyNA(m)) warning(sum(is.na(m)), " bins have no matching segment; excluded.", call. = FALSE)
+  for (nm in setdiff(seg_cols, "segName")) data.bin[[nm]] <- seg.dat[[nm]][m]
+  data.bin <- data.bin[!is.na(data.bin$integerCN), , drop = FALSE]
+  if (nrow(data.bin) == 0L) stop("No bins match valid CN segments.")
+  if (!is.numeric(data.bin$integerCN) || any(!is.finite(data.bin$integerCN) | data.bin$integerCN < 0 | data.bin$integerCN != round(data.bin$integerCN))) stop("Invalid integer CN values.")
+  if (!all(c(value.bin, value.segment) %in% names(data.bin))) stop("Missing requested plot value columns.")
+  data.bin <- data.bin[order(match(data.bin$chrom, chrLine$chrom), data.bin$start), , drop = FALSE]
+  data.bin$segID <- match(data.bin$segName, unique(data.bin$segName))
+  maploc <- data.bin$chrPosStart_abs + data.bin$start
+  breakss <- chrLine$chrPosStart_abs + chrLine$length / 2
+  chr_name_label <- chrLine$chrom
+  chr_name_label[as.character(chr_name_label)%in%c("19","21")] <- ""
+  ploidy <- sum(seg.dat$integerCN * seg.dat$w, na.rm = TRUE) /
+            sum(seg.dat$w[is.finite(seg.dat$integerCN)], na.rm = TRUE)
+
+  a <- data.frame(axis.loc = maploc, value.bin = data.bin[[value.bin]],
+                  value.segment = data.bin[[value.segment]], segID = data.bin$segID,
+                  segStart = data.bin$seg_start_abs, segEnd = data.bin$seg_end_abs,
+                  ratio_map = data.bin$relativeCN, integerCN = data.bin$integerCN,
+                  length_bin = data.bin$length_bin, segName = data.bin$segName)
   # a$colour<- ifelse(a$integerCNV==2,"neutral",ifelse(a$integerCNV>2,"gain","loss"))
   # a$colour <- factor(a$colour,levels=c("loss","neutral","gain"))
+  if (!all(vapply(a[, c("value.bin", "value.segment", "ratio_map", "length_bin")], is.numeric, logical(1)))) {
+    stop("Plot values, relative CN and bin lengths must be numeric.")
+  }
   a$ratio_map <- round(a$ratio_map,4)
-  if(is.null(ylim)){ylim=c(0,max(data.bin$SegMean[is.finite(data.bin$SegMean)])+0.5)}
-  breakshist <- seq(0,max(data.bin$SegMean[is.finite(data.bin$SegMean)]),length.out=100)
+  observed <- c(a$value.bin, a$value.segment)
+  observed <- observed[is.finite(observed)]
+  if (!length(observed)) stop("No finite plot values.")
+  if (is.null(ylim)) ylim <- c(min(0, min(observed)), max(0, max(observed)) + 0.5)
+  hist_values <- if (plot_seg) a$value.segment else a$value.bin
+  hist_values <- hist_values[is.finite(hist_values)]
+  if (plot_hist && !length(hist_values)) stop("No finite histogram values.")
+  if (plot_hist) {
+    hist_range <- range(c(0, hist_values))
+    if (diff(hist_range) == 0) hist_range[2] <- hist_range[1] + 0.5
+    breakshist <- seq(hist_range[1], hist_range[2], length.out = max(2L, length.out))
+  }
   a <- a %>%
     group_by(integerCN) %>%
     mutate(value.segment.map = median(value.segment))%>%
     as.data.frame()
-  if(color_hist_gradient){
-    if(is.null(hist_color)){
-      colorss <- c("#023e8a","grey50", "#cb793a", "#9a031e","#6a040f","#370617")
-
-    }else{
-      colorss <- hist_color
-    }
-  }else{
-    if(is.null(hist_color)){
-      colorss <- "#472d30"
-    }else{
-      colorss <- hist_color[1]
-    }
-    
+  default_colors <- c("#023e8a", "grey50", "#cb793a", "#9a031e", "#6a040f", "#370617")
+  palette_base <- if (is.null(hist_color)) default_colors else hist_color
+  max_cn <- max(6L, ceiling(max(a$integerCN, na.rm = TRUE)))
+  if (length(palette_base) != 6L) {
+    palette_base <- if (length(palette_base) == 1L) rep(palette_base, 6L) else
+      grDevices::colorRampPalette(palette_base)(6L)
   }
-  
-  
-  chr_name_label <- chr_name
-  chr_name_label[as.character(chr_name_label)%in%c("19","21")] <- ""
-  
+  colorss <- palette_base
+  if (max_cn > 6L) colorss <- c(colorss, grDevices::colorRampPalette(c(colorss[6L], "black"))(max_cn - 6L))
+  names(colorss) <- seq_len(max_cn)
+  if (any(a$integerCN == 0, na.rm = TRUE)) colorss <- c("0" = "#023e8a", colorss)
+  if (max_cn > 6L) color_limit[2] <- max_cn
+  if ("0" %in% names(colorss)) color_limit[1] <- min(0, color_limit[1])
+  flat_hist_color <- if (is.null(hist_color)) "#472d30" else hist_color[1L]
+
   if(plot_dots){
     p1 <- ggplot2::ggplot(a) +
       geom_point(aes(x = axis.loc, y = value.bin), colour="darkgrey", alpha = 0.6, shape = 16,size=0.4) 
@@ -271,43 +779,26 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
           legend.position = "none",plot.title = element_text(size = 15),
           axis.title=element_text(size=15),
           axis.text = element_text(size = 15))+
-    scale_x_continuous(guide = guide_axis(check.overlap = TRUE),breaks=breakss,labels=chr_name_label)
-    if(length(chrLine$chrPosStart_abs)>1){
-      odd_positions <- chrLine$chrPosStart_abs[seq(1, length(chrLine$chrPosStart_abs), by = 2)]
-      even_positions <- chrLine$chrPosStart_abs[seq(2, length(chrLine$chrPosStart_abs), by = 2)]
-      if(length(odd_positions)!=length(even_positions)){
-          nrow <- min(length(odd_positions),length(even_positions))
-      }else{nrow=length(odd_positions)}
-        ## highlight region data
-      rects <- data.frame(start=odd_positions, end=even_positions)
-      p1 <- p1+
-        geom_rect(data=rects, inherit.aes=FALSE, 
-                  aes(xmin=start, xmax=end, ymin=-Inf,ymax=Inf),
-                  color="transparent", fill="grey50", alpha=0.3)
+    scale_x_continuous(guide = guide_axis(check.overlap = TRUE),breaks=breakss,labels=chr_name_label, limits=c(0, tail(chrLine$chrPosEnd_abs, 1L)))
+  odd <- seq.int(1L, nrow(chrLine), by = 2L)
+  rects <- data.frame(start = chrLine$chrPosStart_abs[odd],
+                      end = chrLine$chrPosEnd_abs[odd])
+  # Put chromosome backgrounds behind the point/segment layers.
+  bg <- geom_rect(data = rects, inherit.aes = FALSE,
+                  aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf),
+                  colour = NA, fill = "grey50", alpha = 0.3)
+  p1$layers <- c(list(bg), p1$layers)
 
-    }
-
-  
   if(plot_seg){
 
     if(color_seg_gradient){
 
-     if(max(a$integerCN,na.rm=TRUE)<=6){
-       names(colorss) <- seq(1:6)
-     }else{
-       add_Ncolor <- as.numeric(max(a$integerCN,na.rm=TRUE))-6
-       colorss_add <- colorRampPalette(c(colorss[6],"black"))(add_Ncolor)
-       colorss <- c(colorss,colorss_add)
-       names(colorss) <- seq(1,max(a$integerCN,na.rm=TRUE))
-       color_limit <- c(1,max(a$integerCN,na.rm=TRUE))
-     }
-     
       p1 <- p1+
         #geom_line(aes(x = maploc,y=value.segment),col="red")+
         geom_hline(yintercept =1,col="grey",linetype = 2)+
         geom_segment(
           data = a, 
-          mapping = aes(x=segStrat, y=value.segment, xend=segEnd, yend=value.segment,colour=integerCN), 
+          mapping = aes(x=segStart, y=value.segment, xend=segEnd, yend=value.segment,colour=integerCN), 
           na.rm =T,size = 1.5,
           inherit.aes = FALSE)+
         scale_color_gradientn(name = "",colours = colorss,#c("#003049", "#669bbc","#7e7f83","#c1121f","#780000"),
@@ -319,31 +810,31 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
         geom_hline(yintercept =1,col="grey",linetype = 2)+
         geom_segment(
           data = a, 
-          mapping = aes(x=segStrat, y=value.segment, xend=segEnd, yend=value.segment), 
+          mapping = aes(x=segStart, y=value.segment, xend=segEnd, yend=value.segment), 
           colour = seg.color,
           na.rm =T,size = 1,
           inherit.aes = FALSE)
     }
-
-     if(!is.null(show_specific_seg)){
-      show_seg_chr <- sapply(strsplit(show_specific_seg,'-|_|:'),'[',1)
-      show_seg_chr <- gsub("chr","",show_seg_chr)
-      show_seg_chr <- gsub("X","23",show_seg_chr)
-      show_seg_chr <- gsub("Y","24",show_seg_chr)
-      show_seg_start <- as.numeric(sapply(strsplit(show_specific_seg,'-|_|:'),'[',2))
-      show_seg_end <- as.numeric(sapply(strsplit(show_specific_seg,'-|_|:'),'[',3))
-      df_show <- data.frame(Chromosome=show_seg_chr,cnv_start=show_seg_start,cnv_end=show_seg_end)
-      line_df.seg <- cbind(data.bin[,c("chrom","start","End","chrPosStart_abs")],a) %>%
-        dplyr::inner_join(df_show%>% dplyr::select(Chromosome, cnv_start, cnv_end), 
-          join_by(chrom == Chromosome,  
-                start <= cnv_end,     
-                End >= cnv_start)) %>%
-        dplyr::mutate(
-          seg_show = paste(chrom, cnv_start, cnv_end, sep = "_"),
-          seg_show_start = cnv_start+chrPosStart_abs,
-          seg_show_end = cnv_end +chrPosStart_abs
-        ) %>%
-        dplyr::select(-cnv_start, -cnv_end)
+    
+    if(!is.null(show_specific_seg)){
+      df_show <- parse_region(show_specific_seg)
+      names(df_show) <- c("Chromosome", "cnv_start", "cnv_end")
+      if (any(!is.finite(df_show$cnv_start) | !is.finite(df_show$cnv_end) |
+              df_show$cnv_start < 0 | df_show$cnv_end <= df_show$cnv_start)) {
+        stop("Invalid coordinates in show_specific_seg.")
+      }
+      absent <- setdiff(df_show$Chromosome, chrLine$chrom)
+      if (length(absent)) warning("Requested regions outside plotted chromosomes: ",
+                                  paste(absent, collapse = ", "), call. = FALSE)
+      # Clip highlight lines to each overlapping segment, not the whole query interval.
+      line_df.seg <- unique(cbind(data.bin[, c("chrom", "chrPosStart_abs"), drop = FALSE],
+                                  a[, c("segStart", "segEnd", "value.segment"), drop = FALSE])) %>%
+        dplyr::mutate(local_start = segStart - chrPosStart_abs,
+                      local_end = segEnd - chrPosStart_abs) %>%
+        dplyr::inner_join(df_show, dplyr::join_by(chrom == Chromosome,
+                   local_start < cnv_end, local_end > cnv_start)) %>%
+        dplyr::mutate(seg_show_start = pmax(local_start, cnv_start) + chrPosStart_abs,
+                      seg_show_end = pmin(local_end, cnv_end) + chrPosStart_abs)
 
       p1=p1+geom_segment(
       data = line_df.seg, 
@@ -352,36 +843,59 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
       inherit.aes = FALSE)
 
     }
-    
 
+    
     
   }
-  if(!is.null(label_gene)){
-    gene_loc <- annotate_gene(label_gene,genome=genome,annotations=annotations)
-    gene_chr <- as.character(seqnames(gene_loc))
-    label_x <- chrLine[chrLine$chrom==gene_chr,"chrPosStart_abs"]+start(gene_loc)
-    label_y <- unique(data.bin[data.bin$chrom==gene_chr&data.bin$seg_start_abs<=label_x&data.bin$seg_end_abs>=label_x,"SegMean"])[1]
-    
-    p1=p1+
-      geom_point(aes(x = label_x, y = label_y), alpha = 1, shape = 17,size=1,colour=label_gene_color)+
-      geom_text(aes(label_x,label_y,label = label_gene),color=label_gene_color,vjust = -1)+
-      geom_segment(aes(x = label_x, y = label_y, xend = label_x, yend = label_y -1),
-                   color = label_gene_color,  # 指定指引线颜色
-                   linetype = "dashed")  
-    
+  if (!is.null(label_gene)) {
+    # annotate_gene() is an external TeaCNV helper; it must support the selected assembly.
+    gene_labels <- lapply(as.character(label_gene), function(symbol) {
+      gene_loc <- tryCatch(annotate_gene(symbol, genome = genome, annotations = annotations),
+                           error = function(e) {
+                             warning("Gene annotation failed for ", symbol, ": ",
+                                     conditionMessage(e), call. = FALSE)
+                             NULL
+                           })
+      if (is.null(gene_loc) || length(gene_loc) == 0L) return(NULL)
+      gene_chr <- normalize_chr(as.character(seqnames(gene_loc)))
+      gene_start <- as.numeric(start(gene_loc))
+      k <- match(gene_chr, chrLine$chrom)
+      x <- chrLine$chrPosStart_abs[k] + gene_start
+      y <- vapply(seq_along(x), function(i) {
+        if (!is.finite(x[i])) return(NA_real_)
+        hit <- which(data.bin$chrom == gene_chr[i] &
+                       data.bin$seg_start_abs <= x[i] & data.bin$seg_end_abs >= x[i])
+        if (!length(hit)) return(NA_real_)
+        as.numeric(data.bin[[value.segment]][hit[1L]])
+      }, numeric(1))
+      ans <- data.frame(label_x = x, label_y = y, gene = symbol)
+      ans <- ans[is.finite(ans$label_x) & is.finite(ans$label_y), , drop = FALSE]
+      if (!nrow(ans)) warning("Gene outside plotted segments: ", symbol, call. = FALSE)
+      ans
+    })
+    gene_df <- do.call(rbind, gene_labels)
+    if (!is.null(gene_df) && nrow(gene_df) > 0L) {
+      p1 <- p1 + geom_point(data = gene_df, aes(label_x, label_y), inherit.aes = FALSE,
+                             shape = 17, size = 1, colour = label_gene_color) +
+        geom_text(data = gene_df, aes(label_x, label_y, label = gene), inherit.aes = FALSE,
+                  color = label_gene_color, vjust = -1) +
+        geom_segment(data = gene_df, aes(x = label_x, y = label_y,
+                     xend = label_x, yend = label_y - 1), inherit.aes = FALSE,
+                     color = label_gene_color, linetype = "dashed")
+    }
   }
 
-
-  
   if(plot_hist){
-    a$segLen <- as.numeric(a$segEnd)-as.numeric(a$segStrat)
+    a$segLen <- as.numeric(a$segEnd)-as.numeric(a$segStart)
     
-    segLen_sum <- sum(unique(a[,c("segID","segLen")]$segLen))
+    segLen_sum <- sum(unique(a[, c("segID", "segLen")])$segLen)
+    if (any(!is.finite(a$length_bin) | a$length_bin < 0) || sum(a$length_bin) <= 0) stop("Invalid histogram weights.")
     a$wei <- a$length_bin/segLen_sum
-    integerCNVcolumn <- grep("integerCN",colnames(a))
-    labs <- unique(a[integerCNVcolumn])
-    labs <- labs[!is.na(labs[,1]),]
-    
+    cn_labels <- unique(a[, c("ratio_map", "integerCN")])
+    cn_labels <- cn_labels[is.finite(cn_labels$ratio_map) & is.finite(cn_labels$integerCN), , drop = FALSE]
+    cn_ticks <- sort(unique(cn_labels$ratio_map))
+    labs <- vapply(cn_ticks, function(x) paste(sort(unique(cn_labels$integerCN[cn_labels$ratio_map == x])), collapse = "/"), character(1))
+
     if(plot_seg){
       p_x <- "value.segment"
     }else{
@@ -391,13 +905,13 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
     clone_name <- strsplit(fname,":|_|-")[[1]][1]
     # a<- a[!is.na(a$integerCN),,drop=F]
     # a$integerCN <- factor(a$integerCN,levels = sort(unique(a$integerCN )))
-    p3=ggplot(a,aes(x=get(p_x),weight = wei))+
+    p3=ggplot(a,aes(x=.data[[p_x]],weight = wei))+
         geom_histogram(aes(y=after_stat(density), ),breaks=breakshist)
 
     
     plot_build <- ggplot_build(p3)
     hist_data <- plot_build$data[[1]]
-    a$bin <- cut(a$value.segment, breaks = breakshist, include.lowest = TRUE)
+    a$bin <- cut(a[[p_x]], breaks = breakshist, include.lowest = TRUE)
     a$bin_center <- with(a, (as.numeric(bin) - 0.5) * diff(breakshist)[1] + min(breakshist))
     
     CN_ano <- na.omit(unique(a[,c("bin_center","integerCN")]))
@@ -411,22 +925,13 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
     p4<- ggplot(hist_data, aes(x = x, y = density, fill = group))
 
     if(color_hist_gradient){
-      if(max(CN_ano$integerCN)<=6){
-        names(colorss) <- seq(1:6)
-      }else{
-        add_Ncolor <- as.numeric(max(CN_ano$integerCN))-6
-        colorss_add <- colorRampPalette(c(colorss[6],"black"))(add_Ncolor)
-        colorss <- c(colorss,colorss_add)
-        names(colorss) <- seq(1,max(CN_ano$integerCN))
-      }
-     
       if(label_CN){
         p4=p4+
           geom_vline(xintercept = na.omit(unique(a$ratio_map)),col="grey",linetype = "dotted")
       }
       p3 <- p4 +
         geom_bar(stat = "identity", color = NA) +
-        scale_fill_manual(values = colorss, breaks = breakshist)
+        scale_fill_manual(values = colorss)
       
       # p3 <- p3+  #a$value.segment.map
       #   geom_histogram(aes(y=after_stat(density), weight = wei),breaks=breakshist)+ #color="#E69F00",fill="wheat",
@@ -439,17 +944,16 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
           geom_vline(xintercept = na.omit(unique(a$ratio_map)),col="grey",linetype = "dotted")
       }
       p3 <- p3+  #a$value.segment.map
-        geom_histogram(aes(y=after_stat(density), weight = wei),color=colorss,fill=colorss,breaks=breakshist)
+        geom_histogram(aes(y=after_stat(density), weight = wei),color=flat_hist_color,fill=flat_hist_color,breaks=breakshist)
     }
     
     if(label_CN){
        p3=p3+ scale_x_continuous(
-          sec.axis = sec_axis( trans = ~.,breaks=unique(a$ratio_map)[!is.na(unique(a$ratio_map))], labels =labs, name="")
+          sec.axis = sec_axis( trans = ~.,breaks=cn_ticks, labels =labs, name="")
         )
     }
     p3 <- p3 +
       ggtitle(paste0("Ploidy of ",clone_name,": ",round(ploidy,2)))+
-      coord_cartesian(xlim=ylim)+
       theme_bw() +
       theme_classic()+
       coord_flip(xlim=ylim)+
@@ -468,10 +972,14 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
     p_ls <- list(p1=p1)
   }
   if(outPlot){
-    ggsave(paste0(outdir,"/",fname,".png"),pp,height = height,width=width,dpi = 300)
+    dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
+    ggsave(file.path(outdir, paste0(fname, ".png")), pp, height = height, width = width, dpi = 300)
   }
   return(p_ls)
 }
+
+
+
 
 
 #' @title hist_seg()
@@ -1291,21 +1799,39 @@ replotInfercnv <- function(expr.mat,
       low_threshold = x.center - delta
       high_threshold = x.center + delta
       # bk <-seq(0.5,2,length.out=16)
-      bk <- c(low_threshold,x.center,high_threshold)
+      bk <- c(
+        low_threshold,
+        x.center - delta*0.5,
+        x.center,
+        x.center + delta*0.5,
+        high_threshold
+      )
     }else{
       bk <- color.breaks
     }
-    cols <- colorRampPalette(colors = c("#2A72B2", "grey95", "#6a040f"))(length(bk))
+    cnv_palette <- c(
+      "#053061",  # deep deletion
+      "#92C5DE",  # mild deletion
+      "#F3F3F3",  # neutral
+      "#F4A582",  # mild amplification
+      "#67001F"   # strong amplification
+    )
+
+    cols <- colorRampPalette(colors = cnv_palette)(length(bk))
     colors <- circlize::colorRamp2(bk,cols)
     label_brk <- as.character(round(bk,2))
     color_bars <- "continuous"
+
+    expr.mat[expr.mat > high_threshold] <- high_threshold
+    expr.mat[expr.mat < low_threshold]  <- low_threshold
+
   }else if(type%in% "CNV"){
     CN_max <- quantile(as.numeric(as.matrix(expr.mat[!is.null(expr.mat)])),1,na.rm=T)
       # colorss <-  c("#1A4E7A","#2A72B2", "#F2F2F2","#B97B77", "#6a040f","#3F0209")
-      colorss <-  c("#7994cb", "grey95","#F3C3A3","#EE9863","#e75f59","#8B0000") #0:"#1a4fb3"
-      colors <-colorRamp2(c(1,2,3,4,5,6),colorss)
-      bk <- c(1,2,3,4,5,6)
-      label_brk <- c(as.character(c(1,2,3,4,5,6)))
+      colorss <-  c("#0165A2","#82C0DC", "#F3F3F3","#FCD0B4","#EE9863","#e75f59","#8B0000") #0:"#1a4fb3"
+      colors <-colorRamp2(c(0,1,2,3,4,5,6),colorss)
+      bk <- c(0,1,2,3,4,5,6)
+      label_brk <- c(as.character(c(0,1,2,3,4,5,6)))
       color_bars <- "discrete"
       titles <- "CNV"
   }
@@ -1408,7 +1934,6 @@ replotInfercnv <- function(expr.mat,
   }
   return(ht_plot)
 }
-
 
 
 

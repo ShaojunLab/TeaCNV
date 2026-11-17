@@ -450,6 +450,7 @@ runTeaCNV <- function(
 
   mtx_qc_filt <- input_obj@data.filt
   cell_anno <- input_obj@cell_anno.filt
+  genome <- input_obj@options$genome
 
   runstep = 1
   mtx_filt_File <- paste0(outdir,"/step01.mtx_filt.rds")
@@ -648,7 +649,7 @@ runTeaCNV <- function(
                                filt_seg = TRUE,
                                length_seg_cutoff =1e6,
                                segValue_method=segValue.method,
-                               genome="hg38",
+                               genome=genome,
                                true_loc = TRUE,
                                outputFigure = FALSE,
                                outplot_name=paste0("CNV_subClust_initial"))
@@ -764,7 +765,7 @@ runTeaCNV <- function(
       flog.info(paste0("Output figures of initial subgroup-level CN estimation to ", outdir))
       #plot segment (initial)
       plot_combine_seg(clonal_res,outplot_name="subgroup_CN_initial.pdf",show_dots=TRUE,
-                       outdir=plotdir)
+                       outdir=plotdir,genome=genome)
       
 
     }else if(file.exists(CNVresFile_subC)){
@@ -955,10 +956,10 @@ runTeaCNV <- function(
   #segment clonal level Ratio snd CNVs
   plot_combine_seg(outres$clonalest,
                    outplot_name="clonalCN_final.pdf",show_dots=TRUE,
-                   outdir=plotdir)  
+                   outdir=plotdir,genome=genome)  
   plot_combine_seg(outres$clonalest,
                    outplot_name="clonalCN_final_noDots.pdf",show_dots=FALSE,
-                   outdir=plotdir) 
+                   outdir=plotdir,genome=genome) 
 
   #segment clonal CNVs
     p_ls <- lapply(names(outres$clonalest),function(cluster,outdir){
@@ -968,6 +969,7 @@ runTeaCNV <- function(
       ymax <- quantile(integerCNV$integerCN,0.99)
       plt <- cellLineSeg_v3(binRatio.df=clonal_res,integerCNV.df=integerCNV,outdir=plotdir,
                             ylab="CNVs",ylim=c(0,ymax),
+                            genome =genome,
                             plot_dots = FALSE,
                             plot_hist = FALSE,
                             color_seg_gradient=T, seg.color = "#0d3b66",
@@ -1088,6 +1090,7 @@ runTeaCNV <- function(
                         plot_dots = F,
                         ylim=c(0,ymax),
                         add_yline = 2,
+                        genome = genome,
                         plot_seg = T,
                         seg_col = left_anno_cols[["clone"]][cluster],
                         plotDir=plotdir,outPlot=F,
