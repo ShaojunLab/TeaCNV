@@ -1678,7 +1678,7 @@ plot_peak<-function(y0,aaa,main0="",breaks0=30,Zcut=-Inf)
 
 #' @title plot_combine_seg()
 #' @export 
-plot_combine_seg <- function(clonal.res,ylim=NULL,outplot_name=NULL,show_dots=FALSE,outdir="./",ggarrange_width=c(2.5,1)){
+plot_combine_seg <- function(clonal.res,ylim=NULL,outplot_name=NULL,show_dots=FALSE,outdir="./",ggarrange_width=c(2.5,1),genome="hg38"){
   if(is.null(outplot_name)){
     outplot_name <- "clonalCN_seg.pdf"
   }
@@ -1692,7 +1692,7 @@ plot_combine_seg <- function(clonal.res,ylim=NULL,outplot_name=NULL,show_dots=FA
                           fname=paste0("C",outplot_name_i,": score=",score),
                           plot_dots = show_dots,
                           ggarrange_width=ggarrange_width,
-                          height = 2,width=10,outPlot=FALSE)
+                          height = 2,width=10,outPlot=FALSE,genome=genome)
     return(plt$ggarranged_p)
   },clonal.res,outdir)
   pcom <- cowplot::plot_grid(plotlist=plt_clones,ncol = 1,align="v")
