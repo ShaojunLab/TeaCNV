@@ -433,7 +433,23 @@ Group_size <- Group_size[Group_size>10]
 
 
 
-#' @title cell_score()
+#' @title Cell quality assessment
+#' @description Calculate cell quality scores based on the maximum
+#'   proportion of zero-valued bins across chromosomes.
+#' @param data Numeric matrix with genomic bins as rows and cells as columns.
+#' @param ZeroProp.max Maximum allowed zero proportion per chromosome.
+#'   Default is 0.5.
+#' @param byBin Whether to aggregate adjacent bins before scoring.
+#'   Default is TRUE.
+#' @param binWin Window size for bin aggregation. Default is 20.
+#' @param outFigure Whether to generate a cell quality heatmap.
+#'   Default is TRUE.
+#' @param outdir Output directory. Default is "./".
+#' @param cell_meta Optional cell metadata with cell IDs as row names.
+#' @param max.value Maximum signal value for heatmap visualization.
+#'   Default is NULL.
+#' @return A data frame containing cell IDs, quality scores, and
+#'   quality labels ("Quality.Hig" or "Quality.Low").
 #' @export
 
 cell_score <- function(data,ZeroProp.max=0.5,byBin=TRUE,binWin=20,outFigure=TRUE,outdir="./",cell_meta=NULL,max.value=NULL){
@@ -466,7 +482,7 @@ cell_score <- function(data,ZeroProp.max=0.5,byBin=TRUE,binWin=20,outFigure=TRUE
   maxNz <- apply(chrNz, 2, max)
   #maxNz <- MatrixGenerics::colMaxs(chrNz)
   cell_scores$score <- maxNz
-  cell_scores$label <- ifelse(maxNz<=ZeroProp.max,"Low","Hig")
+  cell_scores$label <- ifelse(maxNz<=ZeroProp.max,"Quality.High","Quality.Low")
   rownames(cell_scores) <- cell_scores$cell
   
   if(outFigure){
