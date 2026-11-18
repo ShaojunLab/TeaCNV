@@ -54,7 +54,7 @@
   suppressWarnings(as.numeric(x))
 }
 
-.teacnv_plot_coordinates <- function(data.bin, genome, true_loc, auto_install) {
+.teacnv_plot_coordinates <- function(data.bin, true_loc) {
   if (is.atomic(data.bin) && is.null(dim(data.bin))) {
     data.bin <- data.frame(value = unname(data.bin), row.names = names(data.bin))
   }
@@ -88,18 +88,16 @@
   other <- sort(setdiff(used, c(autos, special)))
   chr_order <- c(autos, special, other)
   if (true_loc) {
-    g <- .teacnv_plot_genome(genome, auto_install)
-    lens <- GenomeInfoDb::seqlengths(g)
-    ref <- .teacnv_plot_chr(names(lens))
-    k <- match(chr_order, ref)
-    if (anyNA(k)) stop("Chromosomes not found in genome: ",
-                       paste(chr_order[is.na(k)], collapse = ", "))
-    if (any(vapply(chr_order, function(x) sum(ref == x) != 1L, logical(1))))
-      stop("Ambiguous chromosome names in the selected genome.")
-    len <- as.numeric(lens[k])
-    if (any(!is.finite(len) | len <= 0)) stop("Invalid reference chromosome lengths.")
-    if (any(z$End > len[match(z$chrom, chr_order)]))
-      stop("Bin coordinates exceed reference chromosome lengths; check genome assembly.")
+    #Use the maximum bin end as chromosome length
+    len <- vapply(
+        chr_order,
+        function(chr) {
+            max(z$End[z$chrom == chr], na.rm = TRUE)
+        },
+        numeric(1)
+    )
+
+    len <- unname(len)
   } else {
     # Equal bin spacing: genome sequence lengths are not needed.
     len <- as.numeric(table(factor(z$chrom, levels = chr_order)))
@@ -563,7 +561,7 @@ seg_plot <- function(data.bin, name.data = "", num_cells = NULL, plotDir = NULL,
                      annotations = NULL, height = 3, width = 14, outPlot = TRUE,
                      device = "png", color_seg_gradient = FALSE,
                      disconnected = TRUE, auto_install = TRUE) {
-  pdat <- .teacnv_plot_coordinates(data.bin, genome, true_loc, auto_install)
+  pdat <- .teacnv_plot_coordinates(data.bin, true_loc)
   d <- pdat$data; chrLine <- pdat$chrLine
   if (!value.bin %in% names(d)) stop("Missing bin value column: ", value.bin)
   a <- data.frame(axis.loc = d$axis.loc, chrom = d$chrom,
@@ -844,7 +842,7 @@ seg_plot_dot <- function(data.bin, name.data = "", plotDir = NULL,
   }
   if (!is.character(value.bin) || length(value.bin)!=1L || !value.bin %in% names(raw))
     stop("Missing or invalid value.bin column.")
-  pdat <- .teacnv_plot_coordinates(raw, genome, TRUE, auto_install)
+  pdat <- .teacnv_plot_coordinates(raw, TRUE)
   d <- pdat$data; chrLine <- pdat$chrLine
   a <- data.frame(axis.loc=d$axis.loc,value.bin=.teacnv_plot_num(d[[value.bin]]),weight=d$End-d$Start)
   a <- a[is.finite(a$value.bin) & is.finite(a$axis.loc), , drop=FALSE]
@@ -1243,8 +1241,8 @@ if(ylim.set){
 .teacnv_abs_layout <- function(data_list, genome, auto_install) {
   # One union axis for all data sets, using the plotting helpers from this file.
   seg_ids <- unique(unlist(lapply(data_list, function(d) d$.seg_key), use.names = FALSE))
-  .teacnv_plot_coordinates(data.frame(binID = seg_ids), genome,
-                           true_loc = TRUE, auto_install = auto_install)$chrLine
+  .teacnv_plot_coordinates(data.frame(binID = seg_ids),
+                           true_loc = TRUE)$chrLine
 }
 
 .teacnv_abs_apply <- function(d, chrLine = NULL, true_loc = TRUE) {
