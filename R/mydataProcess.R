@@ -773,7 +773,7 @@ segment_by_chr_location <- function(mat_obj,cytoBand=NULL,
       genome
     )
 
-    cytoBandFile <- tryCatch({
+    cytoBand <- tryCatch({
 
       tmp <- tempfile(fileext = ".txt.gz")
 

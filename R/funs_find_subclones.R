@@ -522,13 +522,46 @@ seg4clusters <- function(mat,cell_info,
     }else{
       message("CytoBand isn't recognized as data.frame, or filename")
     }
-    #check the columns of cytoBand
-    if(ncol(cytoBand)==5){
-      colnames(cytoBand)=c("chrom","chromStart","chromEnd","name","gieStain")
-    }else{
-      stop("Error, the columns of cytoBand do NOT match the columns of the cytoBand table in the database underlying the UCSC Genome Browser")
-    }
-  } 
+    
+  }else{
+    message("Downloading cytoBand for ", genome, " from UCSC...")
+    cytoBand_url <- sprintf(
+      "https://hgdownload.soe.ucsc.edu/goldenPath/%s/database/cytoBand.txt.gz",
+      genome
+    )
+
+    cytoBand <- tryCatch({
+
+      tmp <- tempfile(fileext = ".txt.gz")
+
+      download.file(cytoBand_url, destfile = tmp,
+                    mode = "wb", quiet = TRUE)
+
+      dat <- read.table(
+        tmp,
+        sep = "\t",
+        header = FALSE,
+        check.names = FALSE,
+        stringsAsFactors = FALSE
+      )
+
+      unlink(tmp)
+
+      dat
+
+    }, error = function(e) {
+      stop("Failed to download cytoBand for genome ", genome,
+           ". Please provide a valid cytoBand file. ",
+           conditionMessage(e))
+    })
+  }
+  #check the columns of cytoBand
+  if(ncol(cytoBand)==5){
+    colnames(cytoBand)=c("chrom","chromStart","chromEnd","name","gieStain")
+  }else{
+    stop("Error, the columns of cytoBand do NOT match the columns of the cytoBand table in the database underlying the UCSC Genome Browser")
+  }
+    
   cell_info_new <- data.frame(cellid=rownames(cell_info),group=as.character(cell_info[,1]))
   mtx_qcs_bulk <- pseudo_bulk_v2(mat[,cell_info_new$cellid],group_ano = cell_info_new,method =method,adjust_zero=adjust_zero)
   if(is.null(col_ref)){
