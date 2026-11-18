@@ -213,8 +213,8 @@ CreateTeaCNVObject <- function(input,
     mtx_filt <- raw.data
   }
 
-
-  mtx_filt <- blacklist.rm(mtx_filt,blacklistFile)
+  if(!is.null(blacklistFile)){mtx_filt <- blacklist.rm(mtx_filt,blacklistFile)}
+  
   
   cell_anno_filt <- cell_anno[colnames(mtx_filt),,drop=F]
   if(ncol(mtx_filt)>10){
@@ -405,6 +405,8 @@ runTeaCNV <- function(
     DEsegCoeff = 0.7,
     correct_by_dist=FALSE
 ){
+  old_options <- options(scipen = 999)
+  on.exit(options(old_options), add = TRUE)
   packages <- c("Signac", "Seurat", "tidyr", "Matrix", "irlba","plyranges","futile.logger","ggplot2","MatrixGenerics","MixGHD","stringr","data.table","ComplexHeatmap","RColorBrewer")
   invisible(lapply(packages, require, character.only = TRUE))
   
@@ -576,7 +578,8 @@ runTeaCNV <- function(
                  FiltSeg= FiltSeg,
                  SegLen_min = SegLen_min,
                  outdir=outdir_sub,
-                 global.norm=global.norm)
+                 global.norm=global.norm,
+                 genome=genome)
       SegScore_total_subC <- CNV_res_ls$SegScore_total_subC
       
       saveRDS(CNV_res_ls,CNV_res_ls_file)
@@ -600,6 +603,13 @@ runTeaCNV <- function(
     }else if(file.exists(CNV_res_ls_file)){
       CNV_res_ls <- readRDS(CNV_res_ls_file)
       SegScore_total_subC <- CNV_res_ls$SegScore_total_subC
+      # Restore step-2 matrices even when starting a new R session.
+      input_obj@data.binRatio <- CNV_res_ls$binRatio
+      input_obj@data.binCount <- CNV_res_ls$binCount
+      input_obj@data.binCount.norm <- CNV_res_ls$binCount.norm
+      input_obj@ref.value <- SegScore_total_subC$ref.value
+      # Later stages add clone_merged and aneuploidy_score to this metadata.
+      cell_anno_new <- if (CurrentStep >= 3L) input_obj@cell_anno.filt else CNV_res_ls$cell_anno_new
     }else{
       stop(paste0("No ",CNV_res_ls_file," found."))
     }
@@ -631,7 +641,8 @@ runTeaCNV <- function(
   }
 
   flog.info("\n")
-  
+
+
   #Step 3: clone-level integer copy numbers estimation
   plotdir <- paste0(outdir,"/Figures")
   ifelse(!dir.exists(file.path(plotdir)), dir.create(file.path(plotdir)), FALSE)
@@ -641,7 +652,7 @@ runTeaCNV <- function(
     CNVresFile_subC_update <- paste0(outdir_sub,"/step03.CNV_res_clonal_update.rds")
     if(CurrentStep < runstep){
       flog.info("\n\n")
-      flog.info("Step 3: Clone-level integer copy numbers estimation.")
+      flog.info("Step 3: Clone-level integer copy numbers estimation, and subclone merging.")
       
       ###3.1 initial estimate
       CNV_res_subC.ini <- CNV_esti_ini(outdir=outdir_sub,
@@ -841,14 +852,16 @@ runTeaCNV <- function(
     
     
     flog.info("\n")
-    # flog.info(paste0("Output figures of initial clone-level CN estimation to ", outdir))
-    # #plot segment (initial-updated)
-    # plot_combine_seg(clonal_res_updated,
-    #                  outplot_name="clonalCN_initial_update.pdf",show_dots=TRUE,
-    #                  outdir=outdir)
-    # plot_combine_seg(clonal_res_updated,
-    #                  outplot_name="clonalCN_initial_update_noDots.pdf",show_dots=FALSE,
-    #                  outdir=outdir)
+    # if (outputFigures && StopStep == 3L) {
+    #   flog.info(paste0("Output figures of initial clone-level CN estimation to ", outdir))
+    #   #plot segment (initial-updated)
+    #   plot_combine_seg(clonal_res_updated,
+    #                    outplot_name="clonalCN_initial_update.pdf",show_dots=TRUE,
+    #                    outdir=outdir)
+    #   plot_combine_seg(clonal_res_updated,
+    #                    outplot_name="clonalCN_initial_update_noDots.pdf",show_dots=FALSE,
+    #                    outdir=outdir)
+    # }
     clonal_res <- clonal_res_updated
   }
   
