@@ -385,7 +385,8 @@ segment4df <- function(df,cytoBand=NULL,win=0,outpath="./",
                                          acen_remove=acen_remove,
                                          method=seg.method,#"robseg",#"gaussian", #
                                          segSize_min=segSize_min,
-                                         penalty=p)
+                                         penalty=p,
+                                         genome=genome)
       segScore = seg_score(seg_bulk,method=segValue.method)
       #calculte the weighted mean standard error for segmentation
       seg_df_p <- segScore$seg_score_binLevel[[1]]
@@ -507,7 +508,8 @@ seg4clusters <- function(mat,cell_info,
                          outFigure=TRUE,
                          color_seg_gradient=TRUE,
                          relative_method="ratio",
-                         plot.ylim=NULL){
+                         plot.ylim=NULL,
+                         genome="hg38"){
   if(!file.exists(outplot_path) & outFigure){dir.create(outplot_path,recursive=T)}
   if(!is.null(cytoBand)){
     if (Reduce("|", is(cytoBand) == "character")) {
@@ -563,7 +565,8 @@ seg4clusters <- function(mat,cell_info,
                                color_dot = F,
                                doFilt=doFilt,
                                color_seg_gradient = color_seg_gradient,
-                               plot_ylim = plot.ylim))
+                               plot_ylim = plot.ylim,
+                               genome=genome))
   if(outFigure){
     p_ls <- lapply(SegScore_total$segPlots,function(x){y=x$ggarranged_p;return(y)})
     pcom <- cowplot::plot_grid(plotlist=p_ls,ncol = 1,align="v")

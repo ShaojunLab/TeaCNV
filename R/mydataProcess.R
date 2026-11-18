@@ -701,7 +701,8 @@ segment_by_chr_location <- function(mat_obj,cytoBand=NULL,
                                     method=c("gaussian","poisson","robseg","strucchange","PELT"),
                                     robseg_loss="Outlier",
                                     segSize_min = 5,
-                                    penalty=1
+                                    penalty=1,
+                                    genome="hg38"
                                     ){
   suppressMessages({
     library(dplyr)
@@ -753,9 +754,6 @@ segment_by_chr_location <- function(mat_obj,cytoBand=NULL,
   # --------------------------------------------------
   # 2. Process cytoband annotation
   # --------------------------------------------------
-
-
-
   if(!is.null(cytoBand)){
     if (Reduce("|", is(cytoBand) == "character")) {
       if(substr(cytoBand, nchar(cytoBand)-2, nchar(cytoBand)) %in% c("txt","tsv","csv")){
@@ -768,87 +766,122 @@ segment_by_chr_location <- function(mat_obj,cytoBand=NULL,
     }else{
       message("CytoBand isn't recognized as data.frame, or filename")
     }
-    #check the columns of cytoBand
-    if (ncol(cytoBand) != 5L) {
-        stop("cytoBand must contain five columns (as UCSC Genome Browser)")
-    }
-    
-    colnames(cytoBand)=c("chrom","chromStart","chromEnd","name","gieStain")
-    cytoBand$chrom <- as.character(cytoBand$chrom)
-    cytoBand$chromStart <- as.numeric(as.character(cytoBand$chromStart))
-    cytoBand$chromEnd <- as.numeric(as.character(cytoBand$chromEnd))
-    if (any(!is.finite(cytoBand$chromStart)) ||
-      any(!is.finite(cytoBand$chromEnd)) ||
-      any(cytoBand$chromEnd <= cytoBand$chromStart)) {
-      stop("Invalid cytoband coordinates")
-    }
-
-    # Identify chromosome arms from cytoband names
-    # Human: p36.33, p11.1, q11.1, q21.1, etc.
-    # Mouse: qA1, qA2, qB, qC1, etc.
-    cytoBand$arm <- tolower(
-        substr(trimws(as.character(cytoBand$name)), 1, 1)
+  }else{
+    message("Downloading cytoBand for ", genome, " from UCSC...")
+    cytoBand_url <- sprintf(
+      "https://hgdownload.soe.ucsc.edu/goldenPath/%s/database/cytoBand.txt.gz",
+      genome
     )
 
-    for (chr in names(chr_indices)) {
-      idx <- chr_indices[[chr]]
-      cb <- cytoBand[which(cytoBand$chrom == chr),,drop = FALSE]
+    cytoBandFile <- tryCatch({
 
-      if (nrow(cb) == 0L) {next}
+      tmp <- tempfile(fileext = ".txt.gz")
 
-      p_band <- cb[which(cb$arm == "p"),,drop = FALSE]
+      download.file(cytoBand_url, destfile = tmp,
+                    mode = "wb", quiet = TRUE)
 
-      q_band <- cb[which(cb$arm == "q"),,drop = FALSE]
+      dat <- read.table(
+        tmp,
+        sep = "\t",
+        header = FALSE,
+        check.names = FALSE,
+        stringsAsFactors = FALSE
+      )
 
-      has_p <- nrow(p_band) > 0L
-      has_q <- nrow(q_band) > 0L
+      unlink(tmp)
 
-      if (has_p && has_q) {
+      dat
 
-        # Determine the p/q boundary independently
-        # of the gieStain column
+    }, error = function(e) {
+      stop("Failed to download cytoBand for genome ", genome,
+           ". Please provide a valid cytoBand file. ",
+           conditionMessage(e))
+    })
+  }
 
-        p_end <- max(p_band$chromEnd)
-        q_start <- min(q_band$chromStart)
 
-        arm_boundary <- p_end +(q_start - p_end) / 2
 
-        arm_id[idx] <- paste0(chr,":",ifelse(bins_mid[idx] < arm_boundary,"p", "q"))
+  #check the columns of cytoBand
+  if (ncol(cytoBand) != 5L) {
+      stop("cytoBand must contain five columns (as UCSC Genome Browser)")
+  }
+  
+  colnames(cytoBand)=c("chrom","chromStart","chromEnd","name","gieStain")
+  cytoBand$chrom <- as.character(cytoBand$chrom)
+  cytoBand$chromStart <- as.numeric(as.character(cytoBand$chromStart))
+  cytoBand$chromEnd <- as.numeric(as.character(cytoBand$chromEnd))
+  if (any(!is.finite(cytoBand$chromStart)) ||
+    any(!is.finite(cytoBand$chromEnd)) ||
+    any(cytoBand$chromEnd <= cytoBand$chromStart)) {
+    stop("Invalid cytoband coordinates")
+  }
 
-      } else if (has_q) {
+  # Identify chromosome arms from cytoband names
+  # Human: p36.33, p11.1, q11.1, q21.1, etc.
+  # Mouse: qA1, qA2, qB, qC1, etc.
+  cytoBand$arm <- tolower(
+      substr(trimws(as.character(cytoBand$name)), 1, 1)
+  )
 
-        # Single q arm, e.g. mouse autosomes
-        arm_id[idx] <- paste0(chr, ":q")
+  for (chr in names(chr_indices)) {
+    idx <- chr_indices[[chr]]
+    cb <- cytoBand[which(cytoBand$chrom == chr),,drop = FALSE]
 
-      } else if (has_p) {
-        # Single p arm
-        arm_id[idx] <- paste0(chr, ":p")
+    if (nrow(cb) == 0L) {next}
 
-      }
+    p_band <- cb[which(cb$arm == "p"),,drop = FALSE]
 
-      # Optional centromere removal
-      # Only performed if acen annotations exist
+    q_band <- cb[which(cb$arm == "q"),,drop = FALSE]
 
-      if (acen_remove) {
+    has_p <- nrow(p_band) > 0L
+    has_q <- nrow(q_band) > 0L
 
-          cen <- cb[which(cb$gieStain %in% "acen"),,drop = FALSE]
+    if (has_p && has_q) {
 
-          if (nrow(cen) > 0L) {
+      # Determine the p/q boundary independently
+      # of the gieStain column
 
-            for (k in seq_len(nrow(cen))) {
+      p_end <- max(p_band$chromEnd)
+      q_start <- min(q_band$chromStart)
 
-                is_acen[idx] <- is_acen[idx] |
-                  (
-                      bins_start[idx] < cen$chromEnd[k] &
-                      bins_end[idx] > cen$chromStart[k]
-                  )
+      arm_boundary <- p_end +(q_start - p_end) / 2
 
-            }
-          }
-      }
+      arm_id[idx] <- paste0(chr,":",ifelse(bins_mid[idx] < arm_boundary,"p", "q"))
+
+    } else if (has_q) {
+
+      # Single q arm, e.g. mouse autosomes
+      arm_id[idx] <- paste0(chr, ":q")
+
+    } else if (has_p) {
+      # Single p arm
+      arm_id[idx] <- paste0(chr, ":p")
+
     }
 
+    # Optional centromere removal
+    # Only performed if acen annotations exist
+
+    if (acen_remove) {
+
+        cen <- cb[which(cb$gieStain %in% "acen"),,drop = FALSE]
+
+        if (nrow(cen) > 0L) {
+
+          for (k in seq_len(nrow(cen))) {
+
+              is_acen[idx] <- is_acen[idx] |
+                (
+                    bins_start[idx] < cen$chromEnd[k] &
+                    bins_end[idx] > cen$chromStart[k]
+                )
+
+          }
+        }
+    }
   }
+
+
 
   # --------------------------------------------------
   # 3. Aggregate cells by cell group if requested
