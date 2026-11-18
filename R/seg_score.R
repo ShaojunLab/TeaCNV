@@ -1,4 +1,4 @@
-options(scipen = 999)
+
 #'
 #' @title seg_score()
 #' @description score each segment based on the segment length (bin size within the segment),
@@ -9,6 +9,7 @@ options(scipen = 999)
 #' @return res list of two data.frame: segment score at bin-level and segment-level
 #' @export
 seg_score = function(data,outname=NA,outdir="./",method="density"){
+  options(scipen = 999)
   #filter chr
   changepoint_mat <- data$changepoint_matrix
   changepoint_mat <-changepoint_mat[grepl("chr",rownames(changepoint_mat)),,drop=F]
