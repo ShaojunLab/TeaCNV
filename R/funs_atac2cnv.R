@@ -284,7 +284,8 @@ pcaClustCN <- function(mtx_qcn_lim,
                        optimalClust=FALSE,
                        mse.min = 0.01,
                        cnv.ref.df =NULL,
-                       global.norm=FALSE
+                       global.norm=FALSE,
+                       genome="hg38"
                        ){
   message("Start bin-ratio-PCA-clustering...")
   if(!file.exists(outdir)){dir.create(outdir,recursive=T)}
@@ -301,13 +302,46 @@ pcaClustCN <- function(mtx_qcn_lim,
     }else{
       message("cytoBandFile isn't recognized as data.frame, or filename")
     }
-    #check the columns of cytoBand
+
+  }else{
+      message("Downloading cytoBand for ", genome, " from UCSC...")
+      cytoBand_url <- sprintf(
+        "https://hgdownload.soe.ucsc.edu/goldenPath/%s/database/cytoBand.txt.gz",
+        genome
+      )
+
+      cytoBandFile <- tryCatch({
+
+        tmp <- tempfile(fileext = ".txt.gz")
+
+        download.file(cytoBand_url, destfile = tmp,
+                      mode = "wb", quiet = TRUE)
+
+        dat <- read.table(
+          tmp,
+          sep = "\t",
+          header = FALSE,
+          check.names = FALSE,
+          stringsAsFactors = FALSE
+        )
+
+        unlink(tmp)
+
+        dat
+
+      }, error = function(e) {
+        stop("Failed to download cytoBand for genome ", genome,
+             ". Please provide a valid cytoBand file. ",
+             conditionMessage(e))
+      })
+    }
+
+        #check the columns of cytoBand
     if(ncol(cytoBandFile)==5){
       colnames(cytoBandFile)=c("chrom","chromStart","chromEnd","name","gieStain")
     }else{
       stop("Error, the columns of cytoBandFile do NOT match the columns of the cytoBandFile table in the database underlying the UCSC Genome Browser")
     }
-  } 
   #outdir_sub <- paste0(outdir,"/subCluster");if(!file.exists(outdir_sub)){dir.create(outdir_sub,recursive=T)}
   if(is.null(FigureName_prefix)){
    

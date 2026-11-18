@@ -1,3 +1,4 @@
+options(scipen = 999)
 #'
 #' @title seg_score()
 #' @description score each segment based on the segment length (bin size within the segment),
