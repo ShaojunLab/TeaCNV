@@ -638,6 +638,10 @@ runTeaCNV <- function(
     color_r <- suppressWarnings(get_group_color_palette("Set3")(length(unique(cell_anno_new$subCluster))))
     names(color_r) <- sort(unique(cell_anno_new$subCluster))
     left_anno_cols[["subCluster"]] <- color_r
+
+    sm_win <- ifelse(binSize<6,ceiling(60/binSize),10)
+    plt_mt2 <- smooth_and_denoise(input_obj@data.binRatio,window=sm_win)
+
   }
 
   flog.info("\n")
@@ -863,6 +867,13 @@ runTeaCNV <- function(
     #                    outdir=outdir)
     # }
     clonal_res <- clonal_res_updated
+
+    if(StopStep<4){
+      profile_plt <- clonal_res_updated
+      cell_anno_cl <- cell_anno_new[,c("clone_merged"),drop=FALSE]
+      colnames(cell_anno_cl) <- "clone"
+    }
+    
   }
   
   
@@ -945,8 +956,7 @@ runTeaCNV <- function(
       write.csv(cell_anno_new,cell_anno_new_file,row.names = T)
       
 
-      sm_win <- ifelse(binSize<6,ceiling(60/binSize),10)
-      plt_mt2 <- smooth_and_denoise(input_obj@data.binRatio,window=sm_win)
+
       outres$cellbinRatio_deNoise <- plt_mt2
       
       saveRDS(outres,CNVresFile_sc)
@@ -962,23 +972,26 @@ runTeaCNV <- function(
       
 
     }
+
+    profile_plt <- outres$clonalest
+    cell_anno_cl <- outres$cellinfo[,c("clone"),drop=FALSE]
   }
 
    
   #Step 5: Visualization
   #segment clonal level Ratio snd CNVs
-  plot_combine_seg(outres$clonalest,
+  plot_combine_seg(profile_plt,
                    outplot_name="clonalCN_final.pdf",show_dots=TRUE,
                    outdir=plotdir,genome=genome)  
-  plot_combine_seg(outres$clonalest,
+  plot_combine_seg(profile_plt,
                    outplot_name="clonalCN_final_noDots.pdf",show_dots=FALSE,
                    outdir=plotdir,genome=genome) 
 
   #segment clonal CNVs
-    p_ls <- lapply(names(outres$clonalest),function(cluster,outdir){
-      clonal_res <- outres$clonalest[[cluster]]$input_BinSegRatio
-      integerCNV <- outres$clonalest[[cluster]]$seg.dat
-      score <-  round(outres$clonalest[[cluster]]$score$score,2)
+    p_ls <- lapply(names(profile_plt),function(cluster,outdir){
+      clonal_res <- profile_plt[[cluster]]$input_BinSegRatio
+      integerCNV <- profile_plt[[cluster]]$seg.dat
+      score <-  round(profile_plt[[cluster]]$score$score,2)
       ymax <- quantile(integerCNV$integerCN,0.99)
       plt <- cellLineSeg_v3(binRatio.df=clonal_res,integerCNV.df=integerCNV,outdir=plotdir,
                             ylab="CNVs",ylim=c(0,ymax),
@@ -1036,9 +1049,9 @@ runTeaCNV <- function(
                                 width=10,height=5,device="pdf")
 
     ###heatmap: clonal CNVs
-    CNmt <- do.call(cbind,lapply(names(outres$clonalest),function(cluster){
-      clonal_res <- outres$clonalest[[cluster]]$input_BinSegRatio
-      integerCNV <- outres$clonalest[[cluster]]$seg.dat
+    CNmt <- do.call(cbind,lapply(names(profile_plt),function(cluster){
+      clonal_res <- profile_plt[[cluster]]$input_BinSegRatio
+      integerCNV <- profile_plt[[cluster]]$seg.dat
       integerCNV <- integerCNV[,c("segName","relativeCN","integerCN")]
       clonal_res <- left_join(clonal_res,integerCNV,by="segName")
       rownames(clonal_res) <- clonal_res$binID
@@ -1090,11 +1103,11 @@ runTeaCNV <- function(
     #plot combined segmentation and CNV
     pl <- c() 
     pl_data <- c()
-    ymax <- quantile(unlist(lapply(outres$clonalest,function(x){x$seg.dat$integerCN})),0.99)
-    for(cluster in sort(names(outres$clonalest))){
-        clonal_res <- outres$clonalest[[cluster]]$input_BinSegRatio
+    ymax <- quantile(unlist(lapply(profile_plt,function(x){x$seg.dat$integerCN})),0.99)
+    for(cluster in sort(names(profile_plt))){
+        clonal_res <- profile_plt[[cluster]]$input_BinSegRatio
         clonal_res <- clonal_res[,!grepl("relativeCN|integerCN",colnames(clonal_res))]
-        integerCNV <- outres$clonalest[[cluster]]$seg.dat
+        integerCNV <- profile_plt[[cluster]]$seg.dat
         clonal_res <- merge(clonal_res,integerCNV[,c("relativeCN", "integerCN","segName")],by="segName",all.x=T)
          pl_scRatio <- seg_plot(clonal_res,name.data="",
                         value.bin="integerCN",
@@ -1134,9 +1147,10 @@ runTeaCNV <- function(
     ggsave(paste0(plotdir,"/integerCN_combined.pdf"),p1,height = 2,width=10)
 
   ###clonal paired-comparison
-    cell_anno_cl <- outres$cellinfo[,c("clone"),drop=FALSE]
+
     cell_anno_cl <- cell_anno_cl[!is.na(cell_anno_cl$clone),,drop=F]
     clones <- as.character(sort(as.numeric(as.character(unique(cell_anno_cl$clone)))))
+
     Nclone <- length(clones)
     outdir_clt4 <- paste0(outdir,"/clone_segRatio_compare")
     ifelse(!dir.exists(file.path(outdir_clt4)), dir.create(file.path(outdir_clt4)), FALSE)
