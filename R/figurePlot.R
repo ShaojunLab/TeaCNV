@@ -649,13 +649,25 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
   data.bin$chrom <- normalize_chr(data.bin$chrom)
   data.bin$start <- as.numeric(as.character(data.bin$start))
 
+  # Use observed bin endpoints rather than reference sequence lengths.
+  if ("End" %in% names(data.bin)) {
+    data.bin$End <- as.numeric(as.character(data.bin$End))
+  } else {
+    data.bin$End <- data.bin$start + as.numeric(as.character(data.bin$length_bin))
+  }
+  if (nrow(data.bin) == 0L || anyNA(data.bin$chrom) ||
+      any(!nzchar(data.bin$chrom)) ||
+      any(!is.finite(data.bin$start) | !is.finite(data.bin$End) |
+          data.bin$start < 0 | data.bin$End <= data.bin$start)) {
+    stop("Invalid or empty bin data.")
+  }
+  # The axis includes only chromosomes represented in the input, in natural order.
+  used_chr <- unique(data.bin$chrom)
+  autosomes <- used_chr[grepl("^[0-9]+$", used_chr)]
+  autosomes <- autosomes[order(as.numeric(autosomes))]
   special <- intersect(c("X", "Y", "M"), used_chr)
-
   other <- sort(setdiff(used_chr, c(autosomes, special)))
-
   chr_order <- c(autosomes, special, other)
-
-  # Use maximum bin end as chromosome length
   chr_len <- vapply(
       chr_order,
       function(chr) {
@@ -688,15 +700,8 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
   }
 
   # Preserve original segment IDs for matching
-  data.bin$segName <- make_key(
-      bin_region$chrom,
-      bin_region$start,
-      bin_region$end
-  )
-
-  # Maximum observed chromosome endpoint
+  data.bin$segName <- make_key(bin_region$chrom, bin_region$start, bin_region$end)
   chr_limit <- chrLine$length[chr_index]
-
   if (any(bin_region$end > chr_limit)) {
       warning(
           "Segment endpoints exceed observed bin coverage; clipping plot coordinates.",
@@ -705,13 +710,8 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
   }
 
   # Restrict plotting coordinates to chromosome boundaries
-  data.bin$seg_start_abs <-
-      pmin(bin_region$start, chr_limit) +
-      data.bin$chrPosStart_abs
-
-  data.bin$seg_end_abs <-
-      pmin(bin_region$end, chr_limit) +
-      data.bin$chrPosStart_abs
+  data.bin$seg_start_abs <- pmin(bin_region$start, chr_limit) + data.bin$chrPosStart_abs
+  data.bin$seg_end_abs <- pmin(bin_region$end, chr_limit) + data.bin$chrPosStart_abs
 
   seg.dat$chr <- normalize_chr(seg.dat$chr)
   seg.dat$start <- as.numeric(as.character(seg.dat$start))
