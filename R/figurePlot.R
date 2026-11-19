@@ -589,13 +589,10 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
   
 
   suppressMessages({
-    library(BSgenome)
     library(ggplot2)
     library(dplyr)
     library(ggpubr)
   })
-  # Load the reference genome
-  g <- getGenome_auto(genome,auto_install = TRUE)
 
   # Keep chromosome identities as character strings, not species-specific IDs.
   normalize_chr <- function(x) {
@@ -622,11 +619,7 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
     paste(normalize_chr(chr), format(start, scientific = FALSE, trim = TRUE),
           format(end, scientific = FALSE, trim = TRUE), sep = "_")
   }
-  lens <- seqlengths(g)
-  ref_chr <- normalize_chr(names(lens))
-  if (anyDuplicated(ref_chr)) {
-    stop("Reference chromosome names are ambiguous after normalization.", call. = FALSE)
-  }
+ 
   if(is.null(integerCNV.df)){
     seg.dat <- integerCNV$seg.dat
   }else{
@@ -655,40 +648,70 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
   }
   data.bin$chrom <- normalize_chr(data.bin$chrom)
   data.bin$start <- as.numeric(as.character(data.bin$start))
-  if ("End" %in% names(data.bin)) data.bin$End <- as.numeric(as.character(data.bin$End))
-  if (nrow(data.bin) == 0L || anyNA(data.bin$chrom) ||
-      any(!is.finite(data.bin$start))) stop("Invalid or empty bin data.")
-  # The axis includes only chromosomes represented in the input, in natural order.
-  used_chr <- unique(data.bin$chrom)
-  idx <- match(used_chr, ref_chr)
-  if (anyNA(idx)) {
-    stop("Chromosomes not in the selected genome: ",
-         paste(used_chr[is.na(idx)], collapse = ", "), call. = FALSE)
-  }
-  if (any(!is.finite(lens[idx]) | lens[idx] <= 0)) stop("Invalid reference sequence lengths.")
-  autosomes <- used_chr[grepl("^[0-9]+$", used_chr)]
-  autosomes <- autosomes[order(as.numeric(autosomes))]
+
   special <- intersect(c("X", "Y", "M"), used_chr)
-  other <- ref_chr[ref_chr %in% setdiff(used_chr, c(autosomes, special))]
+
+  other <- sort(setdiff(used_chr, c(autosomes, special)))
+
   chr_order <- c(autosomes, special, other)
-  chrLine <- data.frame(chrom = chr_order,
-                       length = as.numeric(lens[match(chr_order, ref_chr)]),
-                       stringsAsFactors = FALSE)
+
+  # Use maximum bin end as chromosome length
+  chr_len <- vapply(
+      chr_order,
+      function(chr) {
+          max(data.bin$End[data.bin$chrom == chr])
+      },
+      numeric(1)
+  )
+
+  chrLine <- data.frame(
+      chrom = chr_order,
+      length = unname(chr_len),
+      stringsAsFactors = FALSE
+  )
+
+
   chrLine$chrPosStart_abs <- c(0, head(cumsum(chrLine$length), -1L))
   chrLine$chrPosEnd_abs <- chrLine$chrPosStart_abs + chrLine$length
   chr_index <- match(data.bin$chrom, chrLine$chrom)
   data.bin$chrPosStart_abs <- chrLine$chrPosStart_abs[chr_index]
   bin_region <- parse_region(data.bin$segName)
   if (anyNA(bin_region$chrom) || any(bin_region$chrom != data.bin$chrom)) stop("Bin and segName chromosomes disagree.")
-  if (any(!is.finite(bin_region$start) | !is.finite(bin_region$end) |
-          bin_region$start < 0 | bin_region$end <= bin_region$start |
-          bin_region$end > chrLine$length[chr_index] |
-          data.bin$start < 0 | data.bin$start > chrLine$length[chr_index])) {
-    stop("Bin/segment coordinates are inconsistent with the selected genome.")
+  
+  # Validate segment coordinates
+  if (any(!is.finite(bin_region$start) |
+          !is.finite(bin_region$end) |
+          bin_region$start < 0 |
+          bin_region$end <= bin_region$start)) {
+
+      stop("Invalid segment coordinates in segName.")
   }
-  data.bin$segName <- make_key(bin_region$chrom, bin_region$start, bin_region$end)
-  data.bin$seg_start_abs <- bin_region$start + data.bin$chrPosStart_abs
-  data.bin$seg_end_abs <- bin_region$end + data.bin$chrPosStart_abs
+
+  # Preserve original segment IDs for matching
+  data.bin$segName <- make_key(
+      bin_region$chrom,
+      bin_region$start,
+      bin_region$end
+  )
+
+  # Maximum observed chromosome endpoint
+  chr_limit <- chrLine$length[chr_index]
+
+  if (any(bin_region$end > chr_limit)) {
+      warning(
+          "Segment endpoints exceed observed bin coverage; clipping plot coordinates.",
+          call. = FALSE
+      )
+  }
+
+  # Restrict plotting coordinates to chromosome boundaries
+  data.bin$seg_start_abs <-
+      pmin(bin_region$start, chr_limit) +
+      data.bin$chrPosStart_abs
+
+  data.bin$seg_end_abs <-
+      pmin(bin_region$end, chr_limit) +
+      data.bin$chrPosStart_abs
 
   seg.dat$chr <- normalize_chr(seg.dat$chr)
   seg.dat$start <- as.numeric(as.character(seg.dat$start))
@@ -857,10 +880,25 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
                              NULL
                            })
       if (is.null(gene_loc) || length(gene_loc) == 0L) return(NULL)
-      gene_chr <- normalize_chr(as.character(seqnames(gene_loc)))
-      gene_start <- as.numeric(start(gene_loc))
+      
+      gene_chr <- normalize_chr(
+          as.character(GenomeInfoDb::seqnames(gene_loc))
+      )
+
+      gene_start <- as.numeric(BiocGenerics::start(gene_loc))
+
       k <- match(gene_chr, chrLine$chrom)
+
       x <- chrLine$chrPosStart_abs[k] + gene_start
+
+      outside <- is.na(k) |
+          !is.finite(gene_start) |
+          gene_start < 0 |
+          gene_start > chrLine$length[k]
+
+      x[outside] <- NA_real_
+
+
       y <- vapply(seq_along(x), function(i) {
         if (!is.finite(x[i])) return(NA_real_)
         hit <- which(data.bin$chrom == gene_chr[i] &
@@ -886,11 +924,14 @@ cellLineSeg_v3<-function(binRatio.df = NULL,
   }
 
   if(plot_hist){
-    a$segLen <- as.numeric(a$segEnd)-as.numeric(a$segStart)
+    if (any(!is.finite(a$length_bin) | a$length_bin < 0) ||
+        sum(a$length_bin) <= 0) {
+        stop("Invalid histogram weights.")
+    }
+
+    a$wei <- a$length_bin / sum(a$length_bin)
+
     
-    segLen_sum <- sum(unique(a[, c("segID", "segLen")])$segLen)
-    if (any(!is.finite(a$length_bin) | a$length_bin < 0) || sum(a$length_bin) <= 0) stop("Invalid histogram weights.")
-    a$wei <- a$length_bin/segLen_sum
     cn_labels <- unique(a[, c("ratio_map", "integerCN")])
     cn_labels <- cn_labels[is.finite(cn_labels$ratio_map) & is.finite(cn_labels$integerCN), , drop = FALSE]
     cn_ticks <- sort(unique(cn_labels$ratio_map))
