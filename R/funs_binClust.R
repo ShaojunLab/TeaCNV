@@ -20,6 +20,10 @@ suppressPackageStartupMessages({
 #' @param ref_group_names the group name as reference
 #' @param chrs analysis for specific chromosomes
 #' @param cytoBandFile the reference annotation of chromosome location, BED format with columns of c("chrom","chromStart","chromEnd","name","gieStain")
+#' @param seu_resol A non-negative numeric resolution, or a vector of candidate resolutions.
+#' @param silhouette_npcs Maximum number of PCs used to evaluate candidate resolutions.
+#' @param silhouette_max_cells Maximum number of cells for silhouette evaluation (Inf for all cells).
+#' @param silhouette_seed Random seed for sampling and candidate clustering.
 #' @export
 binClust <- function(inputMat,cellMeta,ref_group_names=NULL,
                      chrs = NULL,
@@ -40,7 +44,10 @@ binClust <- function(inputMat,cellMeta,ref_group_names=NULL,
                      Figure.width=10,
                      Figure.height=6,
                      cytoBand = NULL,
-                     global_norm = FALSE
+                     global_norm = FALSE,
+                     silhouette_npcs = 30L,
+                     silhouette_max_cells = 5000L,
+                     silhouette_seed = 123L
                      ) {
   suppressMessages({
     library(ggplot2)
@@ -179,6 +186,16 @@ binClust <- function(inputMat,cellMeta,ref_group_names=NULL,
   # cells_used <- cellScore$cell[cellScore$label %in% "Low"]
   # cells_filered <- cellScore$cell[!cellScore$label %in% "Low"]
   # clt_matrix_filt <- clt_matrix[,cells_used,drop=F]
+
+  # Initialize selection outputs, also for the low-feature fallback.
+  if (!is.numeric(seu_resol) || length(seu_resol) < 1L ||
+      any(!is.finite(seu_resol)) || any(seu_resol < 0)) {
+    stop("seu_resol must be a non-empty, finite, non-negative numeric vector.")
+  }
+  cell_info_ls <- NULL
+  best_resolution <- NA_real_
+  resolution_eval <- NULL
+
   if(nrow(clt_matrix)>=nFeature.min){
     if(nrow(clt_matrix)>1e4){
        #run for each arm region
@@ -204,12 +221,160 @@ binClust <- function(inputMat,cellMeta,ref_group_names=NULL,
       }))
     }
 
-    cell_info_ls <- suppressMessages(find_subclust(clt_matrix,resolution = seu_resol,sep_by = c("-", "-")))
+    if (length(seu_resol) == 1L) {
+      cell_info_ls <- suppressMessages(find_subclust(clt_matrix,resolution = seu_resol,sep_by = c("-", "-")))      
+      best_resolution <- seu_resol
+    }else{
+      # Compare all candidate resolutions in the same PCA space.
+      if (length(silhouette_npcs) != 1L ||
+          !is.finite(silhouette_npcs) || silhouette_npcs < 1 ||
+          silhouette_npcs != floor(silhouette_npcs)) {
+        stop("silhouette_npcs must be a positive integer.")
+      }
+      if (length(silhouette_max_cells) != 1L ||
+          is.na(silhouette_max_cells) || silhouette_max_cells < 3 ||
+          (is.finite(silhouette_max_cells) &&
+           silhouette_max_cells != floor(silhouette_max_cells))) {
+        stop("silhouette_max_cells must be an integer >= 3 or Inf.")
+      }
+      resolutions <- sort(unique(seu_resol))
+      n_cells <- ncol(clt_matrix)
+      cells <- colnames(clt_matrix)
+
+      set.seed(silhouette_seed)
+      idx <- if (n_cells > silhouette_max_cells) {
+        sort(sample.int(n_cells, silhouette_max_cells))
+      } else {
+        seq_len(n_cells)
+      }
+      d <- NULL
+      if (length(idx) >= 3L && nrow(clt_matrix) >= 1L) {
+        x <- t(clt_matrix)
+        n_pcs <- min(silhouette_npcs, nrow(x) - 1L, ncol(x))
+        # Use truncated SVD if available; otherwise use base R PCA.
+        if (requireNamespace("irlba", quietly = TRUE) &&
+            n_pcs < min(dim(x)) && n_pcs < 0.5 * min(dim(x))) {
+          pcs <- tryCatch(
+            irlba::prcomp_irlba(x, n = n_pcs,
+                               center = TRUE, scale. = FALSE)$x,
+            error = function(e) stats::prcomp(x, rank. = n_pcs,
+                                             center = TRUE, scale. = FALSE)$x
+          )
+        } else {
+          pcs <- stats::prcomp(x, rank. = n_pcs,
+                                center = TRUE, scale. = FALSE)$x
+        }
+        d <- stats::dist(pcs[idx, , drop = FALSE])
+        rm(x, pcs)
+        if (!any(d > 0)) d <- NULL
+      }
+
+      resolution_eval <- data.frame(
+        resolution = resolutions,
+        n_clusters = NA_integer_,
+        n_eval = length(idx),
+        n_eval_clusters = NA_integer_,
+        silhouette = NA_real_,
+        status = rep("not_evaluated", length(resolutions)),
+        stringsAsFactors = FALSE
+      )
+      best_score <- -Inf
+      fallback_result <- NULL
+      fallback_resolution <- NA_real_
+
+      for (i in seq_along(resolutions)) {
+        res <- resolutions[i]
+        set.seed(silhouette_seed)
+        tmp <- tryCatch(
+          suppressMessages(find_subclust(clt_matrix, resolution = res, sep_by = c("-", "-"))),
+          error = function(e) e
+        )
+        if (inherits(tmp, "error")) {
+          resolution_eval$status[i] <- paste("clustering_error:", conditionMessage(tmp))
+          flog.info(sprintf("Resolution %g failed: %s", res, conditionMessage(tmp)))
+          next
+        }
+
+        meta <- tmp$meta_cluster
+        if (is.null(meta) || !"subCluster" %in% colnames(meta) ||
+            is.null(rownames(meta)) || anyDuplicated(rownames(meta))) {
+          resolution_eval$status[i] <- "invalid_meta_cluster"
+          next
+        }
+        # Match by cell ID, never by metadata row order.
+        labs_all <- as.character(meta$subCluster[match(cells, rownames(meta))])
+        valid <- !is.na(labs_all) & nzchar(labs_all) & labs_all != "reference"
+        k <- length(unique(labs_all[valid]))
+        resolution_eval$n_clusters[i] <- k
+        if (k == 0L) {
+          resolution_eval$status[i] <- "no_cluster_labels"
+          next
+        }
+        if (is.null(fallback_result)) {
+          fallback_result <- tmp
+          fallback_resolution <- res
+        }
+
+        labs_eval <- labs_all[idx]
+        if (!all(valid[idx])) {
+          resolution_eval$status[i] <- "missing_or_reference_labels_in_sample"
+          next
+        }
+        labs_eval <- as.integer(factor(labs_eval))
+        k_eval <- length(unique(labs_eval))
+        resolution_eval$n_eval_clusters[i] <- k_eval
+        if (is.null(d) || k_eval < 2L || k_eval >= length(idx)) {
+          resolution_eval$status[i] <- "silhouette_undefined"
+          next
+        }
+        if (k_eval != k) {
+          resolution_eval$status[i] <- "sample_missing_clusters"
+          next
+        }
+        score <- mean(cluster::silhouette(labs_eval, d)[, "sil_width"])
+        if (!is.finite(score)) {
+          resolution_eval$status[i] <- "nonfinite_silhouette"
+          next
+        }
+        resolution_eval$silhouette[i] <- score
+        resolution_eval$status[i] <- "ok"
+        flog.info(sprintf("Resolution = %g; clusters = %d; silhouette = %.6f",
+                          res, k, score))
+
+        # Keep only the best full find_subclust result, not just its labels.
+        # Because resolutions are sorted, equal scores favor lower resolution.
+        if (score > best_score) {
+          best_score <- score
+          best_resolution <- res
+          cell_info_ls <- tmp
+        }
+      }
+
+      if (!is.finite(best_score)) {
+        if (is.null(fallback_result)) {
+          stop("find_subclust produced no usable clustering for any resolution.")
+        }
+        # A one-cluster result has no defined silhouette, for example.
+        warning("No valid silhouette score; using the smallest successful resolution.")
+        cell_info_ls <- fallback_result
+        best_resolution <- fallback_resolution
+      }
+      resolution_eval$selected <- resolution_eval$resolution == best_resolution
+      flog.info(sprintf("Selected resolution: %g; number of clusters: %d; silhouette: %s",
+                        best_resolution,
+                        resolution_eval$n_clusters[resolution_eval$selected],
+                        format(resolution_eval$silhouette[resolution_eval$selected], digits = 6)))
+
+    }
     cell_info <- cell_info_ls$meta_cluster 
+
+
+
   }else{
     cell_info <- cellMeta
     cell_info$subCluster <- NA
     cell_info[colnames(clt_matrix),"subCluster"] <- "0"
+    cell_info_ls <- list(meta_cluster = cell_info)
   }
 
   flog.info("Number of cells in clusters:")
@@ -321,11 +486,19 @@ binClust <- function(inputMat,cellMeta,ref_group_names=NULL,
       saveRDS(ratio_res[,rownames(ano2)],binRatio_OutName)
     }
   }
-  if(onRatio){
-    return(list(cellMeta=cellMeta,binCount=mtx_bin,binCount.nom=countsMnormal,binRatio=ratio_res[,rownames(ano2)]))
-  }else{
-    return(list(cellMeta=cellMeta,binCount=mtx_bin,binCount.nom=countsMnormal,binRatio=NULL))
+
+  binRatio <- if (onRatio) {
+    ratio_cells <- rownames(cellMeta)[!cellMeta$subCluster %in%"reference"]
+    ratio_res[, ratio_cells, drop = FALSE]
+  } else {
+    NULL
   }
+
+
+
+  return(list(cellMeta=cellMeta,binCount=mtx_bin,binCount.nom=countsMnormal,binRatio=binRatio,
+    best_resolution = best_resolution,resolution_eval = resolution_eval
+    ))
 }
 
 
